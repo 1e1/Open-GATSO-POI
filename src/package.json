@@ -1,0 +1,13 @@
+{
+  "name": "GATSO",
+  "version": "1.0.0",
+  "main": "index_fr.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "1e1",
+  "license": "ISC",
+  "dependencies": {
+    "request-promise-native": "^1.0.5"
+  }
+}
