@@ -9,21 +9,23 @@ It aims Garmin GPS like them into VolksWagen, MAN, Skoda, Seat, etc.
 3 methods:
 
 1. Copy SD_CARD
-    - download the lastest release [on this page](https://github.com/1e1/Garmin-Open-GATSO/releases)
+    - download the lastest `sd_image.img.zip` [on this page](https://github.com/1e1/Garmin-Open-GATSO/releases)
     - unzip it
     - burn it on a SD Card
     - insert the SD Card in your GPS
 
 2. Run POILoader to copy SD_CARD on a SD Card
     - download [Garmin POI Loader](https://www8.garmin.com/support/collection.jsp?product=999-99999-12)
-    - copy all files from [this directory](./SD_CARD) into a local directory
+    - download the lastest `all_files.zip` [on this page](https://github.com/1e1/Garmin-Open-GATSO/releases)
+    - unzip it
     - run Garmin POI Loader and let the wizard lead you
     - insert the SD Card in your GPS
 
 3. Go to website of your car (VW: Carnet) and add manually new POI
-    - copy all files from [this directory](./SD_CARD) into a local directory
+    - download the lastest `all_files.zip` [on this page](https://github.com/1e1/Garmin-Open-GATSO/releases)
+    - unzip it
     - go to the website of your car maker
-    - upload the files as new POIs
+    - upload every CSV as new POIs
     - connect your car to the Internet
     - update your GPS
 
