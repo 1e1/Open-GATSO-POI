@@ -32,7 +32,7 @@ branches:
     - stable
 
 before_deploy:
-  - $TRAVIS_TAG || export TRAVIS_TAG="$TAG_NAME"
+  - [[ $TRAVIS_TAG ]] || export TRAVIS_TAG="$TAG_NAME"
   - echo "$TRAVIS_TAG" "$TRAVIS_COMMIT"
   - git config --local user.name "$USER_NAME"
   - git config --local user.email "$USER_EMAIL"
