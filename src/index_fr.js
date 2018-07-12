@@ -264,8 +264,9 @@ async function start() {
 function openFiles() {
     if (FS.existsSync(OUTPUT_PATH)) {
         rmdirSyncForce(OUTPUT_PATH);
-        FS.mkdirSync(OUTPUT_PATH);
     }
+
+    FS.mkdirSync(OUTPUT_PATH);
 
     for (let id in REF_RULES) {
         const filePath = OUTPUT_PATH + '/' + REF_RULES[id].filename;
