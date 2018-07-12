@@ -5,6 +5,10 @@ const INFO_PATH = '/radars/{id}?_format=json';
 const OUTPUT_DIR = './SD_CARD/FR';
 const ASSET_DIR = './src/assets';
 
+const BOUND_FIRST_PREFIX = '⚑ ';
+const BOUND_MIDDLE_PREFIX = '↕︎ ';
+const BOUND_LAST_PREFIX = '⚐ ';
+
 const REF_TYPES = { 
     '1': { label: 'Feux rouges', type: 'stop', display: 'stop' },
     '2': { label: 'Fixes', type: 'fixed', display: 'max' },
@@ -96,11 +100,31 @@ function parseInfo(gatso, entry) {
     const title = '"' + (displayType + displayRule).trim().replace(/"/g,'\\"') + '"';
     const description = '"' + (gatso.radarDirection + ' ' + gatso.radarRoad).trim().replace(/"/g,'\\"') + '"';
 
-    entry.geoJson.forEach(lng_lat => {
+    const geoJsonLength = entry.geoJson.length;
+    for (let i = 0; i < geoJsonLength; ++i) {
+        const lng_lat = entry.geoJson[i];
+
+        let titleWithBounds = title;
+
+        if (geoJsonLength > 1) {
+            switch (i) {
+                case 0: 
+                titleWithBounds = BOUND_FIRST_PREFIX + titleWithBounds;
+                break;
+
+                case geoJsonLength -1:
+                titleWithBounds = BOUND_LAST_PREFIX + titleWithBounds;
+                break;
+
+                default:
+                titleWithBounds = BOUND_MIDDLE_PREFIX + titleWithBounds;
+            }
+        }
+
         const info = {
             longitude: lng_lat[0],
             latitude: lng_lat[1],
-            title: title,
+            title: titleWithBounds,
             description: description,
         };
 
@@ -111,7 +135,7 @@ function parseInfo(gatso, entry) {
         });
 
         points.push(info);
-    });
+    }
 
     return points;
 }

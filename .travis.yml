@@ -1,0 +1,54 @@
+language: node_js
+node_js:
+  - "10"
+addons:
+  apt:
+    update: true
+    packages:
+    - genisoimage
+
+install:
+  - cd src
+  - npm install
+  - cd ..
+
+jobs:
+  include:
+    - stage: release
+      script: 
+        - node ./src/index_fr.js
+        - genisoimage -o sd_image.iso SD_CARD
+        - zip -r sd_image.iso.zip sd_image.iso
+        - zip -r all_files.zip SD_CARD
+
+stages:
+  - name: release
+    if: branch = master
+
+branches:
+  only:
+    - master
+    - stable
+
+before_deploy:
+  - export TRAVIS_TAG="$(date +'%Y-%m-%d').$TRAVIS_BUILD_NUMBER"
+  - echo "$TRAVIS_TAG" "$TRAVIS_COMMIT"
+  - git config --local user.name "$USER_NAME"
+  - git config --local user.email "$USER_EMAIL"
+  - git tag "$TRAVIS_TAG" "$TRAVIS_COMMIT"
+
+deploy:
+  provider: releases
+  tag_name: $TRAVIS_TAG
+  target_commitish: $TRAVIS_COMMIT
+  name: $TRAVIS_TAG
+  overwrite: true
+  skip_cleanup: true
+  api_key: $GITHUB_TOKEN
+  file:
+    - "all_files.zip"
+    - "sd_image.iso.zip"
+  on:
+    tags: false
+    branch: 
+      - master
