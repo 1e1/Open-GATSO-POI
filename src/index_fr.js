@@ -181,7 +181,20 @@ function appendToGatsoList(transactionList) {
     GATSO_LIST = GATSO_LIST.concat(transactionList);
 }
 
-function rmdirSyncForce(dir) {
+function mkdirRecursiveSync(path) {
+    const paths = path.split('/');
+    let fullPath = '';
+
+    paths.forEach((filename) => {
+        fullPath += filename + '/';
+
+        if (! FS.existsSync(fullPath)) {
+            FS.mkdirSync(fullPath);
+        }
+    });
+};
+
+function rmdirRecursiveSync(dir) {
     const list = FS.readdirSync(dir);
     
     for(let i = 0; i < list.length; i++) {
@@ -190,7 +203,7 @@ function rmdirSyncForce(dir) {
 
         if('.' !== filename && '..' !== filename) {
             if(stat.isDirectory()) {
-                rmdirSyncForce(filename);
+                rmdirRecursiveSync(filename);
             } else {
                 FS.unlinkSync(filename);
             }
@@ -263,9 +276,10 @@ async function start() {
 
 function openFiles() {
     if (FS.existsSync(OUTPUT_PATH)) {
-        rmdirSyncForce(OUTPUT_PATH);
-        FS.mkdirSync(OUTPUT_PATH);
+        rmdirRecursiveSync(OUTPUT_PATH);
     }
+
+    mkdirRecursiveSync(OUTPUT_PATH);
 
     for (let id in REF_RULES) {
         const filePath = OUTPUT_PATH + '/' + REF_RULES[id].filename;
@@ -339,10 +353,8 @@ async function run() {
 (async function() {
     await run();
 
-    //const theFinalResultForTheChallenge = JSON.stringify(GATSO_LIST);
+    const theFinalResult = JSON.stringify(GATSO_LIST);
 
-    //console.log(theFinalResultForTheChallenge);
-
-    // be carefull it floods the JSON response
-    //console.debug(GATSO_LIST.length + " transactions");
+    console.log(theFinalResult.length + " entries");
+    console.log("done");
 })()
