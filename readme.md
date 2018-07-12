@@ -13,6 +13,7 @@ It aims Garmin GPS like them into VolksWagen, MAN, Skoda, Seat, etc.
     - unzip it
     - burn it on a SD Card
     - insert the SD Card in your GPS
+    - you should manually import the POI (see [howto for VW](#explanations)) 
 
 2. Run POILoader to copy SD_CARD on a SD Card
     - download [Garmin POI Loader](https://www8.garmin.com/support/collection.jsp?product=999-99999-12)
@@ -32,11 +33,24 @@ It aims Garmin GPS like them into VolksWagen, MAN, Skoda, Seat, etc.
 
 ## usage
 
+### first run
+
 ```bash
 # git clone ...
 npm install
 ls ./src
 ./src/index_fr.js
+```
+
+### batch 
+
+require cdrtools
+
+```bash
+./src/index_fr.js
+mkisofs -o sd_image.iso SD_CARD
+zip -r sd_image.iso.zip sd_image.iso
+date +%Y-%m-%d
 ```
 
 
@@ -60,3 +74,18 @@ REST service from:
 * https://www8.garmin.com/support/collection.jsp?product=999-99999-12
 * save image: `dd if=/dev/disk2 of=./sd_image.img`
 
+### explanations
+
+1. http://www.speedcamupdates.fr/volkswagen-discover-media-mib2-2017
+> - press the **NAV** button
+> - insert the SD Card into the second card connector of your GPS
+> - select *Configuration*
+> - select *Gérer la mémoire*
+> - select *Mise à jour my POI*
+> - waiting for *Logiciel de mise à jour disponible* then press *mise à jour* then press *suivant*
+> - while it terminated, press the **NAV** button
+> - select *Carte*
+> - select *Afficher les POI*
+> - select *Afficher les catégories*
+> - scroll down to GATSO and check which POI you want
+> - enjoy
