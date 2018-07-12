@@ -15,6 +15,7 @@ install:
 jobs:
   include:
     - stage: release
+      if: branch = master
       script: 
         - node ./src/index_fr.js
         - genisoimage -o sd_image.iso SD_CARD
@@ -31,7 +32,7 @@ branches:
     - stable
 
 before_deploy:
-  - export TRAVIS_TAG="$(date +'%Y-%m-%d').$TRAVIS_BUILD_NUMBER"
+  - $TRAVIS_TAG || export TRAVIS_TAG="$TAG_NAME"
   - echo "$TRAVIS_TAG" "$TRAVIS_COMMIT"
   - git config --local user.name "$USER_NAME"
   - git config --local user.email "$USER_EMAIL"
