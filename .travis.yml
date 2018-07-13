@@ -15,41 +15,51 @@ install:
 jobs:
   include:
     - stage: release
-      if: branch = master
+      #if: branch = master
       script: 
         - node ./src/index_fr.js
         - genisoimage -o sd_image.iso SD_CARD
         - zip -r sd_image.iso.zip sd_image.iso
         - zip -r all_files.zip SD_CARD
 
-stages:
-  - name: release
-    if: branch = master
+#stages:
+#  - name: release
+#    if: branch = master
 
 branches:
   only:
     - master
     - stable
 
-before_deploy:
-  - "[[ $TRAVIS_TAG ]] || export TRAVIS_TAG=\"$TRAVIS_BRANCH\""
-  - echo "$TRAVIS_TAG" "$TRAVIS_COMMIT"
-  - git config --local user.name "$USER_NAME"
-  - git config --local user.email "$USER_EMAIL"
-  - git tag "$TRAVIS_TAG" "$TRAVIS_COMMIT"
+#before_deploy:
+#  - "[[ $TRAVIS_TAG ]] || export TRAVIS_TAG=\"${TRAVIS_BRANCH}\""
+#  - git config --local user.name "$USER_NAME"
+#  - git config --local user.email "$USER_EMAIL"
+#  - git tag --force $TRAVIS_TAG $TRAVIS_COMMIT
 
 deploy:
-  provider: releases
-  tag_name: $TRAVIS_TAG
-  target_commitish: $TRAVIS_COMMIT
-  name: $TRAVIS_TAG
-  overwrite: true
-  skip_cleanup: true
-  api_key: $GITHUB_TOKEN
-  file:
-    - "all_files.zip"
-    - "sd_image.iso.zip"
-  on:
+  - provider: releases
+    name: $TRAVIS_BRANCH
+    overwrite: true
     tags: false
-    branch: 
-      - master
+    prerelease: true
+    skip_cleanup: true
+    api_key: $GITHUB_TOKEN
+    file:
+      - "all_files.zip"
+      - "sd_image.iso.zip"
+    on:
+      tags: false
+      branch: 
+        - master
+  - provider: releases
+    name: $TRAVIS_TAG
+    overwrite: true
+    prerelease: false
+    skip_cleanup: true
+    api_key: $GITHUB_TOKEN
+    file:
+      - "all_files.zip"
+      - "sd_image.iso.zip"
+    on:
+      tags: true
