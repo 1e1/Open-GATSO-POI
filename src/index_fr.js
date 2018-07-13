@@ -5,11 +5,6 @@ const INFO_PATH = '/radars/{id}?_format=json';
 const OUTPUT_DIR = './SD_CARD/FR';
 const ASSET_DIR = './src/assets';
 
-const FORMAT_CSV = 'csv';
-const FORMAT_GPX = 'gpx';
-
-const FORMAT = FORMAT_GPX;
-
 const BOUND_FIRST_PREFIX = '⚑ ';
 const BOUND_MIDDLE_PREFIX = '↕︎ ';
 const BOUND_LAST_PREFIX = '⚐ ';
@@ -141,6 +136,11 @@ const NB_PARALLEL_PROCESS = OS.cpus().length * NB_PARALLEL_PROCESS_PER_CORE;
 
 const OUTPUT_PATH = PATH.resolve(__dirname, '..', OUTPUT_DIR);
 const ASSET_PATH = PATH.resolve(__dirname, '..', ASSET_DIR);
+
+const FORMAT_CSV = 'csv';
+const FORMAT_GPX = 'gpx';
+
+const FORMATS = [ FORMAT_CSV, FORMAT_GPX ];
 
 const FILES = {};
 
@@ -339,49 +339,58 @@ function pointToGpxString(point) {
 
 
 function writeHeader(files) {
-    switch (FORMAT) {
-        case FORMAT_CSV:
-        break;
+    files.forEach(file => {
+        file.pointers.forEach(pointer => {
+            switch (pointer.format) {
+                case FORMAT_CSV:
+                break;
 
-        case FORMAT_GPX:
-        files.forEach(file => {
-            FS.writeSync(file.fs, '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>' + "\n");
-            FS.writeSync(file.fs, '<gpx xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" creator="Oregon 400t" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd">');
+                case FORMAT_GPX:
+                FS.writeSync(pointer.fs, '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>' + "\n");
+                FS.writeSync(pointer.fs, '<gpx xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" creator="Oregon 400t" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd">');
+                break;
+            }
         });
-        break;
-    }
+    });
 }
 
 
 function writePoint(files, point) {
-    let text = '';
-
-    switch (FORMAT) {
-        case FORMAT_CSV:
-        text = pointescapeCsvString(point);
-        break;
-
-        case FORMAT_GPX:
-        text = pointToGpxString(point);
-        break;
-    }
-
     files.forEach(file => {
-        FS.writeSync(file.fs, text);
+        file.pointers.forEach(pointer => {
+            let text = '';
+
+            switch (pointer.format) {
+                case FORMAT_CSV:
+                text = pointescapeCsvString(point);
+                break;
+
+                case FORMAT_GPX:
+                text = pointToGpxString(point);
+                break;
+            }
+
+            FS.writeSync(pointer.fs, text);
+        });
+
         file.size++;
     });
 }
 
 
 function writeFooter(files) {
-    switch (FORMAT) {
-        case FORMAT_CSV:
-        break;
+    files.forEach(file => {
+        file.pointers.forEach(pointer => {
+            switch (pointer.format) {
+                case FORMAT_CSV:
+                break;
 
-        case FORMAT_GPX:
-        files.forEach(file => FS.writeSync(file.fs, '</gpx>'));
-        break;
-    }
+                case FORMAT_GPX:
+                FS.writeSync(pointer.fs, '</gpx>');
+                break;
+            }
+        });
+    });
 }
 
 
@@ -396,10 +405,20 @@ function openFiles() {
         const rule = REF_RULES[id];
 
         if (undefined === FILES[rule.basename]) {
-            const filePath = OUTPUT_PATH + '/' + rule.basename + '.' + FORMAT;
-            const fs = FS.openSync(filePath, 'as');
+            const pointers = [];
 
-            FILES[rule.basename] = { fs: fs, size: 0 };
+            FORMATS.forEach(format => {
+                const filePath = OUTPUT_PATH + '/' + rule.basename + '.' + format;
+                const fs = FS.openSync(filePath, 'as');
+                const pointer = {
+                    fs: fs,
+                    format: format,
+                };
+
+                pointers.push(pointer);
+            });
+
+            FILES[rule.basename] = { pointers: pointers, size: 0 };
         }
     }
 
@@ -411,9 +430,13 @@ function closeFiles() {
     writeFooter(Object.values(FILES));
 
     for (let basename in FILES) {
-        FS.closeSync(FILES[basename].fs);
+        const file = FILES[basename];
 
-        delete FILES[basename].fs;
+        file.pointers.forEach(pointer => {
+            FS.closeSync(pointer.fs);
+
+            delete pointer.fs;
+        });
     }
 }
 
@@ -429,15 +452,18 @@ function copyAsset(filename) {
 function packageFiles() {
     for (let basename in FILES) {
         const file = FILES[basename];
-        const filePath = OUTPUT_PATH + '/' + basename + '.' + FORMAT;
 
-        if (FS.existsSync(filePath)) {
-            if (0 === file.size) {
-                FS.unlinkSync(filePath);
-            } else {
-                copyAsset(basename + '.bmp');
+        file.pointers.forEach(pointer => {
+            const filePath = OUTPUT_PATH + '/' + basename + '.' + pointer.format;
+
+            if (FS.existsSync(filePath)) {
+                if (0 === file.size) {
+                    FS.unlinkSync(filePath);
+                } else {
+                    copyAsset(basename + '.bmp');
+                }
             }
-        }
+        });
     }
 }
 
