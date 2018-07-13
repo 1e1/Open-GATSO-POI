@@ -36,7 +36,7 @@ before_deploy:
   - git config --local user.name "$USER_NAME"
   - git config --local user.email "$USER_EMAIL"
   - git tag -d $TRAVIS_TAG || true
-  - git tag $TRAVIS_TAG $TRAVIS_COMMIT
+  - git tag -f $TRAVIS_TAG $TRAVIS_COMMIT
 
 deploy:
   - provider: releases
