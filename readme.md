@@ -37,9 +37,9 @@ It aims Garmin GPS like them into VolksWagen, MAN, Skoda, Seat, etc.
 
 ```bash
 # git clone ...
+cd ./src
 npm install
-ls ./src
-./src/index_fr.js
+./index_fr.js
 ```
 
 ### batch 
