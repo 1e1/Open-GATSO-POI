@@ -8,30 +8,31 @@ It aims Garmin GPS like them into VolksWagen, MAN, Skoda, Seat, etc.
 ![VW website](./ScreenShot2018-07-09at18.23.50.png)
 3 methods:
 
-1. Copy SD_CARD
-    - download the lastest `sd_image.img.zip` [on this page](https://github.com/1e1/Garmin-Open-GATSO/releases)
+1. Quick (on SD Card)
+    - download the lastest [⤓](https://github.com/1e1/Garmin-Open-GATSO/releases/download/travis_master/sd_image.iso.zip)`sd_image.iso.zip` from the [releases page](https://github.com/1e1/Garmin-Open-GATSO/releases)
     - unzip it
     - burn it on a SD Card
     - insert the SD Card in your GPS
     - you should manually import the POI (see [howto for VW](#explanations)) 
 
-2. Run POILoader to copy SD_CARD on a SD Card
-    - download [Garmin POI Loader](https://www8.garmin.com/support/collection.jsp?product=999-99999-12)
-    - download the lastest `all_files.zip` [on this page](https://github.com/1e1/Garmin-Open-GATSO/releases)
+2. Official on SD Card
+    - download the lastest [⤓](https://github.com/1e1/Garmin-Open-GATSO/releases/download/travis_master/all_files.zip)`all_files.zip` from the [releases page](https://github.com/1e1/Garmin-Open-GATSO/releases)
     - unzip it
+    - download [Garmin POI Loader](https://www8.garmin.com/support/collection.jsp?product=999-99999-12)
     - run Garmin POI Loader and let the wizard lead you
     - insert the SD Card in your GPS
+    - you should manually import the POI (see [howto for VW](#explanations)) 
 
-3. Go to website of your car (VW: Carnet) and add manually new POI
-    - download the lastest `all_files.zip` [on this page](https://github.com/1e1/Garmin-Open-GATSO/releases)
+3. Official online
+    - download the lastest [⤓](https://github.com/1e1/Garmin-Open-GATSO/releases/download/travis_master/all_files.zip)`all_files.zip` from the [releases page](https://github.com/1e1/Garmin-Open-GATSO/releases)
     - unzip it
-    - go to the website of your car maker
+    - go to the website of your car maker (eg VW: https://www.volkswagen-car-net.com) (please, contact me for others links)
     - upload every CSV as new POIs
     - connect your car to the Internet
     - update your GPS
 
 
-## usage
+## DIY usage
 
 ### first run
 
@@ -76,7 +77,8 @@ REST service from:
 
 ### explanations
 
-1. http://www.speedcamupdates.fr/volkswagen-discover-media-mib2-2017
+#### VW Discover Media
+
 > - press the **NAV** button
 > - insert the SD Card into the second card connector of your GPS
 > - select *Configuration*
@@ -89,3 +91,11 @@ REST service from:
 > - select *Afficher les catégories*
 > - scroll down to GATSO and check which POI you want
 > - enjoy
+
+#### others
+
+[SpeedCamUpdates](http://www.speedcamupdates.fr) helps for a lot of configurations
+
+---
+
+![Travis CI](https://api.travis-ci.org/1e1/Garmin-Open-GATSO.svg?branch=master)
