@@ -31,15 +31,15 @@ branches:
     - master
     - stable
 
-#before_deploy:
-#  - "[[ $TRAVIS_TAG ]] || export TRAVIS_TAG=\"${TRAVIS_BRANCH}\""
-#  - git config --local user.name "$USER_NAME"
-#  - git config --local user.email "$USER_EMAIL"
-#  - git tag --force $TRAVIS_TAG $TRAVIS_COMMIT
+before_deploy:
+  - "[[ $TRAVIS_TAG ]] || export TRAVIS_TAG=\"${TAG_PREFIX}${TRAVIS_BRANCH}\""
+  - git config --local user.name "$USER_NAME"
+  - git config --local user.email "$USER_EMAIL"
+  - git tag --force $TRAVIS_TAG $TRAVIS_COMMIT
 
 deploy:
   - provider: releases
-    name: $TRAVIS_BRANCH
+    name: $TRAVIS_TAG
     overwrite: true
     tags: false
     prerelease: true
