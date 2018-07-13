@@ -70,6 +70,7 @@ REST service from:
 ### CSV structure
 * https://www8.garmin.com/products/poiloader/creating-custom-poi-files/ <- best doc! 
 * http://www.poi-factory.com/garmin-csv-file-format
+* https://www.poieditor.com/poi_convert/garmin-csv-to-ov2/
 
 ### Gamin POI Loader
 * https://www8.garmin.com/support/collection.jsp?product=999-99999-12
