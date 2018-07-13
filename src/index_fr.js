@@ -30,7 +30,7 @@ const REF_RULES = {
     '12': { label: 'Vitesse PL 70', type: 'speed', alert: 70, filter: false, filename: 'GATSO_70.csv'  },
     '13': { label: 'Vitesse PL 80', type: 'speed', alert: 80, filter: false, filename: 'GATSO_80.csv'  },
     '14': { label: 'Vitesse PL 90', type: 'speed', alert: 90, filter: false, filename: 'GATSO_90.csv'  },
-    '15': { label: 'Franchissement de feux', type: 'traffic_light', alert: null, filter: true, filename: 'GATSO_red.csv'  },
+    '15': { label: 'Franchissement de feux', type: 'traffic_light', alert: null, filter: true, filename: 'GATSO_stop.csv'  },
     '17': { label: 'Franchissement de voie ferrée', type: 'railway', alert: null, filter: true, filename: 'GATSO_rail.csv'  },
  };
 
