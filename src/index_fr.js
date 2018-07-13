@@ -5,6 +5,11 @@ const INFO_PATH = '/radars/{id}?_format=json';
 const OUTPUT_DIR = './SD_CARD/FR';
 const ASSET_DIR = './src/assets';
 
+const FORMAT_CSV = 'csv';
+const FORMAT_GPX = 'gpx';
+
+const FORMAT = FORMAT_GPX;
+
 const BOUND_FIRST_PREFIX = '⚑ ';
 const BOUND_MIDDLE_PREFIX = '↕︎ ';
 const BOUND_LAST_PREFIX = '⚐ ';
@@ -19,19 +24,19 @@ const REF_TYPES = {
 };
 
 const REF_RULES = { 
-    '4': { label: 'Vitesse VL 30', type: 'speed', alert: 30, filter: true, filename: 'GATSO_30.csv' },
-    '5': { label: 'Vitesse VL 50', type: 'speed', alert: 50, filter: true, filename: 'GATSO_50.csv' },
-    '6': { label: 'Vitesse VL 70', type: 'speed', alert: 70, filter: true, filename: 'GATSO_70.csv' },
-    '7': { label: 'Vitesse VL 80', type: 'speed', alert: 80, filter: true, filename: 'GATSO_80.csv' },
-    '8': { label: 'Vitesse VL 90', type: 'speed', alert: 90, filter: true, filename: 'GATSO_90.csv' },
-    '9': { label: 'Vitesse VL 110', type: 'speed', alert: 110, filter: true, filename: 'GATSO_110.csv' },
-    '10': { label: 'Vitesse VL 130', type: 'speed', alert: 130, filter: true, filename: 'GATSO_130.csv' },
-    '11': { label: 'Vitesse PL 50', type: 'speed', alert: 50, filter: false, filename: 'GATSO_50.csv' },
-    '12': { label: 'Vitesse PL 70', type: 'speed', alert: 70, filter: false, filename: 'GATSO_70.csv'  },
-    '13': { label: 'Vitesse PL 80', type: 'speed', alert: 80, filter: false, filename: 'GATSO_80.csv'  },
-    '14': { label: 'Vitesse PL 90', type: 'speed', alert: 90, filter: false, filename: 'GATSO_90.csv'  },
-    '15': { label: 'Franchissement de feux', type: 'traffic_light', alert: null, filter: true, filename: 'GATSO_stop.csv'  },
-    '17': { label: 'Franchissement de voie ferrée', type: 'railway', alert: null, filter: true, filename: 'GATSO_rail.csv'  },
+    '4': { label: 'Vitesse VL 30', type: 'speed', alert: 30, filter: true, basename: 'GATSO_30' },
+    '5': { label: 'Vitesse VL 50', type: 'speed', alert: 50, filter: true, basename: 'GATSO_50' },
+    '6': { label: 'Vitesse VL 70', type: 'speed', alert: 70, filter: true, basename: 'GATSO_70' },
+    '7': { label: 'Vitesse VL 80', type: 'speed', alert: 80, filter: true, basename: 'GATSO_80' },
+    '8': { label: 'Vitesse VL 90', type: 'speed', alert: 90, filter: true, basename: 'GATSO_90' },
+    '9': { label: 'Vitesse VL 110', type: 'speed', alert: 110, filter: true, basename: 'GATSO_110' },
+    '10': { label: 'Vitesse VL 130', type: 'speed', alert: 130, filter: true, basename: 'GATSO_130' },
+    '11': { label: 'Vitesse PL 50', type: 'speed', alert: 50, filter: false, basename: 'GATSO_50' },
+    '12': { label: 'Vitesse PL 70', type: 'speed', alert: 70, filter: false, basename: 'GATSO_70'  },
+    '13': { label: 'Vitesse PL 80', type: 'speed', alert: 80, filter: false, basename: 'GATSO_80'  },
+    '14': { label: 'Vitesse PL 90', type: 'speed', alert: 90, filter: false, basename: 'GATSO_90'  },
+    '15': { label: 'Franchissement de feux', type: 'traffic_light', alert: null, filter: true, basename: 'GATSO_stop'  },
+    '17': { label: 'Franchissement de voie ferrée', type: 'railway', alert: null, filter: true, basename: 'GATSO_rail'  },
  };
 
 
@@ -58,86 +63,54 @@ function parseList(gatsoList) {
 }
 
 function parseInfo(gatso, entry) {
-    const points = [];
     const files = [];
 
     const displayTypes = [];
     gatso.radarType.forEach(type => {
-        const info = REF_TYPES[type.tid];
+        const ref = REF_TYPES[type.tid];
 
-        if (! info) {
+        if (undefined === ref) {
             console.log("--- ERROR TYPE ---");
             console.log(gatso);
             console.log("------------------");
-        }
-
-        if (!displayTypes.includes(info.display)) {
-            displayTypes.push(info.display);
+        } else {
+            if (!displayTypes.includes(ref.display)) {
+                displayTypes.push(ref.display);
+            }
         }
     });
 
     const displayRules = [];
     gatso.rulesMesured.forEach(rule => {
-        const info = REF_RULES[rule.tid];
+        const ref = REF_RULES[rule.tid];
 
-        if (! info) {
+        if (undefined === ref) {
             console.log("--- ERROR RULE ---");
             console.log(gatso);
             console.log("------------------");
-        }
+        } else {
+            if (true === ref.filter) {
+                if (null !== ref.alert && !displayRules.includes(rule.alert)) {
+                    displayRules.push(ref.alert);
+                }
 
-        if (info.filter) {
-            if (null !== info.alert && !displayRules.includes(info.alert)) {
-                displayRules.push(info.alert);
+                const file = FILES[ref.basename];
+
+                files.push(file);
             }
-            files.push(info.fs);
         }
     });
 
     const displayType = displayTypes.join(' ');
     const displayRule = displayRules.length ? '@' + displayRules.reduce((min,val) => Math.min(min,val)) : '';
 
-    const title = '"' + (displayType + displayRule).trim().replace(/"/g,'\\"') + '"';
-    const description = '"' + (gatso.radarDirection + ' ' + gatso.radarRoad).trim().replace(/"/g,'\\"') + '"';
+    const point = {
+        geoJson: entry.geoJson,
+        title: (displayType + displayRule).trim(),
+        description: (gatso.radarDirection + ' ' + gatso.radarRoad).trim(),
+    };
 
-    const geoJsonLength = entry.geoJson.length;
-    for (let i = 0; i < geoJsonLength; ++i) {
-        const lng_lat = entry.geoJson[i];
-
-        let titleWithBounds = title;
-
-        if (geoJsonLength > 1) {
-            switch (i) {
-                case 0: 
-                titleWithBounds = BOUND_FIRST_PREFIX + titleWithBounds;
-                break;
-
-                case geoJsonLength -1:
-                titleWithBounds = BOUND_LAST_PREFIX + titleWithBounds;
-                break;
-
-                default:
-                titleWithBounds = BOUND_MIDDLE_PREFIX + titleWithBounds;
-            }
-        }
-
-        const info = {
-            longitude: lng_lat[0],
-            latitude: lng_lat[1],
-            title: titleWithBounds,
-            description: description,
-        };
-
-        const csvLine = Object.values(info).join(',');
-
-        files.forEach(fs => {
-            FS.writeSync(fs, csvLine + "\n");
-        });
-
-        points.push(info);
-    }
-
-    return points;
+    writePoint(files, point);
 }
 
 
@@ -149,6 +122,9 @@ function parseInfo(gatso, entry) {
  * -------------------------------------------------------------------------- */
 
 String.prototype.format = function(opts) { return this.replace(/\{([^\}]+)\}/g, (match, name) => opts[name]) }
+String.prototype.escapeCsv = function(opts) { return '"' + this.replace(/"/g,'\\"') + '"' }
+String.prototype.escapeAttribute = function(opts) { return '"' + this.replace(/"/g,'\\"') + '"' }
+String.prototype.escapeXml = function(opts) { return '<![CDATA[' + this.replace(/"/g,'\\"') + ']]>' }
 
 /* -------------------------------------------------------------------------- */
 
@@ -166,8 +142,9 @@ const NB_PARALLEL_PROCESS = OS.cpus().length * NB_PARALLEL_PROCESS_PER_CORE;
 const OUTPUT_PATH = PATH.resolve(__dirname, '..', OUTPUT_DIR);
 const ASSET_PATH = PATH.resolve(__dirname, '..', ASSET_DIR);
 
+const FILES = {};
+
 var ENTRY_LIST = [];
-var GATSO_LIST = [];
 
 
 /* --------------------------------------------------------------------------
@@ -176,10 +153,6 @@ var GATSO_LIST = [];
  *
  * -------------------------------------------------------------------------- */
 
-
-function appendToGatsoList(transactionList) {
-    GATSO_LIST = GATSO_LIST.concat(transactionList);
-}
 
 function mkdirRecursiveSync(path) {
     const paths = path.split('/');
@@ -225,9 +198,7 @@ async function crawlPromise(entry) {
                 data += chunk;
             });
             request.on('end', () => {
-                const gatso = parseInfo(JSON.parse(data), entry);
-
-                appendToGatsoList(gatso);
+                parseInfo(JSON.parse(data), entry);
 
                 resolve();
             });
@@ -274,6 +245,146 @@ async function start() {
 }
 
 
+function pointescapeCsvString(point) {
+    const geoJsonLength = point.geoJson.length;
+
+    let output = '';
+
+    for (let i = 0; i < geoJsonLength; ++i) {
+        const lng_lat = point.geoJson[i];
+
+        let titleWithBounds = point.title;
+
+        if (geoJsonLength > 1) {
+            switch (i) {
+                case 0: 
+                titleWithBounds = BOUND_FIRST_PREFIX + titleWithBounds;
+                break;
+
+                case geoJsonLength -1:
+                titleWithBounds = BOUND_LAST_PREFIX + titleWithBounds;
+                break;
+
+                default:
+                titleWithBounds = BOUND_MIDDLE_PREFIX + titleWithBounds;
+            }
+        }
+
+        const data = {
+            longitude: lng_lat[0],
+            latitude: lng_lat[1],
+            title: titleWithBounds,
+            description: point.description,
+        };
+     
+        output += Object.values(data).join(',') + "\n";
+    }
+
+    return output;
+}
+
+
+function pointToGpxString(point) {
+    const geoJsonLength = point.geoJson.length;
+
+    let output = '';
+
+    if (1 === geoJsonLength) {
+        // WAYPOINT
+        output = '<wpt lon="{lon}" lat="{lat}"><name>{title}</name><desc>{desc}</desc></wpt>'.format({
+            lon: point.geoJson[0][0],
+            lat: point.geoJson[0][1],
+            title: point.title.escapeXml(),
+            desc: point.description.escapeXml(),
+        });
+    } else {
+        // ROUTE
+        const points = [];
+        for (let i=0; i<geoJsonLength; ++i) {
+            let titleWithBounds = point.title;
+
+            switch (i) {
+                case 0: 
+                titleWithBounds = BOUND_FIRST_PREFIX + titleWithBounds;
+                break;
+
+                case geoJsonLength -1:
+                titleWithBounds = BOUND_LAST_PREFIX + titleWithBounds;
+                break;
+
+                default:
+                titleWithBounds = BOUND_MIDDLE_PREFIX + titleWithBounds;
+            }
+
+            //const rtept = '<rtept lon="{lon}" lat="{lat}"><name>{title}</name><desc>{desc}</desc></rtept>'.format({
+            const rtept = '<trkpt lon="{lon}" lat="{lat}"></trkpt>'.format({
+                lon: point.geoJson[i][0],
+                lat: point.geoJson[i][1],
+                title: titleWithBounds.escapeXml(),
+                desc: point.description.escapeXml(),
+            });
+
+            points.push(rtept);
+        }
+
+        output = '<trk><name>{title}</name><desc>{desc}</desc><trkseg>{points}</trkseg></trk>'.format({
+            title: point.title.escapeXml(),
+            desc: point.description.escapeXml(),
+            points: points.join(''),
+        });
+    }
+
+    return output;
+}
+
+
+function writeHeader(files) {
+    switch (FORMAT) {
+        case FORMAT_CSV:
+        break;
+
+        case FORMAT_GPX:
+        files.forEach(file => {
+            FS.writeSync(file.fs, '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>' + "\n");
+            FS.writeSync(file.fs, '<gpx xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" creator="Oregon 400t" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd">');
+        });
+        break;
+    }
+}
+
+
+function writePoint(files, point) {
+    let text = '';
+
+    switch (FORMAT) {
+        case FORMAT_CSV:
+        text = pointescapeCsvString(point);
+        break;
+
+        case FORMAT_GPX:
+        text = pointToGpxString(point);
+        break;
+    }
+
+    files.forEach(file => {
+        FS.writeSync(file.fs, text);
+        file.size++;
+    });
+}
+
+
+function writeFooter(files) {
+    switch (FORMAT) {
+        case FORMAT_CSV:
+        break;
+
+        case FORMAT_GPX:
+        files.forEach(file => FS.writeSync(file.fs, '</gpx>'));
+        break;
+    }
+}
+
+
 function openFiles() {
     if (FS.existsSync(OUTPUT_PATH)) {
         rmdirRecursiveSync(OUTPUT_PATH);
@@ -282,40 +393,49 @@ function openFiles() {
     mkdirRecursiveSync(OUTPUT_PATH);
 
     for (let id in REF_RULES) {
-        const filePath = OUTPUT_PATH + '/' + REF_RULES[id].filename;
-        const fs = FS.openSync(filePath, 'as');
-        
-        REF_RULES[id].fs = fs;
+        const rule = REF_RULES[id];
+
+        if (undefined === FILES[rule.basename]) {
+            const filePath = OUTPUT_PATH + '/' + rule.basename + '.' + FORMAT;
+            const fs = FS.openSync(filePath, 'as');
+
+            FILES[rule.basename] = { fs: fs, size: 0 };
+        }
     }
+
+    writeHeader(Object.values(FILES));
 }
 
 
 function closeFiles() {
-    for (let id in REF_RULES) {
-        const rule = REF_RULES[id];
-        
-        FS.closeSync(rule.fs);
-        delete rule.fs;
+    writeFooter(Object.values(FILES));
+
+    for (let basename in FILES) {
+        FS.closeSync(FILES[basename].fs);
+
+        delete FILES[basename].fs;
     }
 }
 
 
+function copyAsset(filename) {
+    const fromBmpPath = ASSET_PATH + '/' + filename;
+    const toBmpPath = OUTPUT_PATH + '/' + filename;
+
+    FS.copyFileSync(fromBmpPath, toBmpPath);
+}
+
+
 function packageFiles() {
-    for (let id in REF_RULES) {
-        const rule = REF_RULES[id];
-        const filePath = OUTPUT_PATH + '/' + rule.filename;
+    for (let basename in FILES) {
+        const file = FILES[basename];
+        const filePath = OUTPUT_PATH + '/' + basename + '.' + FORMAT;
 
         if (FS.existsSync(filePath)) {
-            const stat = FS.statSync(filePath);
-
-            if (0 === stat.size) {
+            if (0 === file.size) {
                 FS.unlinkSync(filePath);
             } else {
-                const filename = rule.filename.replace(/\.csv$/, '.bmp');;
-                const fromBmpPath = ASSET_PATH + '/' + filename;
-                const toBmpPath = OUTPUT_PATH + '/' + filename;
-
-                FS.copyFileSync(fromBmpPath, toBmpPath);
+                copyAsset(basename + '.bmp');
             }
         }
     }
@@ -332,9 +452,12 @@ async function run() {
             request.on('data', (chunk) => {
                 data += chunk;
             });
+
             request.on('end', async () => {
                 ENTRY_LIST = parseList(JSON.parse(data));
+                
                 await start();
+                
                 resolve();
             });
         });
@@ -353,8 +476,6 @@ async function run() {
 (async function() {
     await run();
 
-    const theFinalResult = JSON.stringify(GATSO_LIST);
-
-    console.log(theFinalResult.length + " entries");
+    console.log(FILES);
     console.log("done");
 })()
