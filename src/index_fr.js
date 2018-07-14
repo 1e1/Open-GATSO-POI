@@ -2,8 +2,11 @@ const BASE_URL = 'https://radars.securite-routiere.gouv.fr';
 const LIST_PATH = '/radars/all?_format=json';
 const INFO_PATH = '/radars/{id}?_format=json';
 
+const MANIFEST_FILE = './SD_CARD/manifest.txt';
 const OUTPUT_DIR = './SD_CARD/FR';
 const ASSET_DIR = './src/assets';
+
+const REQUEST_RETRY = 5;
 
 const BOUND_FIRST_PREFIX = '⚑ ';
 const BOUND_MIDDLE_PREFIX = '↕︎ ';
@@ -103,6 +106,7 @@ function parseInfo(gatso, entry) {
         geoJson: entry.geoJson,
         title: (displayType + displayRule).trim(),
         description: (gatso.radarDirection + ' ' + gatso.radarRoad).trim(),
+        lastUpdateTimestamp: gatso.changed,
     };
 
     writePoint(files, point);
@@ -134,6 +138,7 @@ HTTPS.globalAgent.options.rejectUnauthorized = false;
 const NB_PARALLEL_PROCESS_PER_CORE = 1;
 const NB_PARALLEL_PROCESS = OS.cpus().length * NB_PARALLEL_PROCESS_PER_CORE;
 
+const MANIFEST_PATH = PATH.resolve(__dirname, '..', MANIFEST_FILE);
 const OUTPUT_PATH = PATH.resolve(__dirname, '..', OUTPUT_DIR);
 const ASSET_PATH = PATH.resolve(__dirname, '..', ASSET_DIR);
 
@@ -145,6 +150,7 @@ const FORMATS = [ FORMAT_CSV, FORMAT_GPX ];
 const FILES = {};
 
 var ENTRY_LIST = [];
+var CHANGED_TIMESTAMP_MAX = 0;
 
 
 /* --------------------------------------------------------------------------
@@ -188,22 +194,41 @@ function rmdirRecursiveSync(dir) {
 
 
 async function crawlPromise(entry) {
-    return new Promise((resolve, reject) => {
-        console.log(entry.url);
+    let retryLeft = REQUEST_RETRY;
 
-        HTTPS.get(entry.url, (request) => {
-            let data = '';
-    
-            request.on('data', (chunk) => {
-                data += chunk;
-            });
-            request.on('end', () => {
-                parseInfo(JSON.parse(data), entry);
+    do {
+        const request = new Promise((resolve, reject) => {
+            console.log(entry.url);
 
-                resolve();
+            HTTPS.get(entry.url, (request) => {
+                let data = '';
+        
+                request.on('data', (chunk) => {
+                    data += chunk;
+                });
+
+                request.on('error', (chunk) => {
+                    reject();
+                });
+
+                request.on('end', () => {
+                    const json = JSON.parse(data);
+                    
+                    retryLeft = -1;
+
+                    parseInfo(json, entry);
+                    resolve();
+                });
             });
         });
-    });
+
+        if (0 < retryLeft) {
+            request.catch(ignore => null);
+        }
+
+        await request;
+
+    } while (0 < --retryLeft);
 }
 
 async function crawlLoopPromise() {
@@ -374,6 +399,7 @@ function writePoint(files, point) {
         });
 
         file.size++;
+        file.timestampMax = Math.max(file.timestampMax, point.lastUpdateTimestamp);
     });
 }
 
@@ -405,7 +431,11 @@ function openFiles() {
         const rule = REF_RULES[id];
 
         if (undefined === FILES[rule.basename]) {
-            const pointers = [];
+            const file = {
+                pointers: [],
+                size: 0,
+                timestampMax: 0,
+            };
 
             FORMATS.forEach(format => {
                 const filePath = OUTPUT_PATH + '/' + rule.basename + '.' + format;
@@ -415,10 +445,10 @@ function openFiles() {
                     format: format,
                 };
 
-                pointers.push(pointer);
+                file.pointers.push(pointer);
             });
 
-            FILES[rule.basename] = { pointers: pointers, size: 0 };
+            FILES[rule.basename] = file;
         }
     }
 
@@ -468,6 +498,16 @@ function packageFiles() {
 }
 
 
+function generateManifest() {
+    const fs = FS.openSync(MANIFEST_PATH, 'a');
+    const timestamps = Object.values(FILES).map(file => file.timestampMax);
+    const timestampMax = Math.max.apply(null, timestamps);
+
+    FS.writeSync(fs, timestampMax);
+    FS.closeSync(fs);
+}
+
+
 async function run() {
     openFiles();
 
@@ -493,6 +533,8 @@ async function run() {
 
     closeFiles();
     packageFiles();
+
+    generateManifest();
 }
 
 
