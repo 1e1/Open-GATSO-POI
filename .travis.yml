@@ -16,6 +16,7 @@ jobs:
   include:
     - stage: release
       script: 
+        - rm -rf ./SD_CARD
         - node ./src/index_fr.js
         - genisoimage -o sd_image.iso SD_CARD
         - zip -r sd_image.iso.zip sd_image.iso
@@ -27,8 +28,7 @@ branches:
     - stable
 
 before_deploy:
-  - rm -rf ./SD_CARD
-  - export GATSO_UPDATE_MAX=`date -d @$(cat SD_CARD/manifest.txt | sort -n | tail -1) +%Y-%m-%d`
+  - export GATSO_UPDATE_MAX=`date -d @$(cat ./SD_CARD/manifest.txt | sort -n | tail -1) +%Y-%m-%d`
   - "[[ $TRAVIS_TAG ]] || export TRAVIS_TAG=\"${TAG_PREFIX}${TRAVIS_BRANCH}.${GATSO_UPDATE_MAX}\""
   - git config --local user.name "$USER_NAME"
   - git config --local user.email "$USER_EMAIL"
