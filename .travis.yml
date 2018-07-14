@@ -15,16 +15,11 @@ install:
 jobs:
   include:
     - stage: release
-      #if: branch = master
       script: 
         - node ./src/index_fr.js
         - genisoimage -o sd_image.iso SD_CARD
         - zip -r sd_image.iso.zip sd_image.iso
         - zip -r all_files.zip SD_CARD
-
-#stages:
-#  - name: release
-#    if: branch = master
 
 branches:
   only:
@@ -32,11 +27,12 @@ branches:
     - stable
 
 before_deploy:
-  - "[[ $TRAVIS_TAG ]] || export TRAVIS_TAG=\"${TAG_PREFIX}${TRAVIS_BRANCH}\""
+  - rm -rf ./SD_CARD
+  - export GATSO_UPDATE_MAX=`date -d @$(cat SD_CARD/manifest.txt | sort -n | tail -1) +%Y-%m-%d`
+  - "[[ $TRAVIS_TAG ]] || export TRAVIS_TAG=\"${TAG_PREFIX}${TRAVIS_BRANCH}.${GATSO_UPDATE_MAX}\""
   - git config --local user.name "$USER_NAME"
   - git config --local user.email "$USER_EMAIL"
-  - git tag -d $TRAVIS_TAG || true
-  - git tag -f $TRAVIS_TAG $TRAVIS_COMMIT
+  - git tag $TRAVIS_TAG $TRAVIS_COMMIT
 
 deploy:
   - provider: releases
