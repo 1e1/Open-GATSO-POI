@@ -505,6 +505,8 @@ function generateManifest() {
 
     FS.writeSync(fs, timestampMax);
     FS.closeSync(fs);
+
+    return timestampMax;
 }
 
 
@@ -534,7 +536,9 @@ async function run() {
     closeFiles();
     packageFiles();
 
-    generateManifest();
+    const timestampMax = generateManifest();
+
+    return timestampMax;
 }
 
 
@@ -542,8 +546,13 @@ async function run() {
 
 
 (async function() {
-    await run();
+    const timestampMax = await run();
+    const dateMax = new Date();
+
+    dateMax.setTime(timestampMax);
 
     console.log(FILES);
+    console.log("timestampMax=" + dateMax.getTime());
+    console.log("dateMax=" + dateMax.toISOString());
     console.log("done");
 })()
