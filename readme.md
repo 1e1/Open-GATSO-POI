@@ -1,6 +1,16 @@
-# Garmin Open GATSO
+# Open GATSO
 
-It aims Garmin GPS like them into VolksWagen, MAN, Skoda, Seat, etc. 
+It gives a set of speed camera. 
+
+* GPX (accurate)
+    - Garmin (embeded into VolksWagen, MAN, Skoda, Seat, etc.)
+    - Mercedes
+    - Volvo
+* CSV (verbose): 
+    - Garmin (embeded into VolksWagen, MAN, Skoda, Seat, etc.)
+    - Navman
+* OV2 (minimalist):
+    - TomTom (embeded into Fiat, Peugeot, etc.)
 
 
 ## installation
@@ -75,6 +85,9 @@ REST service from:
 ### Gamin POI Loader
 * https://www8.garmin.com/support/collection.jsp?product=999-99999-12
 * save image: `dd if=/dev/disk2 of=./sd_image.img`
+
+### TomTom POI ov2
+* https://www.tomtom.com/lib/doc/ttnavsdk3_manual.pdf
 
 ### explanations
 

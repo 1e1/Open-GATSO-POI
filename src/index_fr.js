@@ -142,10 +142,13 @@ const MANIFEST_PATH = PATH.resolve(__dirname, '..', MANIFEST_FILE);
 const OUTPUT_PATH = PATH.resolve(__dirname, '..', OUTPUT_DIR);
 const ASSET_PATH = PATH.resolve(__dirname, '..', ASSET_DIR);
 
+const FILE_ENCODING = 'utf8';
+
 const FORMAT_CSV = 'csv';
 const FORMAT_GPX = 'gpx';
+const FORMAT_OV2 = 'ov2';
 
-const FORMATS = [ FORMAT_CSV, FORMAT_GPX ];
+const FORMATS = [ FORMAT_CSV, FORMAT_GPX, FORMAT_OV2 ];
 
 const FILES = {};
 
@@ -198,7 +201,7 @@ async function crawlPromise(entry) {
 
     do {
         const request = new Promise((resolve, reject) => {
-            console.log(entry.url);
+            console.log(entry.url + ' #' + (1 + REQUEST_RETRY - retryLeft));
 
             HTTPS.get(entry.url, (request) => {
                 let data = '';
@@ -270,10 +273,10 @@ async function start() {
 }
 
 
-function pointescapeCsvString(point) {
+function pointToCsvBuffer(point) {
     const geoJsonLength = point.geoJson.length;
-
-    let output = '';
+    
+    let lines = [];
 
     for (let i = 0; i < geoJsonLength; ++i) {
         const lng_lat = point.geoJson[i];
@@ -298,25 +301,84 @@ function pointescapeCsvString(point) {
         const data = {
             longitude: lng_lat[0],
             latitude: lng_lat[1],
-            title: titleWithBounds,
-            description: point.description,
+            title: titleWithBounds.escapeCsv(),
+            description: point.description.escapeCsv(),
         };
      
-        output += Object.values(data).join(',') + "\n";
+        const line = Object.values(data).join(',');
+
+        lines.push(line + "\n");
     }
 
-    return output;
+    return Buffer.from(lines.join(''), FILE_ENCODING);
 }
 
 
-function pointToGpxString(point) {
+function pointToOv2Buffer(point) {
     const geoJsonLength = point.geoJson.length;
+    const buffers = [];
 
-    let output = '';
+    for (let i = 0; i < geoJsonLength; ++i) {
+        const lng_lat = point.geoJson[i];
+
+        let titleWithBounds = point.title;
+
+        if (geoJsonLength > 1) {
+            switch (i) {
+                case 0: 
+                titleWithBounds = BOUND_FIRST_PREFIX + titleWithBounds;
+                break;
+
+                case geoJsonLength -1:
+                titleWithBounds = BOUND_LAST_PREFIX + titleWithBounds;
+                break;
+
+                default:
+                titleWithBounds = BOUND_MIDDLE_PREFIX + titleWithBounds;
+            }
+        }
+
+        const data = {
+            longitude: Math.round(lng_lat[0] * 100000),
+            latitude: Math.round(lng_lat[1] * 100000),
+            title: titleWithBounds,
+            length: titleWithBounds.length,
+        };
+     
+        const noTitleTrameLength = 14;
+        const trameLength = data.title.length + noTitleTrameLength;
+        const buffer = Buffer.alloc(trameLength);
+
+        let offset = 0;
+
+        buffer.writeUInt8('0x02', offset);
+        offset += 1;
+        buffer.writeUInt32LE(trameLength, offset);
+        offset += 4;
+        buffer.writeInt32LE(data.longitude, offset);
+        offset += 4;
+        buffer.writeInt32LE(data.latitude, offset);
+        offset += 4;
+        buffer.write(data.title, offset, data.title.length);
+        offset += data.length;
+        buffer.writeUInt8('0x00', offset);
+        offset += 1;
+
+        buffers.push(buffer);
+    }
+
+    return Buffer.concat(buffers);
+}
+
+
+function pointToGpxBuffer(point) {
+    const geoJsonLength = point.geoJson.length;
+    
+    let line;
 
     if (1 === geoJsonLength) {
         // WAYPOINT
-        output = '<wpt lon="{lon}" lat="{lat}"><name>{title}</name><desc>{desc}</desc></wpt>'.format({
+        line = '<wpt lon="{lon}" lat="{lat}"><name>{title}</name><desc>{desc}</desc></wpt>'.format({
             lon: point.geoJson[0][0],
             lat: point.geoJson[0][1],
             title: point.title.escapeXml(),
@@ -352,14 +414,14 @@ function pointToGpxString(point) {
             points.push(rtept);
         }
 
-        output = '<trk><name>{title}</name><desc>{desc}</desc><trkseg>{points}</trkseg></trk>'.format({
+        line = '<trk><name>{title}</name><desc>{desc}</desc><trkseg>{points}</trkseg></trk>'.format({
             title: point.title.escapeXml(),
             desc: point.description.escapeXml(),
             points: points.join(''),
         });
     }
 
-    return output;
+    return Buffer.from(line, FILE_ENCODING);
 }
 
 
@@ -367,9 +429,11 @@ function writeHeader(files) {
     files.forEach(file => {
         file.pointers.forEach(pointer => {
             switch (pointer.format) {
+                /*
                 case FORMAT_CSV:
+                case FORMAT_OV2:
                 break;
-
+                */
                 case FORMAT_GPX:
                 FS.writeSync(pointer.fs, '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>' + "\n");
                 FS.writeSync(pointer.fs, '<gpx xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" creator="Oregon 400t" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd">');
@@ -383,19 +447,23 @@ function writeHeader(files) {
 function writePoint(files, point) {
     files.forEach(file => {
         file.pointers.forEach(pointer => {
-            let text = '';
+            let buffer = null;
 
             switch (pointer.format) {
                 case FORMAT_CSV:
-                text = pointescapeCsvString(point);
+                buffer = pointToCsvBuffer(point);
+                break;
+
+                case FORMAT_OV2:
+                buffer = pointToOv2Buffer(point);
                 break;
 
                 case FORMAT_GPX:
-                text = pointToGpxString(point);
+                buffer = pointToGpxBuffer(point);
                 break;
             }
 
-            FS.writeSync(pointer.fs, text);
+            FS.writeSync(pointer.fs, buffer);
         });
 
         file.size++;
@@ -408,9 +476,11 @@ function writeFooter(files) {
     files.forEach(file => {
         file.pointers.forEach(pointer => {
             switch (pointer.format) {
+                /*
                 case FORMAT_CSV:
+                case FORMAT_OV2:
                 break;
-
+                */
                 case FORMAT_GPX:
                 FS.writeSync(pointer.fs, '</gpx>');
                 break;
@@ -505,6 +575,8 @@ function generateManifest() {
 
     FS.writeSync(fs, timestampMax);
     FS.closeSync(fs);
+
+    return timestampMax;
 }
 
 
@@ -534,7 +606,9 @@ async function run() {
     closeFiles();
     packageFiles();
 
-    generateManifest();
+    const timestampMax = generateManifest();
+
+    return timestampMax;
 }
 
 
@@ -542,8 +616,13 @@ async function run() {
 
 
 (async function() {
-    await run();
+    const timestampMax = await run();
+    const dateMax = new Date();
+
+    dateMax.setTime(timestampMax);
 
     console.log(FILES);
+    console.log("timestampMax=" + dateMax.getTime());
+    console.log("dateMax=" + dateMax.toISOString());
     console.log("done");
 })()
