@@ -1,6 +1,16 @@
-# Garmin Open GATSO
+# Open GATSO
 
-It aims Garmin GPS like them into VolksWagen, MAN, Skoda, Seat, etc. 
+It gives a set of speed camera. 
+
+* GPX (accurate)
+    - Garmin (embeded into VolksWagen, MAN, Skoda, Seat, etc.)
+    - Mercedes
+    - Volvo
+* CSV (verbose): 
+    - Garmin (embeded into VolksWagen, MAN, Skoda, Seat, etc.)
+    - Navman
+* OV2 (minimalist):
+    - TomTom (embeded into Fiat, Peugeot, etc.)
 
 
 ## installation
