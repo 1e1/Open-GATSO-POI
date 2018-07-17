@@ -76,6 +76,9 @@ REST service from:
 * https://www8.garmin.com/support/collection.jsp?product=999-99999-12
 * save image: `dd if=/dev/disk2 of=./sd_image.img`
 
+### TomTom POI ov2
+* https://www.tomtom.com/lib/doc/ttnavsdk3_manual.pdf
+
 ### explanations
 
 #### VW Discover Media
