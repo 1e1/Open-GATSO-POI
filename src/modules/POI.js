@@ -1,6 +1,6 @@
 const NOW = new Date();
 
-module.exports = class PoiPoint {
+module.exports = class POI {
 
     constructor() {
         this.geoJson = [];
