@@ -1,9 +1,17 @@
-const POINTER = require('./PoiPointer.js');
+const POINTER = require('./Pointer.js');
 
-module.exports = class PoiFile {
+module.exports = class File {
 
-    constructor(directory, basename) {
-        this.filePath = directory + '/' + basename;
+    static from(directory, basename) {
+        const file = new this();
+
+        file.filePath = directory + '/' + basename;
+        
+        return file;
+    }
+
+    constructor() {
+        this.filePath = '';
 
         this.pointers = [];
         this.size = 0;
@@ -20,7 +28,7 @@ module.exports = class PoiFile {
 
     addFormat(format) {
         const filePath = this.getFullFilePath(format);
-        const pointer = new POINTER(filePath);
+        const pointer = POINTER.from(filePath);
 
         this.pointers.push(pointer);
 

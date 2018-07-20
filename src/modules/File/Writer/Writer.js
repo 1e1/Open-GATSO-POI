@@ -12,9 +12,17 @@ String.prototype.escapeXml = function(opts) { return '<![CDATA[' + this.replace(
 
 const FS = require('fs');
 
-module.exports = class PoiWriter {
+module.exports = class Writer {
 
-    constructor(fs) {
+    static from(filePath) {
+        const writer = new this();
+
+        writer.open(filePath);
+
+        return writer;
+    }
+
+    constructor() {
         this.header = new Buffer.alloc(0);
         this.footer = new Buffer.alloc(0);
         this.fs = null;

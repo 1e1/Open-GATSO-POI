@@ -29,7 +29,7 @@ const PATH = require('path');
 const FS = require('fs');
 const OS = require('os');
 
-const FILES = require('./PoiFileList');
+const FILES = require('./File/FileList');
 
 const NB_PARALLEL_PROCESS_PER_CORE = 1;
 const NB_PARALLEL_PROCESS = OS.cpus().length * NB_PARALLEL_PROCESS_PER_CORE;
@@ -37,8 +37,6 @@ const NB_PARALLEL_PROCESS = OS.cpus().length * NB_PARALLEL_PROCESS_PER_CORE;
 const MANIFEST_FILE = './SD_CARD/manifest.txt';
 const OUTPUT_DIR = './SD_CARD';
 const ASSET_DIR = './src/assets';
-
-const FORMATS = [ 'csv', 'ov2', 'gpx' ];
 
 const MANIFEST_PATH = PATH.resolve(__dirname, '../..', MANIFEST_FILE);
 const OUTPUT_PATH = PATH.resolve(__dirname, '../..', OUTPUT_DIR);
@@ -85,9 +83,17 @@ String.prototype.format = function(opts) { return this.replace(/\{([^\}]+)\}/g, 
 
 
 
-module.exports = class Launcher {
-    
-    constructor(options) {
+module.exports = class Crawler {
+
+    static from(formats) {
+        const crawler = new this();
+
+        crawler.formats = formats;
+
+        return crawler;
+    }
+
+    constructor() {
         const basenames = Object.values(REF_RULES).map(rule => rule.basename);
 
         this.nbParallelProcess = NB_PARALLEL_PROCESS;
@@ -96,13 +102,14 @@ module.exports = class Launcher {
         this.assetPath = ASSET_PATH;
 
         this.isTruck = false;
+        this.formats = [];
         
-        this.files = new FILES(this.outputPath, basenames);
+        this.files = FILES.from(this.outputPath, basenames);
+    }
 
-        if (options) {
-            if (undefined !== options.isTruck) {
-                this.isTruck = !!options.isTruck;
-            }
+    setOptions(options) {
+        if (undefined !== options.isTruck) {
+            this.isTruck = !!options.isTruck;
         }
     }
 
@@ -155,7 +162,7 @@ module.exports = class Launcher {
         const mainPromise = this.getMainPromise();
 
         this.resetDirectory(); 
-        this.files.listen(FORMATS);
+        this.files.listen(this.formats);
 
         await mainPromise;
 

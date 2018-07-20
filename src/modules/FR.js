@@ -3,8 +3,8 @@ const LIST_PATH = '/radars/all?_format=json';
 const INFO_PATH = '/radars/{id}?_format=json';
 
 const HTTPS = require('https');
-const LAUNCHER = require('./Launcher.js');
-const POINT = require('./PoiPoint.js');
+const CRAWLER = require('./Crawler.js');
+const POINT = require('./POI.js');
 
 HTTPS.globalAgent.options.rejectUnauthorized = false;
 
@@ -12,7 +12,7 @@ const REQUEST_RETRY = 5;
 
 
 
-module.exports = class LauncherFr extends LAUNCHER {
+module.exports = class CrawlerFr extends CRAWLER {
     
     constructor() {
         super();

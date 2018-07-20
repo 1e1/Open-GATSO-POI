@@ -1,6 +1,6 @@
-const PoiWriter = require('./../PoiWriter.js');
+const WRITER = require('./Writer.js');
 
-module.exports = class PoiWriterGpx extends PoiWriter {
+module.exports = class Gpx extends WRITER {
 
     setHeader() {
         const header = '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>' + "\n"

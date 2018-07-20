@@ -1,16 +1,17 @@
 (async function() {
 
-    const countries = [
-        require('./modules/LauncherFr.js'),
-    ];
+    const COUNTRIES = [ 'FR' ];
+    const FORMATS = [ 'csv', 'ov2', 'gpx' ];
 
-    countries.forEach(async country => {
-        const launcher = new country();
-        console.log(launcher.getCode() + ' is running');
+    COUNTRIES.forEach(async country => {
+        const launcher = require('./modules/' + country + '.js');
+        const crawler = launcher.from(FORMATS);
+        
+        console.log(crawler.getCode() + ' is running');
 
-        await launcher.run();
+        await crawler.run();
 
-        console.log(launcher.getCode() + ' terminated');
+        console.log(crawler.getCode() + ' terminated');
         console.log();
     });
 
