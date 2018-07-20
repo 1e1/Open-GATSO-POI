@@ -1,6 +1,6 @@
 # Open GATSO
 
-It gives a set of speed camera. 
+It gives a set of speed cameras. 
 
 * GPX (accurate)
     - Garmin (embeded into VolksWagen, MAN, Skoda, Seat, etc.)
@@ -71,6 +71,7 @@ date +%Y-%m-%d
 REST service from:
 * https://radars.securite-routiere.gouv.fr/radars/all?_format=json
 * https://radars.securite-routiere.gouv.fr/radars/{id}?_format=json
+* https://poiplaza.com/
 
 ### GFX tool
 * draw icons 24x24 icons on https://www.piskelapp.com/
