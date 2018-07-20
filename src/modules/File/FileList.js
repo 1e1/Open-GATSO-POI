@@ -1,17 +1,29 @@
-const FILE = require('./PoiFile.js');
+const FILE = require('./File.js');
 
-module.exports = class PoiFileList {
+module.exports = class FileList {
 
-    constructor(directory, basenames) {
+    static from(directory, basenames) {
+        const files = new this();
+
+        files.setBasenames(basenames, directory);
+
+        return files;
+    }
+
+    constructor() {
         this.files = {};
+    }
 
+    setBasenames(basenames, directory) {
         basenames.forEach(basename => {
             if (undefined === this.files[basename]) {
-                const file = new FILE(directory, basename);
+                const file = FILE.from(directory, basename);
 
                 this.files[basename] = file;
             }
         });
+
+        return this;
     }
 
     listen(formats) {
