@@ -1,6 +1,6 @@
-const PoiWriter = require('./PoiWriter.js');
+const WRITER = require('./Writer.js');
 
-module.exports = class PoiWriterOv2 extends PoiWriter {
+module.exports = class Ov2 extends WRITER {
 
     convertToBuffer(point) {
         const geoJsonLength = point.geoJson.length;

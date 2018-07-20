@@ -1,18 +1,30 @@
 const FS = require('fs');
-const CSV = require('./PoiWriterCsv.js');
-const OV2 = require('./PoiWriterOv2.js');
-const GPX = require('./PoiWriterGpx.js');
+const CSV = require('./Writer/Csv.js');
+const OV2 = require('./Writer/Ov2.js');
+const GPX = require('./Writer/Gpx.js');
 
-module.exports = class PoiPointer {
+module.exports = class Pointer {
 
-    constructor(filePath) {
+    static from(filePath) {
+        const pointer = new this();
+        pointer.setFilePath(filePath);
+
+        return pointer;
+    }
+
+    constructor() {
+        this.filePath = '';
+        this.writer = null;
+        this.format = '';
+    }
+
+    setFilePath(filePath) {
         const p = filePath.lastIndexOf('.');
-        const format = filePath.substring(p+1).toLowerCase();
-
+        
+        this.format = filePath.substring(p+1).toLowerCase();
         this.filePath = filePath;
 
-        this.writer = null;
-        this.format = format;
+        return this;
     }
 
     open() {
