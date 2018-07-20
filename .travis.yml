@@ -17,7 +17,7 @@ jobs:
     - stage: release
       script: 
         - rm -rf ./SD_CARD
-        - node ./src/index_fr.js
+        - node ./src/index.js
         - genisoimage -o sd_image.iso SD_CARD
         - zip -r sd_image.iso.zip sd_image.iso
         - zip -r all_files.zip SD_CARD
