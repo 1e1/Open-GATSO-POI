@@ -35,8 +35,8 @@ module.exports = class Csv extends WRITER {
             const data = {
                 longitude: lng_lat[0],
                 latitude: lng_lat[1],
-                title: (title + extra.trim()).escapeCsv(),
-                description: point.description.escapeCsv(),
+                name: (title + extra.trim()).escapeCsv(),
+                comment: point.description.escapeCsv(),
             };
          
             const line = Object.values(data).join(',');
