@@ -2,6 +2,8 @@
 
 It gives a set of speed cameras. 
 
+![preview](./map.png)
+
 * GPX (accurate)
     - Garmin (embeded into VolksWagen, MAN, Skoda, Seat, etc.)
     - Mercedes
