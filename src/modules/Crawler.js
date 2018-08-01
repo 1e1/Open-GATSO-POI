@@ -19,8 +19,8 @@ const REF_RULES = {
     truck70: { label: 'Vitesse PL 70', type: 'speed', alert: 70, filter: false, basename: 'GATSO_70'  },
     truck80: { label: 'Vitesse PL 80', type: 'speed', alert: 80, filter: false, basename: 'GATSO_80'  },
     truck90: { label: 'Vitesse PL 90', type: 'speed', alert: 90, filter: false, basename: 'GATSO_90'  },
-    traffic_light: { label: 'Franchissement de feux', type: 'traffic_light', alert: null, filter: true, basename: 'GATSO_stop'  },
-    railroad: { label: 'Franchissement de voie ferrée', type: 'railway', alert: null, filter: true, basename: 'GATSO_rail'  },
+    traffic_light: { label: 'Franchissement de feux', type: 'redlight', alert: null, filter: true, basename: 'GATSO_stop_0'  },
+    railroad: { label: 'Franchissement de voie ferrée', type: 'redlight', alert: null, filter: true, basename: 'GATSO_rail_0'  },
  };
 
 
@@ -34,11 +34,10 @@ const FILES = require('./File/FileList');
 const NB_PARALLEL_PROCESS_PER_CORE = 1;
 const NB_PARALLEL_PROCESS = OS.cpus().length * NB_PARALLEL_PROCESS_PER_CORE;
 
-const MANIFEST_FILE = './SD_CARD/manifest.txt';
-const OUTPUT_DIR = './SD_CARD';
+const OUTPUT_DIR = './BUILD';
 const ASSET_DIR = './src/assets';
 
-const MANIFEST_PATH = PATH.resolve(__dirname, '../..', MANIFEST_FILE);
+const MANIFEST_PATH = PATH.resolve(__dirname, '../..', OUTPUT_DIR, 'manifest.txt');
 const OUTPUT_PATH = PATH.resolve(__dirname, '../..', OUTPUT_DIR);
 const ASSET_PATH = PATH.resolve(__dirname, '../..', ASSET_DIR);
 

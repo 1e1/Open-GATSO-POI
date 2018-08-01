@@ -109,6 +109,7 @@ REST service from:
 
 #### others
 
+[mypois](https://github.com/jimmyH/mypois) is a useful packaging tool
 [SpeedCamUpdates](http://www.speedcamupdates.fr) helps for a lot of configurations
 
 ---
