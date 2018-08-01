@@ -11,24 +11,51 @@ install:
   - cd src
   - npm install
   - cd ..
+  - pip install --user configparser pandas pillow
+  - wget https://github.com/jimmyH/mypois/archive/master.tar.gz
+  - if [ -f master.tar.gz ]; then mv master.tar.gz mypois-master.tar.gz; fi
+  - tar -xzf mypois-master.tar.gz
+  - rm mypois-master.tar.gz
 
 jobs:
   include:
     - stage: release
       script: 
-        - rm -rf ./SD_CARD
+        - rm -rf ./BUILD
+        - mkdir ./BUILD
         - node ./src/index.js
+        - echo 'zip all_files'
+        - ls -alR ./BUILD
+        - zip -r all_files.zip BUILD
+        - echo 'zip custom_files'
+        - mkdir ./BUILD_csv ./BUILD_gpx ./BUILD_ov2
+        - cp -R ./BUILD/*/*.{bmp,csv} ./BUILD_csv/
+        - ls -alR ./BUILD_csv
+        - zip -r csv_files.zip BUILD_csv
+        - cp -R ./BUILD/*/*.{bmp,gpx} ./BUILD_gpx/
+        - ls -alR ./BUILD_gpx
+        - zip -r gpx_files.zip BUILD_gpx
+        - cp -R ./BUILD/*/*.{bmp,ov2} ./BUILD_ov2/
+        - ls -alR ./BUILD_ov2
+        - zip -r ov2_files.zip BUILD_ov2
+        - echo 'create specialized image'
+        - ./csv_h.sh
+        - ls -alR ./BUILD_csv_h
+        - python ./mypois-master/mypois.py ./config.ini
+        - ls -alR ./SD_CARD
+        - zip -r sd_files.zip SD_CARD
         - genisoimage -o sd_image.iso SD_CARD
         - zip -r sd_image.iso.zip sd_image.iso
-        - zip -r all_files.zip SD_CARD
+        - ls -al
 
 branches:
   only:
     - master
     - stable
+    - travisci
 
 before_deploy:
-  - export GATSO_UPDATE_MAX=`date -d @$(cat ./SD_CARD/manifest.txt | sort -n | tail -1) +%Y-%m-%d`
+  - export GATSO_UPDATE_MAX=`date -d @$(cat ./BUILD/manifest.txt | sort -n | tail -1) +%Y-%m-%d`
   - "[[ $TRAVIS_TAG ]] || export TRAVIS_TAG=\"${TAG_PREFIX}${TRAVIS_BRANCH}.${GATSO_UPDATE_MAX}\""
   - git config --local user.name "$USER_NAME"
   - git config --local user.email "$USER_EMAIL"
@@ -49,6 +76,7 @@ deploy:
       tags: false
       branch: 
         - master
+        - travisci
   - provider: releases
     name: $TRAVIS_TAG
     overwrite: true
@@ -57,6 +85,10 @@ deploy:
     api_key: $GITHUB_TOKEN
     file:
       - "all_files.zip"
+      - "csv_files.zip"
+      - "gpx_files.zip"
+      - "ov2_files.zip"
+      - "sd_files.zip"
       - "sd_image.iso.zip"
     on:
       tags: true
