@@ -15,7 +15,7 @@ It gives a set of speed cameras.
 
 ## installation
 
-![VW website](./ScreenShot2018-07-09at18.23.50.png)
+![VW website](./ScreenShot2018-08-01at11.10.13.png)
 3 methods:
 
 1. Quick (on SD Card)
@@ -50,18 +50,25 @@ It gives a set of speed cameras.
 # git clone ...
 cd ./src
 npm install
-./index_fr.js
+# export only csv and gpx
+node ./index.js csv gpx
 ```
 
 ### batch 
 
-require cdrtools
+require [cdrtools](http://cdrtools.sourceforge.net/private/cdrecord.html) and [mypois](https://github.com/jimmyH/mypois)
 
 ```bash
-./src/index_fr.js
+# get latest GATSO
+node ./src/index.js csv
+# append headers to CSV
+./csv_h.sh
+# make SD_CARD structure
+python ./mypois-master/mypois.py ./config.ini
+# create disk image
 mkisofs -o sd_image.iso SD_CARD
+# archive it
 zip -r sd_image.iso.zip sd_image.iso
-date +%Y-%m-%d
 ```
 
 
@@ -109,7 +116,6 @@ REST service from:
 
 #### others
 
-[mypois](https://github.com/jimmyH/mypois) is a useful packaging tool
 [SpeedCamUpdates](http://www.speedcamupdates.fr) helps for a lot of configurations
 
 ---
