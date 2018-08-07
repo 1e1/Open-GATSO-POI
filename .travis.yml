@@ -39,7 +39,7 @@ jobs:
         - ls -alR ./BUILD_ov2
         - zip -r ov2_files.zip BUILD_ov2
         - echo 'create specialized image'
-        - ./csv_h.sh
+        - ./make_mypois.sh
         - ls -alR ./BUILD_csv_h
         - python ./mypois-master/mypois.py ./config.ini
         - ls -alR ./SD_CARD
