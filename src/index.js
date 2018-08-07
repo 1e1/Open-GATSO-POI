@@ -1,26 +1,24 @@
+const CRAWLER = require('./modules/Crawler.js');
+
+const COUNTRIES = [ 'FR', 'EU' ];
+const FORMATS = [ 'csv', 'ov2', 'gpx' ];
+
+
 (async function() {
 
-    const COUNTRIES = [ 'FR', 'EU' ];
-    const FORMATS = [ 'csv', 'ov2', 'gpx' ];
+    const formats = process.argv.slice(2);
+    const options = {
+        countries: COUNTRIES,
+        formats: [],
+        isTruck: false,
+    };
 
-    let formats = process.argv.slice(2);
     if (0 === formats.length) {
-        formats = FORMATS;
+        options.formats = FORMATS;
     } else {
-        formats = formats.filter(format => FORMATS.includes(format));
+        options.formats = formats.filter(format => FORMATS.includes(format));
     }
 
-    COUNTRIES.forEach(async country => {
-        const launcher = require('./modules/' + country + '.js');
-        const crawler = launcher.from(formats);
-        
-        console.log(crawler.getCode() + ' is running');
-
-        await crawler.run();
-
-        console.log(crawler.getCode() + ' terminated');
-        console.log();
-    });
-
+    await CRAWLER.from(options);
 })();
 
