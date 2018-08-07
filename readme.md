@@ -1,6 +1,6 @@
 # Open GATSO
 
-It gives a set of speed cameras. 
+It gives a set of speed cameras on the EU. 
 
 ![preview](./readme.img/map.png)
 
