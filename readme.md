@@ -2,7 +2,7 @@
 
 It gives a set of speed cameras. 
 
-![preview](./map.png)
+![preview](./readme.img/map.png)
 
 * GPX (accurate)
     - Garmin (embeded into VolksWagen, MAN, Skoda, Seat, etc.)
@@ -17,7 +17,7 @@ It gives a set of speed cameras.
 
 ## installation
 
-![VW website](./ScreenShot2018-08-01at11.10.13.png)
+![VW website](./readme.img/ScreenShot2018-08-01at11.10.13.png)
 3 methods:
 
 1. Quick (on SD Card)
@@ -76,11 +76,11 @@ zip -r sd_image.iso.zip sd_image.iso
 
 ## documentation
 
-### FR Speed Camera
+### Speed Camera
 REST service from:
 * https://radars.securite-routiere.gouv.fr/radars/all?_format=json
 * https://radars.securite-routiere.gouv.fr/radars/{id}?_format=json
-* https://poiplaza.com/
+* https://lufop.net/wp-content/plugins/downloads-manager/upload/Lufop-Zones-de-danger-EU-CSV.zip
 
 ### GFX tool
 * draw icons 24x24 icons on https://www.piskelapp.com/
