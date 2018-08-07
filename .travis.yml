@@ -52,6 +52,7 @@ branches:
   only:
     - master
     - stable
+    - develop
     - travisci
 
 before_deploy:
