@@ -71,43 +71,31 @@ module.exports = class CrawlerFr extends CRAWLER {
 
     parseInfo(gatso, entry) {
         const basenames = [];
-    
         const displayTypes = [];
+        const displayRules = [];
+
         gatso.radarType.forEach(type => {
             const ref = this.getTypeById(type.tid);
     
-            if (null === ref) {
-                console.log("--- ERROR TYPE ---");
-                console.log(gatso);
-                console.log("------------------");
-            } else {
-                if (!displayTypes.includes(ref.display)) {
-                    displayTypes.push(ref.display);
-                }
+            if (!displayTypes.includes(ref.display)) {
+                displayTypes.push(ref.display);
             }
         });
     
-        const displayRules = [];
         gatso.rulesMesured.forEach(rule => {
             const ref = this.getRuleById(rule.tid);
-    
-            if (null === ref) {
-                console.log("--- ERROR RULE ---");
-                console.log(gatso);
-                console.log("------------------");
-            } else {
-                if (true === ref.filter) {
-                    if (null !== ref.alert && !displayRules.includes(rule.alert)) {
-                        displayRules.push(ref.alert);
-                    }
-    
-                    basenames.push(ref.basename);
+            
+            if (true === ref.filter) {
+                if (null !== ref.alert && !displayRules.includes(rule.alert)) {
+                    displayRules.push(ref.alert);
                 }
+
+                basenames.push(ref.basename);
             }
         });
     
-        const displayType = displayTypes.join(' ');
-        const displayRule = displayRules.length ? '' + displayRules.reduce((min,val) => Math.min(min,val)) : '';
+        const displayType = this.displayTypesToString(displayTypes);
+        const displayRule = this.displayRulesToString(displayRules);
     
         const point = new POINT();
 
@@ -143,7 +131,7 @@ module.exports = class CrawlerFr extends CRAWLER {
             return this.getType('route');
         }
 
-        return null;
+        throw `unknown type id=${id}`;
     }
 
     getRuleById(id) {
@@ -188,7 +176,7 @@ module.exports = class CrawlerFr extends CRAWLER {
             return this.getRule('railroad');
         }
 
-        return null;
+        throw `unknown rule id=${id}`;
     }
 
     async crawlPromise(entry) {

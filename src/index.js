@@ -1,6 +1,6 @@
 (async function() {
 
-    const COUNTRIES = [ 'FR' ];
+    const COUNTRIES = [ 'FR', 'EU' ];
     const FORMATS = [ 'csv', 'ov2', 'gpx' ];
 
     let formats = process.argv.slice(2);
