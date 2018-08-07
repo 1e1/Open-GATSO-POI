@@ -56,10 +56,11 @@ branches:
     - travisci
 
 before_deploy:
-  - export GATSO_UPDATE_MAX=`date -d @$(cat ./BUILD/manifest.txt | sort -n | tail -1) +%Y-%m-%d`
+  - export GATSO_UPDATE_MAX=`date -d @$(cat ./BUILD/version.txt | sort -n | tail -1) +%Y-%m-%d`
   - "[[ $TRAVIS_TAG ]] || export TRAVIS_TAG=\"${TAG_PREFIX}${TRAVIS_BRANCH}.${GATSO_UPDATE_MAX}\""
   - git config --local user.name "$USER_NAME"
   - git config --local user.email "$USER_EMAIL"
+  - echo "git tag --force \"$TRAVIS_TAG\" $TRAVIS_COMMIT"
   - git tag --force "$TRAVIS_TAG" $TRAVIS_COMMIT
 
 deploy:
