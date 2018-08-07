@@ -1,8 +1,259 @@
 # Open GATSO
 
-It gives a set of speed cameras on the EU. 
-
 ![preview](./readme.img/map.png)
+
+Daily it gives the latest set of speed cameras on the EU.
+
+<table>
+    <thead>
+        <tr>
+            <td></td>
+            <th>BE</th>
+            <th>CH</th>
+            <th>DE</th>
+            <th>ES</th>
+            <th>FR</th>
+            <th>GB</th>
+            <th>IT</th>
+            <th>LU</th>
+            <th>NL</th>
+            <th>PL</th>
+            <th>PT</th>
+            <th>SE</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th>30</th>
+            <td>*</td><!-- BE -->
+            <td>*</td><!-- CH -->
+            <td>*</td><!-- DE -->
+            <td></td><!-- ES -->
+            <td>*</td><!-- FR -->
+            <td>*</td><!-- GB -->
+            <td>*</td><!-- IT -->
+            <td></td><!-- LU -->
+            <td>*</td><!-- NL -->
+            <td>*</td><!-- PL -->
+            <td>*</td><!-- PT -->
+            <td>*</td><!-- SE -->
+        </tr>
+        <tr>
+            <th>40</th>
+            <td></td><!-- BE -->
+            <td>*</td><!-- CH -->
+            <td>*</td><!-- DE -->
+            <td>*</td><!-- ES -->
+            <td></td><!-- FR -->
+            <td>*</td><!-- GB -->
+            <td>*</td><!-- IT -->
+            <td></td><!-- LU -->
+            <td>*</td><!-- NL -->
+            <td>*</td><!-- PL -->
+            <td></td><!-- PT -->
+            <td>*</td><!-- SE -->
+        </tr>
+        <tr>
+            <th>50</th>
+            <td>*</td><!-- BE -->
+            <td>*</td><!-- CH -->
+            <td>*</td><!-- DE -->
+            <td>*</td><!-- ES -->
+            <td>*</td><!-- FR -->
+            <td>*</td><!-- GB -->
+            <td>*</td><!-- IT -->
+            <td></td><!-- LU -->
+            <td>*</td><!-- NL -->
+            <td>*</td><!-- PL -->
+            <td></td><!-- PT -->
+            <td>*</td><!-- SE -->
+        </tr>
+        <tr>
+            <th>60</th>
+            <td>*</td><!-- BE -->
+            <td>*</td><!-- CH -->
+            <td>*</td><!-- DE -->
+            <td>*</td><!-- ES -->
+            <td></td><!-- FR -->
+            <td>*</td><!-- GB -->
+            <td>*</td><!-- IT -->
+            <td></td><!-- LU -->
+            <td>*</td><!-- NL -->
+            <td>*</td><!-- PL -->
+            <td>*</td><!-- PT -->
+            <td>*</td><!-- SE -->
+        </tr>
+        <tr>
+            <th>70</th>
+            <td>*</td><!-- BE -->
+            <td>*</td><!-- CH -->
+            <td>*</td><!-- DE -->
+            <td>*</td><!-- ES -->
+            <td>*</td><!-- FR -->
+            <td>*</td><!-- GB -->
+            <td>*</td><!-- IT -->
+            <td>*</td><!-- LU -->
+            <td>*</td><!-- NL -->
+            <td>*</td><!-- PL -->
+            <td>*</td><!-- PT -->
+            <td>*</td><!-- SE -->
+        </tr>
+        <tr>
+            <th>80</th>
+            <td>*</td><!-- BE -->
+            <td>*</td><!-- CH -->
+            <td>*</td><!-- DE -->
+            <td>*</td><!-- ES -->
+            <td>*</td><!-- FR -->
+            <td>*</td><!-- GB -->
+            <td>*</td><!-- IT -->
+            <td></td><!-- LU -->
+            <td>*</td><!-- NL -->
+            <td>*</td><!-- PL -->
+            <td>*</td><!-- PT -->
+            <td>*</td><!-- SE -->
+        </tr>
+        <tr>
+            <th>90</th>
+            <td>*</td><!-- BE -->
+            <td></td><!-- CH -->
+            <td>*</td><!-- DE -->
+            <td>*</td><!-- ES -->
+            <td>*</td><!-- FR -->
+            <td></td><!-- GB -->
+            <td>*</td><!-- IT -->
+            <td>*</td><!-- LU -->
+            <td>*</td><!-- NL -->
+            <td>*</td><!-- PL -->
+            <td>*</td><!-- PT -->
+            <td>*</td><!-- SE -->
+        </tr>
+        <tr>
+            <th>100</th>
+            <td>*</td><!-- BE -->
+            <td>*</td><!-- CH -->
+            <td>*</td><!-- DE -->
+            <td>*</td><!-- ES -->
+            <td></td><!-- FR -->
+            <td>*</td><!-- GB -->
+            <td>*</td><!-- IT -->
+            <td></td><!-- LU -->
+            <td>*</td><!-- NL -->
+            <td>*</td><!-- PL -->
+            <td>*</td><!-- PT -->
+            <td>*</td><!-- SE -->
+        </tr>
+        <tr>
+            <th>110</th>
+            <td></td><!-- BE -->
+            <td></td><!-- CH -->
+            <td>*</td><!-- DE -->
+            <td></td><!-- ES -->
+            <td>*</td><!-- FR -->
+            <td></td><!-- GB -->
+            <td>*</td><!-- IT -->
+            <td></td><!-- LU -->
+            <td>*</td><!-- NL -->
+            <td></td><!-- PL -->
+            <td></td><!-- PT -->
+            <td>*</td><!-- SE -->
+        </tr>
+        <tr>
+            <th>120</th>
+            <td>*</td><!-- BE -->
+            <td>*</td><!-- CH -->
+            <td>*</td><!-- DE -->
+            <td>*</td><!-- ES -->
+            <td></td><!-- FR -->
+            <td>*</td><!-- GB -->
+            <td></td><!-- IT -->
+            <td></td><!-- LU -->
+            <td>*</td><!-- NL -->
+            <td></td><!-- PL -->
+            <td>*</td><!-- PT -->
+            <td></td><!-- SE -->
+        </tr>
+        <tr>
+            <th>130</th>
+            <td></td><!-- BE -->
+            <td></td><!-- CH -->
+            <td></td><!-- DE -->
+            <td></td><!-- ES -->
+            <td>*</td><!-- FR -->
+            <td></td><!-- GB -->
+            <td>*</td><!-- IT -->
+            <td></td><!-- LU -->
+            <td></td><!-- NL -->
+            <td></td><!-- PL -->
+            <td></td><!-- PT -->
+            <td></td><!-- SE -->
+        </tr>
+        <tr>
+            <th>red light</th>
+            <td>*</td><!-- BE -->
+            <td>*</td><!-- CH -->
+            <td>*</td><!-- DE -->
+            <td>*</td><!-- ES -->
+            <td>*</td><!-- FR -->
+            <td>*</td><!-- GB -->
+            <td>*</td><!-- IT -->
+            <td></td><!-- LU -->
+            <td>*</td><!-- NL -->
+            <td></td><!-- PL -->
+            <td></td><!-- PT -->
+            <td></td><!-- SE -->
+        </tr>
+        <tr>
+            <th>railroad</th>
+            <td></td><!-- BE -->
+            <td></td><!-- CH -->
+            <td></td><!-- DE -->
+            <td></td><!-- ES -->
+            <td>*</td><!-- FR -->
+            <td></td><!-- GB -->
+            <td></td><!-- IT -->
+            <td></td><!-- LU -->
+            <td></td><!-- NL -->
+            <td></td><!-- PL -->
+            <td></td><!-- PT -->
+            <td></td><!-- SE -->
+        </tr>
+        <tr>
+            <th>tunnel</th>
+            <td></td><!-- BE -->
+            <td>*</td><!-- CH -->
+            <td>*</td><!-- DE -->
+            <td>*</td><!-- ES -->
+            <td></td><!-- FR -->
+            <td></td><!-- GB -->
+            <td></td><!-- IT -->
+            <td></td><!-- LU -->
+            <td></td><!-- NL -->
+            <td></td><!-- PL -->
+            <td></td><!-- PT -->
+            <td></td><!-- SE -->
+        </tr>
+    </tbody>
+    <tfoot>
+        <tr>
+            <td></td>
+            <td>9</td><!-- BE -->
+            <td>10</td><!-- CH -->
+            <td>12</td><!-- DE -->
+            <td>10</td><!-- ES -->
+            <td>9</td><!-- FR -->
+            <td>9</td><!-- GB -->
+            <td>11</td><!-- IT -->
+            <td>2</td><!-- LU -->
+            <td>11</td><!-- NL -->
+            <td>8</td><!-- PL -->
+            <td>7</td><!-- PT -->
+            <td>9</td><!-- SE -->
+        </tr>
+    </tfoot>
+</table> 
+
+Activate only the POI near you. Their name on your GPS is like `!110 - DE FR IT NL SE`.
 
 * GPX (accurate)
     - Garmin (embeded into VolksWagen, MAN, Skoda, Seat, etc.)
