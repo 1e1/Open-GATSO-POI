@@ -315,7 +315,7 @@ require [cdrtools](http://cdrtools.sourceforge.net/private/cdrecord.html) and [m
 # get latest GATSO
 node ./src/index.js csv
 # append headers to CSV
-./csv_h.sh
+./make_mypois.sh
 # make SD_CARD structure
 python ./mypois-master/mypois.py ./config.ini
 # create disk image
@@ -329,9 +329,8 @@ zip -r sd_image.iso.zip sd_image.iso
 
 ### Speed Camera
 REST service from:
-* https://radars.securite-routiere.gouv.fr/radars/all?_format=json
-* https://radars.securite-routiere.gouv.fr/radars/{id}?_format=json
-* https://lufop.net/wp-content/plugins/downloads-manager/upload/Lufop-Zones-de-danger-EU-CSV.zip
+* https://radars.securite-routiere.gouv.fr/
+* https://lufop.net/zones-de-danger-france-et-europe-asc-et-csv/
 
 ### GFX tool
 * draw icons 24x24 icons on https://www.piskelapp.com/
