@@ -29,13 +29,13 @@ jobs:
         - zip -r all_files.zip BUILD
         - echo 'zip custom_files'
         - mkdir ./BUILD_csv ./BUILD_gpx ./BUILD_ov2
-        - cp -R ./BUILD/*/*.{bmp,csv} ./BUILD_csv/
+        - cp -R ./BUILD/*.{bmp,csv} ./BUILD_csv/
         - ls -alR ./BUILD_csv
         - zip -r csv_files.zip BUILD_csv
-        - cp -R ./BUILD/*/*.{bmp,gpx} ./BUILD_gpx/
+        - cp -R ./BUILD/*.{bmp,gpx} ./BUILD_gpx/
         - ls -alR ./BUILD_gpx
         - zip -r gpx_files.zip BUILD_gpx
-        - cp -R ./BUILD/*/*.{bmp,ov2} ./BUILD_ov2/
+        - cp -R ./BUILD/*.{bmp,ov2} ./BUILD_ov2/
         - ls -alR ./BUILD_ov2
         - zip -r ov2_files.zip BUILD_ov2
         - echo 'create specialized image'
@@ -52,6 +52,7 @@ branches:
   only:
     - master
     - stable
+    - develop
     - travisci
 
 before_deploy:

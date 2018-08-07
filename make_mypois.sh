@@ -21,8 +21,8 @@ echo '' >> config.ini
 
 
 while IFS='' read -r line || [[ -n "$line" ]]; do
-    # split / -> filename, name
-    IFS='/' read -ra cells <<< "$line"
+    # split > -> filename, name
+    IFS='>' read -ra cells <<< "$line"
     FILENAME=${cells[0]}
     NAME=${cells[1]}
 
