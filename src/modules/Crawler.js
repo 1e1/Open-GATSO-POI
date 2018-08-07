@@ -29,13 +29,14 @@ const REF_RULES = {
     tunnel: { label: 'Franchissement de tunnel', type: 'unknown', alert: null, filter: true, basename: 'GATSO_tunnel_0'  },
  };
 
+ const BASENAMES = Object.values(REF_RULES).map(rule => rule.basename);
+
 
 
 const PATH = require('path');
 const FS = require('fs');
 const OS = require('os');
-
-const FILES = require('./File/FileList');
+const FILE_LIST = require('./File/FileList');
 
 const NB_PARALLEL_PROCESS_PER_CORE = 1;
 const NB_PARALLEL_PROCESS = OS.cpus().length * NB_PARALLEL_PROCESS_PER_CORE;
@@ -43,9 +44,15 @@ const NB_PARALLEL_PROCESS = OS.cpus().length * NB_PARALLEL_PROCESS_PER_CORE;
 const OUTPUT_DIR = './BUILD';
 const ASSET_DIR = './src/assets';
 
+const POI_NAME_PREFIX = '!';
+const POI_NAME_INFO_PREFIX = ' - ';
+const POI_NAME_INFO_SEPARATOR = ' ';
 const MANIFEST_PATH = PATH.resolve(__dirname, '../..', OUTPUT_DIR, 'manifest.txt');
+const VERSION_PATH = PATH.resolve(__dirname, '../..', OUTPUT_DIR, 'version.txt');
 const OUTPUT_PATH = PATH.resolve(__dirname, '../..', OUTPUT_DIR);
 const ASSET_PATH = PATH.resolve(__dirname, '../..', ASSET_DIR);
+
+const FILES = FILE_LIST.from(OUTPUT_PATH, BASENAMES);
 
 
 
@@ -82,6 +89,14 @@ function rmdirRecursiveSync(dir) {
     FS.rmdirSync(dir);
 };
 
+function resetDirectory(dir) {
+    if (FS.existsSync(dir)) {
+        rmdirRecursiveSync(dir);
+    }
+
+    mkdirRecursiveSync(dir);
+}
+
 
 
 String.prototype.format = function(opts) { return this.replace(/\{([^\}]+)\}/g, (match, name) => opts[name]) }
@@ -90,32 +105,84 @@ String.prototype.format = function(opts) { return this.replace(/\{([^\}]+)\}/g, 
 
 module.exports = class Crawler {
 
-    static from(formats) {
-        const crawler = new this();
+    static async from(options) {
+        const crawlerPromises = [];
 
-        crawler.formats = formats;
+        resetDirectory(OUTPUT_PATH);
+        FILES.listen(options.formats);
 
-        return crawler;
+        options.countries.forEach(async country => {
+            const launcher = require(`./${country}.js`);
+            const crawler = new launcher();
+
+            crawler.options = options;
+
+            const crawlerPromise = crawler.run();
+
+            crawlerPromises.push(crawlerPromise);
+        });
+
+        await Promise.all(crawlerPromises);
+
+        const mypoisConfiguration = this.getMypoisConfiguration();
+        const timestampMax = FILES.package();
+
+        this.copyAssets();
+        this.generateVersion(timestampMax);
+        this.generateManifest(mypoisConfiguration);
+    }
+
+    static copyAssets() {
+        const basenames = FILES.getBasenames();
+
+        basenames.forEach(basename => {
+            const filename = basename + '.bmp';
+            const fromBmpPath = ASSET_PATH + '/' + filename;
+            const toBmpPath = OUTPUT_PATH + '/' + filename;
+        
+            FS.copyFileSync(fromBmpPath, toBmpPath);
+        });
+    }
+
+    static getMypoisConfiguration() {
+        const lines = [];
+        const files = Object.values(FILES.files);
+
+        files.forEach(file => {
+            if (file.size) {
+                const filename = PATH.basename(file.filePath);
+                const cleanFilename = filename.replace('GATSO_', '').replace('_0', '');
+                const countries = file.countries.sort();
+
+                const name = POI_NAME_PREFIX + cleanFilename + POI_NAME_INFO_PREFIX + countries.join(POI_NAME_INFO_SEPARATOR);
+                const line = filename + '>' + name;
+
+                lines.push(line);
+            }
+        });
+
+        return lines.join("\n");
+    }
+
+    static generateVersion(timestampMax) {
+        const fs = FS.openSync(VERSION_PATH, 'a');
+
+        FS.writeSync(fs, timestampMax + "\n");
+        FS.closeSync(fs);
+    }
+
+    static generateManifest(content) {
+        const fs = FS.openSync(MANIFEST_PATH, 'a');
+
+        FS.writeSync(fs, content + "\n");
+        FS.closeSync(fs);
     }
 
     constructor() {
-        const basenames = Object.values(REF_RULES).map(rule => rule.basename);
-
         this.nbParallelProcess = NB_PARALLEL_PROCESS;
-        this.manifestPath = MANIFEST_PATH;
-        this.outputPath = OUTPUT_PATH + '/' + this.getCode();
-        this.assetPath = ASSET_PATH;
-
-        this.isTruck = false;
-        this.formats = [];
+        this.options = {};
         
-        this.files = FILES.from(this.outputPath, basenames);
-    }
-
-    setOptions(options) {
-        if (undefined !== options.isTruck) {
-            this.isTruck = !!options.isTruck;
-        }
+        this.fileList = FILES;
     }
 
     getType(name) {
@@ -148,49 +215,8 @@ module.exports = class Crawler {
         return '' + min;
     }
 
-    resetDirectory() {
-        if (FS.existsSync(this.outputPath)) {
-            rmdirRecursiveSync(this.outputPath);
-        }
-    
-        mkdirRecursiveSync(this.outputPath);
-    }
-
-    generateManifest(timestampMax) {
-        const fs = FS.openSync(this.manifestPath, 'a');
-
-        FS.writeSync(fs, timestampMax + "\n");
-        FS.closeSync(fs);
-    
-        return timestampMax;
-    }
-
-    copyAssets() {
-        const basenames = this.files.getBasenames();
-
-        basenames.forEach(basename => {
-            const filename = basename + '.bmp';
-            const fromBmpPath = this.assetPath + '/' + filename;
-            const toBmpPath = this.outputPath + '/' + filename;
-        
-            FS.copyFileSync(fromBmpPath, toBmpPath);
-        });
-    }
-
     async run() {
-        const mainPromise = this.getMainPromise();
-
-        this.resetDirectory(); 
-        this.files.listen(this.formats);
-
-        await mainPromise;
-
-        const timestampMax = this.files.package();
-
-        this.copyAssets();
-        this.generateManifest(timestampMax);
-        
-        return timestampMax;
+        return await this.getMainPromise();
     }
 
     getCode() { throw "getCode() undefined" };

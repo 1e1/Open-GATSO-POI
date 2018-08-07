@@ -100,6 +100,7 @@ module.exports = class CrawlerFr extends CRAWLER {
         const point = new POINT();
 
         point
+            .setCountry(this.getCode())
             .setGeoJson(entry.geoJson)
             .setType(displayType)
             .setRule(displayRule)
@@ -107,7 +108,7 @@ module.exports = class CrawlerFr extends CRAWLER {
             .setLastUpdateTimestamp(gatso.changed)
             ;
     
-        this.files.addPoint(point, basenames);
+        this.fileList.addPoint(point, basenames);
     }
 
     getTypeById(id) {

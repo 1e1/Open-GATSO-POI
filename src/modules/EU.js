@@ -156,6 +156,7 @@ module.exports = class CrawlerEu extends CRAWLER {
         const point = new POINT();
 
         point
+            .setCountry(entry.country)
             .setCoordinates(gatso.longitude, gatso.latitude)
             .setType(displayType)
             .setRule(displayRule)
@@ -163,7 +164,7 @@ module.exports = class CrawlerEu extends CRAWLER {
             .setLastUpdateTimestamp(entry.lastUpdateTimestamp)
             ;
     
-        this.files.addPoint(point, basenames);
+        this.fileList.addPoint(point, basenames);
     }
 
 
@@ -264,7 +265,7 @@ module.exports = class CrawlerEu extends CRAWLER {
         const options = URL.parse(META_URL);
         options.headers = { 'User-Agent': 'Mozilla/5.0' };
 
-        return new Promise((resolve, reject) => {
+        const requestPromise = new Promise((resolve, reject) => {
             HTTPS.get(options, (request) => {
                 let data = '';
         
@@ -283,7 +284,7 @@ module.exports = class CrawlerEu extends CRAWLER {
                         const [ , day, month, year, hour, minute, second] = results;
                         const iso = `${year}-${month}-${day}T${hour}:${minute}:${second}`
                         const date = new Date(iso);
-                        const timestamp = date.getTime();
+                        const timestamp = Math.round(date.getTime() / 1000);
 
                         timestamps.push(timestamp);
                     }
@@ -292,6 +293,8 @@ module.exports = class CrawlerEu extends CRAWLER {
                 });
             });
         });
+
+        await requestPromise;
     }
     
     

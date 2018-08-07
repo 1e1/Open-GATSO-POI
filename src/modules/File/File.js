@@ -16,6 +16,7 @@ module.exports = class File {
         this.pointers = [];
         this.size = 0;
         this.timestampMax = 0;
+        this.countries = [];
     }
 
     setFormats(formats) {
@@ -43,6 +44,10 @@ module.exports = class File {
         return this.size;
     }
 
+    getCountries() {
+        return this.countries;
+    }
+
     getFullFilePath(format) {
         return this.filePath + '.' + format;
     }
@@ -62,6 +67,15 @@ module.exports = class File {
 
         this.size++;
         this.timestampMax = Math.max(this.timestampMax, point.lastUpdateTimestamp);
+        this.addCountry(point.country);
+
+        return this;
+    }
+
+    addCountry(country) {
+        if (!this.countries.includes(country)) {
+            this.countries.push(country);
+        }
 
         return this;
     }
@@ -86,8 +100,9 @@ module.exports = class File {
 
     toString() {
         const formats = this.pointers.map(p=>p.toString()).join(',');
+        const countries = this.countries.join(',');
         
-        return this.filePath + '[' + formats + '] x' + this.size + ' ' + this.timestampMax;
+        return this.filename + '[' + formats + '][' + countries + '] x' + this.size + ' ' + this.timestampMax;
     }
 
 }
