@@ -3,11 +3,18 @@ const NOW = new Date();
 module.exports = class POI {
 
     constructor() {
+        this.country = '';
         this.geoJson = [];
         this.type = '';
         this.rule = '';
         this.description = '',
         this.lastUpdateTimestamp = NOW.getTime();
+    }
+
+    setCountry(country) {
+        this.country = country;
+
+        return this;
     }
 
     setCoordinates(longitude, latitude) {
