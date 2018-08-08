@@ -4,7 +4,7 @@ const COUNTRIES = [ 'FR', 'EU' ];
 const FORMATS = [ 'csv', 'ov2', 'gpx' ];
 
 
-(async function() {
+(async () => {
 
     const formats = process.argv.slice(2);
     const options = {
