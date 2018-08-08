@@ -1,5 +1,6 @@
-const README_FILENAME = 'readme.md';
 const BUILD_DIRECTORY = 'BUILD';
+const DOC_DIRECTORY = 'docs';
+const README_FILENAME = 'readme.md';
 const MANIFEST_FILENAME = 'manifest.txt';
 const VERSION_FILENAME = 'version.txt';
 
@@ -7,8 +8,9 @@ const FS = require('fs');
 const PATH = require('path');
 
 const PROJECT_PATH = PATH.resolve(__dirname, '..');
-const README_PATH = PATH.resolve(PROJECT_PATH, README_FILENAME);
 const BUILD_PATH = PATH.resolve(PROJECT_PATH, BUILD_DIRECTORY);
+const DOC_PATH = PATH.resolve(PROJECT_PATH, DOC_DIRECTORY);
+const README_PATH = PATH.resolve(DOC_PATH, README_FILENAME);
 const MANIFEST_PATH = PATH.resolve(BUILD_PATH, MANIFEST_FILENAME);
 const VERSION_PATH = PATH.resolve(BUILD_PATH, VERSION_FILENAME);
 

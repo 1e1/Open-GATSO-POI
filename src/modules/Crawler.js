@@ -117,7 +117,7 @@ module.exports = class Crawler {
 
             crawler.options = options;
 
-            const crawlerPromise = crawler.run();
+            const crawlerPromise = await crawler.run();
 
             crawlerPromises.push(crawlerPromise);
         });
