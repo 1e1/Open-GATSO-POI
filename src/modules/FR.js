@@ -208,14 +208,16 @@ module.exports = class CrawlerFr extends CRAWLER {
                     });
                 });
             });
-    
-            if (0 < retryLeft) {
-                request.catch(ignore => null);
-            }
+
+            request.catch(ignore => null);
     
             await request;
     
         } while (0 < --retryLeft);
+
+        if (0 === retryLeft) {
+            throw `can not get ${entry.url}`;
+        }
     }
     
     async crawlLoopPromise() {
