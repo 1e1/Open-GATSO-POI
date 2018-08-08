@@ -102,7 +102,7 @@ module.exports = class File {
         const formats = this.pointers.map(p=>p.toString()).join(',');
         const countries = this.countries.join(',');
         
-        return this.filename + '[' + formats + '][' + countries + '] x' + this.size + ' ' + this.timestampMax;
+        return this.filePath + '[' + formats + '][' + countries + '] x' + this.size + ' ' + this.timestampMax;
     }
 
 }

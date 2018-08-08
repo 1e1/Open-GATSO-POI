@@ -21,10 +21,11 @@ echo '' >> config.ini
 
 
 while IFS='' read -r line || [[ -n "$line" ]]; do
-    # split > -> filename, name
-    IFS='>' read -ra cells <<< "$line"
+    # split filename/counter/name
+    IFS='/' read -ra cells <<< "$line"
     FILENAME=${cells[0]}
-    NAME=${cells[1]}
+    COUNTER=${cells[1]}
+    NAME=${cells[2]}
 
     echo "Source=./BUILD_csv_h/${FILENAME}_h.csv"
 

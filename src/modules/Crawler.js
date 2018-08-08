@@ -153,9 +153,10 @@ module.exports = class Crawler {
                 const filename = PATH.basename(file.filePath);
                 const cleanFilename = filename.replace('GATSO_', '').replace('_0', '');
                 const countries = file.countries.sort();
+                const counter = file.size;
 
                 const name = POI_NAME_PREFIX + cleanFilename + POI_NAME_INFO_PREFIX + countries.join(POI_NAME_INFO_SEPARATOR);
-                const line = filename + '>' + name;
+                const line = [filename, counter, name].join('/');
 
                 lines.push(line);
             }

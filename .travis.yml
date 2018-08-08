@@ -46,6 +46,7 @@ jobs:
         - zip -r sd_files.zip SD_CARD
         - genisoimage -o sd_image.iso SD_CARD
         - zip -r sd_image.iso.zip sd_image.iso
+        - node ./src/update_readme.js
         - ls -al
 
 branches:
@@ -62,10 +63,12 @@ before_deploy:
   - git config --local user.email "$USER_EMAIL"
   - echo "git tag --force \"$TRAVIS_TAG\" $TRAVIS_COMMIT"
   - git tag --force "$TRAVIS_TAG" $TRAVIS_COMMIT
+  - export RELEASE_DESCRIPTION=`cat ./BUILD/manifest.txt`
 
 deploy:
   - provider: releases
     name: $TRAVIS_TAG
+    body: $RELEASE_DESCRIPTION
     overwrite: true
     tags: false
     prerelease: true
@@ -81,6 +84,7 @@ deploy:
         - travisci
   - provider: releases
     name: $TRAVIS_TAG
+    body: $RELEASE_DESCRIPTION
     overwrite: true
     prerelease: false
     skip_cleanup: true
@@ -94,3 +98,13 @@ deploy:
       - "sd_image.iso.zip"
     on:
       tags: true
+  - provider: pages
+    name: $TRAVIS_TAG
+    skip-cleanup: true
+    github-token: $GITHUB_TOKEN
+    keep-history: true
+      branch: 
+        - master
+        - stable
+        #- develop
+        - travisci
