@@ -53,7 +53,7 @@ branches:
   only:
     - master
     - stable
-    #- develop
+    - develop
     - travisci
 
 before_deploy:
@@ -103,8 +103,9 @@ deploy:
     skip-cleanup: true
     github-token: $GITHUB_TOKEN
     keep-history: true
+    on:
       branch: 
         - master
         - stable
-        #- develop
+        - develop
         - travisci
