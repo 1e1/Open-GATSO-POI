@@ -49,7 +49,7 @@ module.exports = class CrawlerEu extends CRAWLER {
         return 'EU';
     }
 
-    async getMainPromise() {
+    async prepare() {
         const options = URL.parse(SOURCE_URL);
         const zip_path = PATH.join(WORKSPACE, 'source.zip');
         const zip_file = FS.createWriteStream(zip_path);
@@ -75,58 +75,45 @@ module.exports = class CrawlerEu extends CRAWLER {
                     request.pipe(zip_file);
                 } else {
                     console.log('status: ' + request.statusCode);
+
+                    reject();
                 }
                 
                 request.on('error', function (err) {
                     console.error('[ERROR]', err); 
                     FS.unlink(zip_path);
+
+                    reject();
                 });
                 
                 request.on('end', async () => {
                     zip_file.end();
-                    
-                    const unzip = new ZIP({
-                        file: zip_path,
-                        storeEntries: true,
-                    });
 
-                    unzip.on('error', (err) => {
-                        console.error('[ERROR]', err); 
-                    });
+                    await this.unzip(zip_path, lastUpdateTimestamp);
                     
-                    unzip.on('entry', (entry) => {
-                        const infos = entry.name.match(FILE_PATTERN);
-
-                        if (null !== infos) {
-                            const file = {
-                                filename: entry.name,
-                                country: infos[1].toUpperCase(),
-                                type: infos[2],
-                                speedLimit: undefined === infos[3] ? null : infos[3],
-                                lastUpdateTimestamp: lastUpdateTimestamp,
-                            };
-
-                            if (!REJECT_COUNTRIES.includes(file.country)) {
-                                this.entryList.push(file);
-                            }
-                        }
-                    });
-                    
-                    unzip.on('ready', () => {
-                        unzip.extract(null, WORKSPACE, async (err, count) => {
-                            console.log(err ? 'Extract error' : `Extracted ${count} entries`);
-                            unzip.close();
-                    
-                            await this.start();
-
-                            resolve();
-                        });
-                    });
+                    resolve();
                 });
             });
         });
 
-        return mainPromise;
+        mainPromise.catch(err => this.kill(err));
+
+        await mainPromise;
+    }
+    
+    
+    async start() {
+        const crawlerPromises = [];
+        
+        for (let processIndex = 0; processIndex < this.nbParallelProcess; ++processIndex) {
+            const crawlerPromise = this.crawlLoopPromise();
+    
+            crawlerPromise.catch(err => this.kill(err));
+
+            crawlerPromises.push(crawlerPromise);
+        }
+    
+        await Promise.all(crawlerPromises);
     }
 
 
@@ -205,6 +192,50 @@ module.exports = class CrawlerEu extends CRAWLER {
     }
 
 
+    async unzip(zip_path, timestamp) {
+        const unzipPromise = new Promise((resolve, reject) => {
+            const unzip = new ZIP({
+                file: zip_path,
+                storeEntries: true,
+            });
+
+            unzip.on('error', (err) => {
+                console.error('[ERROR]', err); 
+                reject();
+            });
+            
+            unzip.on('entry', (entry) => {
+                const infos = entry.name.match(FILE_PATTERN);
+
+                if (null !== infos) {
+                    const file = {
+                        filename: entry.name,
+                        country: infos[1].toUpperCase(),
+                        type: infos[2],
+                        speedLimit: undefined === infos[3] ? null : infos[3],
+                        lastUpdateTimestamp: timestamp,
+                    };
+
+                    if (!REJECT_COUNTRIES.includes(file.country)) {
+                        this.entryList.push(file);
+                    }
+                }
+            });
+            
+            unzip.on('ready', () => {
+                unzip.extract(null, WORKSPACE, async (err, count) => {
+                    console.log(err ? 'Extract error' : `Extracted ${count} entries`);
+                    unzip.close();
+
+                    resolve();
+                });
+            });
+        });
+
+        await unzipPromise;
+    }
+
+
     async crawlPromise(entry) {
         console.log(this.getCode() + ' ' + entry.filename);
 
@@ -212,8 +243,6 @@ module.exports = class CrawlerEu extends CRAWLER {
         const content = FS.readFileSync(csv_path, 'utf8');
         const lines = content.split(/\r?\n/);
         const line_pattern = /^(?:(-?\d*(?:\.\d*))\s*,\s*)(?:(-?\d*(?:\.\d*))\s*,\s*)(.*)$/;
-
-        // console.log(lines.length + ' lines');
 
         lines.forEach(line => {
             const lon_lat_comments = line.match(line_pattern);
@@ -295,18 +324,5 @@ module.exports = class CrawlerEu extends CRAWLER {
         });
 
         await requestPromise;
-    }
-    
-    
-    async start() {
-        const crawlerPromises = [];
-    
-        for (let processIndex = 0; processIndex < this.nbParallelProcess; ++processIndex) {
-            const crawlerPromise = this.crawlLoopPromise();
-    
-            crawlerPromises.push(crawlerPromise);
-        }
-    
-        await Promise.all(crawlerPromises);
     }
 }
