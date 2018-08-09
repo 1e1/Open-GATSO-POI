@@ -221,6 +221,14 @@ module.exports = class Crawler {
         await this.prepare();
         await this.start();
     }
+
+    async sleep(ms) {
+        const sleepPromise = new Promise((resolve, reject) => {
+            setTimeout(resolve, ms);
+        });
+
+        await sleepPromise;
+    }
     
     kill(err) {
         console.log(err);
