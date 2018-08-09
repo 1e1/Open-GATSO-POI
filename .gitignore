@@ -78,3 +78,7 @@ typings/
 
 
 # End of https://www.gitignore.io/api/node
+SD_CARD
+BUILD
+RELEASES
+mypois-master
