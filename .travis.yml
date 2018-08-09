@@ -6,8 +6,17 @@ addons:
     update: true
     packages:
     - genisoimage
+    
+branches:
+  only:
+    - master
+    #- stable
+    #- develop
+    - travisci
 
-install:
+
+before_install:
+  - ls -al
   - cd src
   - npm install
   - cd ..
@@ -16,96 +25,99 @@ install:
   - if [ -f master.tar.gz ]; then mv master.tar.gz mypois-master.tar.gz; fi
   - tar -xzf mypois-master.tar.gz
   - rm mypois-master.tar.gz
+  - ls -al
 
-jobs:
-  include:
-    - stage: release
-      script: 
-        - rm -rf ./BUILD
-        - mkdir ./BUILD
-        - node ./src/index.js
-        - echo 'zip all_files'
-        - ls -alR ./BUILD
-        - zip -r all_files.zip BUILD
-        - echo 'zip custom_files'
-        - mkdir ./BUILD_csv ./BUILD_gpx ./BUILD_ov2
-        - cp -R ./BUILD/*.{bmp,csv} ./BUILD_csv/
-        - ls -alR ./BUILD_csv
-        - zip -r csv_files.zip BUILD_csv
-        - cp -R ./BUILD/*.{bmp,gpx} ./BUILD_gpx/
-        - ls -alR ./BUILD_gpx
-        - zip -r gpx_files.zip BUILD_gpx
-        - cp -R ./BUILD/*.{bmp,ov2} ./BUILD_ov2/
-        - ls -alR ./BUILD_ov2
-        - zip -r ov2_files.zip BUILD_ov2
-        - echo 'create specialized image'
-        - ./make_mypois.sh
-        - ls -alR ./BUILD_csv_h
-        - python ./mypois-master/mypois.py ./config.ini
-        - ls -alR ./SD_CARD
-        - zip -r sd_files.zip SD_CARD
-        - genisoimage -o sd_image.iso SD_CARD
-        - zip -r sd_image.iso.zip sd_image.iso
-        - node ./src/update_readme.js
-        - ls -al
+install:
+  - ls -al
+  ############################################
+  - rm -rf ./BUILD
+  - mkdir ./BUILD
+  - rm -rf ./RELEASES
+  - mkdir ./RELEASES
+  ############################################
+  - node ./src/build.js
+  - ls -alR ./BUILD
+  ############################################
+  - ls -al
 
-branches:
-  only:
-    - master
-    - stable
-    #- develop
-    - travisci
+before_script:
+  - ls -al
+
+script: 
+  - ls -al
+  ############################################
+  - zip -r ./RELEASES/all_files.zip ./BUILD
+  - ./make_zip.sh csv
+  - ./make_zip.sh gpx
+  - ./make_zip.sh ov2
+  - ls -alR ./RELEASES
+  ############################################
+  - ./make_mypois.sh
+  - cat ./config.ini
+  - ls -alR ./BUILD_csv_h
+  - python ./mypois-master/mypois.py ./config.ini
+  - rm ./config.ini
+  - rm -rf ./BUILD_csv_h
+  - ls -alR ./SD_CARD
+  ############################################
+  - zip -r ./RELEASES/sd_files.zip SD_CARD
+  - genisoimage -o sd_image.iso SD_CARD
+  - zip -r ./RELEASES/sd_image.iso.zip sd_image.iso
+  - ls -alR ./RELEASES
+  ############################################
+  - node ./src/update_doc.js
+  ############################################
+  - rm -rf ./mypois-master
+  ############################################
+  - ls -al
 
 before_deploy:
   - export GATSO_UPDATE_MAX=`date -d @$(cat ./BUILD/version.txt | sort -n | tail -1) +%Y-%m-%d`
   - "[[ $TRAVIS_TAG ]] || export TRAVIS_TAG=\"${TAG_PREFIX}${TRAVIS_BRANCH}.${GATSO_UPDATE_MAX}\""
   - git config --local user.name "$USER_NAME"
   - git config --local user.email "$USER_EMAIL"
-  - echo "git tag --force \"$TRAVIS_TAG\" $TRAVIS_COMMIT"
   - git tag --force "$TRAVIS_TAG" $TRAVIS_COMMIT
   - export RELEASE_DESCRIPTION=`cat ./BUILD/manifest.txt`
 
 deploy:
   - provider: releases
+    api_key: $GITHUB_TOKEN
     name: $TRAVIS_TAG
-    body: $RELEASE_DESCRIPTION
+    body: "$RELEASE_DESCRIPTION"
     overwrite: true
     tags: false
     prerelease: true
     skip_cleanup: true
-    api_key: $GITHUB_TOKEN
     file:
-      - "all_files.zip"
-      - "sd_image.iso.zip"
+      - "./RELEASES/all_files.zip"
+      - "./RELEASES/sd_image.iso.zip"
     on:
       tags: false
       branch: 
         - master
         - travisci
   - provider: releases
+    api_key: $GITHUB_TOKEN
     name: $TRAVIS_TAG
-    body: $RELEASE_DESCRIPTION
+    body: "$RELEASE_DESCRIPTION"
     overwrite: true
     prerelease: false
     skip_cleanup: true
-    api_key: $GITHUB_TOKEN
-    file:
-      - "all_files.zip"
-      - "csv_files.zip"
-      - "gpx_files.zip"
-      - "ov2_files.zip"
-      - "sd_files.zip"
-      - "sd_image.iso.zip"
+    file_glob: true
+    file: "./RELEASES/*"
     on:
       tags: true
   - provider: pages
-    name: $TRAVIS_TAG
-    skip-cleanup: true
     github-token: $GITHUB_TOKEN
-    keep-history: false
+    skip-cleanup: true
+    keep-history: true
+    #target-branch: $TRAVIS_BRANCH
     on:
       branch: 
         - master
-        - stable
-        - develop
-        - travisci
+
+after_deploy:
+  - ls -al
+
+after_script:
+  - ls -al

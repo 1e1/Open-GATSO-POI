@@ -1,0 +1,145 @@
+@import "{{ site.theme }}";
+@import url('https://fonts.googleapis.com/css?family=Roboto:300');
+
+html, 
+body {
+  color: #CCC;
+  background-color: #000;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+}
+
+.head {
+  width: 100%;
+  display: block;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: 50% 100%;
+  background-image: url(./../img/map.png);
+  color: #000;
+  text-shadow: #FEC 0 0 2px;
+}
+
+.head h1 {
+  text-align: center;
+  clear: both;
+  font-size: 100px;
+  margin: 1em;
+}
+
+.head h3 {
+  float: right;
+  clear: right;
+  margin: 1em 10%;
+}
+
+article {
+  margin: 4em auto;
+  max-width: 600px;
+}
+
+section {
+  margin: 2em 1em;
+}
+
+img, 
+section + section {
+  border-top: 1px solid #FEC;
+}
+
+fieldset,
+a,
+code {
+  color: #AAA;
+  border: 1px solid #333;
+  background-color: transparent;
+  border-radius: 0.5em;
+  padding: 2px; 
+  margin: 2px;
+  text-decoration: none;
+  flex-grow: 1;
+}
+
+section a[href$=zip]::before {
+  content: "▽";
+  margin: 2px;
+}
+
+a:hover {
+  color: #000;
+  background-color: #AAA;
+}
+
+section a[href$=zip]:hover::before {
+  content: "▼";
+}
+
+.cover img,
+.download a {
+  font-size: 1.5em;
+  margin: 0 2em; 
+  flex-grow: 1;
+}
+
+table {
+  margin: auto;
+  text-align: center;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  border: 1px solid #000;
+  background-color: #333;
+}
+
+thead td:empty,
+tfoot td:empty {
+  background-color: transparent;
+}
+
+tbody th:first-child {
+  text-align: left;
+}
+
+tfoot,
+tbody th:last-child {
+  text-align: right;
+}
+
+aside.download,
+.cover,
+footer {
+  display: flex;
+  text-align: center;
+  margin: 1em;
+  flex-wrap: nowrap;
+  align-content: stretch;
+}
+
+mark {
+  color: inherit;
+  background-color: transparent;
+}
+
+a[href^="mailto"] > * {
+  display: none;
+}
+
+a[href^="mailto"]::after {
+  content: "\0040" attr(data-domain);
+  margin-left: -3px;
+}
+
+a[href^="mailto"]::before {
+  content: "📧 " attr(data-user);
+}
+
+.octicon {
+  stroke: #999;
+  margin-top: -1em;
+}

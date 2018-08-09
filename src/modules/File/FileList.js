@@ -41,6 +41,8 @@ module.exports = class FileList {
         basenames.forEach(basename => {
             this.files[basename].addPoint(point);
         });
+
+        return this;
     }
 
     package() {

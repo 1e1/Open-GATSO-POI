@@ -1,16 +1,16 @@
-const README_FILENAME = 'readme.md';
 const BUILD_DIRECTORY = 'BUILD';
 const MANIFEST_FILENAME = 'manifest.txt';
 const VERSION_FILENAME = 'version.txt';
+const UPDATE_FILENAMES = [ './index.html', './readme.md' ];
 
 const FS = require('fs');
 const PATH = require('path');
 
 const PROJECT_PATH = PATH.resolve(__dirname, '..');
-const README_PATH = PATH.resolve(PROJECT_PATH, README_FILENAME);
 const BUILD_PATH = PATH.resolve(PROJECT_PATH, BUILD_DIRECTORY);
 const MANIFEST_PATH = PATH.resolve(BUILD_PATH, MANIFEST_FILENAME);
 const VERSION_PATH = PATH.resolve(BUILD_PATH, VERSION_FILENAME);
+const UPDATE_PATHS = UPDATE_FILENAMES.map(filename => PATH.resolve(PROJECT_PATH, filename));
 
 
 
@@ -38,7 +38,7 @@ String.prototype.replaceToken = function (name, content) {
 
 
 function getLastupdateDate(path) {
-    const timestamp = FS.readFileSync(path).toString();
+    const timestamp = FS.readFileSync(path);
     const date = new Date(timestamp * 1000);
 
     return date;
@@ -46,8 +46,8 @@ function getLastupdateDate(path) {
 
 function createMatrix(path) {
     const matrix = {};
-    const manifestContent = FS.readFileSync(path).toString();
-    const manifestLines = manifestContent.split(/\r?\n/);
+    const manifestContent = FS.readFileSync(path);
+    const manifestLines = manifestContent.toString().split(/\r?\n/);
 
     manifestLines.forEach(line => {
         if (0 < line.length) { 
@@ -141,18 +141,21 @@ function getMatrixHTML(matrix) {
 (async () => {
     const matrix = createMatrix(MANIFEST_PATH);
     const date = getLastupdateDate(VERSION_PATH);
+    const dateISO = date.toISOString();
 
     const amount = getCounterSum(matrix);
     const table = getMatrixHTML(matrix);
 
-    let readme = FS.readFileSync(README_PATH, 'utf8').toString();
+    UPDATE_PATHS.forEach(path => {
+        const input = FS.readFileSync(path, 'utf8');
+        const output = input
+            .replaceToken('VERSION', dateISO)
+            .replaceToken('AMOUNT', amount)
+            .replaceToken('MATRIX', table)
+            ;
     
-    readme = readme
-        .replaceToken('VERSION', date.toISOString())
-        .replaceToken('AMOUNT', amount)
-        .replaceToken('MATRIX', table)
-        ;
+        FS.writeFileSync(path, output);
 
-    FS.writeFileSync(README_PATH, readme);
-
+        console.log(`updated ${path} at ${dateISO}`);
+    });
 })();
