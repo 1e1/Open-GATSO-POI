@@ -40,7 +40,7 @@ String.prototype.replaceToken = function (name, content) {
 
 
 function getLastupdateDate(path) {
-    const timestamp = FS.readFileSync(path).toString();
+    const timestamp = FS.readFileSync(path);
     const date = new Date(timestamp * 1000);
 
     return date;
@@ -48,7 +48,7 @@ function getLastupdateDate(path) {
 
 function createMatrix(path) {
     const matrix = {};
-    const manifestContent = FS.readFileSync(path).toString();
+    const manifestContent = FS.readFileSync(path);
     const manifestLines = manifestContent.split(/\r?\n/);
 
     manifestLines.forEach(line => {
@@ -147,7 +147,7 @@ function getMatrixHTML(matrix) {
     const amount = getCounterSum(matrix);
     const table = getMatrixHTML(matrix);
 
-    let readme = FS.readFileSync(README_PATH, 'utf8').toString();
+    let readme = FS.readFileSync(README_PATH, 'utf8');
     
     readme = readme
         .replaceToken('VERSION', date.toISOString())
