@@ -20,4 +20,3 @@ const FORMATS = [ 'csv', 'ov2', 'gpx' ];
 
     await CRAWLER.from(options);
 })();
-
