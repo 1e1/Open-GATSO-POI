@@ -24,28 +24,49 @@ module.exports = class CrawlerFr extends CRAWLER {
         return 'FR';
     }
 
-    getMainPromise() {
+    async prepare() {
         this.entryList = [];
 
         const mainPromise = new Promise((resolve, reject) => {
             HTTPS.get(BASE_URL + LIST_PATH, (request) => {
-                let data = '';
-    
-                request.on('data', (chunk) => {
-                    data += chunk;
-                });
-    
-                request.on('end', async () => {
-                    this.entryList = this.parseList(JSON.parse(data));
-                    
-                    await this.start();
-                    
-                    resolve();
-                });
+                if (200 === request.statusCode) {
+                    let data = '';
+            
+                    request.on('data', (chunk) => {
+                        data += chunk;
+                    });
+        
+                    request.on('end', async () => {
+                        this.entryList = this.parseList(JSON.parse(data));
+                        
+                        resolve();
+                    });
+                } else {
+                    console.log('status: ' + request.statusCode);
+
+                    reject();
+                }
             });
         });
 
-        return mainPromise;
+        mainPromise.catch(err => this.kill(err));
+
+        await mainPromise;
+    }
+    
+    
+    async start() {
+        const crawlerPromises = [];
+    
+        for (let processIndex = 0; processIndex < this.nbParallelProcess; ++processIndex) {
+            const crawlerPromise = this.crawlLoopPromise();
+    
+            crawlerPromise.catch(err => this.kill(err));
+
+            crawlerPromises.push(crawlerPromise);
+        }
+    
+        await Promise.all(crawlerPromises);
     }
 
 
@@ -188,24 +209,26 @@ module.exports = class CrawlerFr extends CRAWLER {
                 console.log(this.getCode() + ' ' + entry.url + ' #' + (1 + REQUEST_RETRY - retryLeft));
     
                 HTTPS.get(entry.url, (request) => {
-                    let data = '';
-            
-                    request.on('data', (chunk) => {
-                        data += chunk;
-                    });
+                    if (200 === request.statusCode) {
+                        let data = '';
+                
+                        request.on('data', (chunk) => {
+                            data += chunk;
+                        });
+        
+                        request.on('end', () => {
+                            const json = JSON.parse(data);
+                            
+                            retryLeft = -1;
+        
+                            this.parseInfo(json, entry);
+                            resolve();
+                        });
+                    } else {
+                        console.log('status: ' + request.statusCode);
     
-                    request.on('error', (chunk) => {
-                        reject();
-                    });
-    
-                    request.on('end', () => {
-                        const json = JSON.parse(data);
-                        
-                        retryLeft = -1;
-    
-                        this.parseInfo(json, entry);
                         resolve();
-                    });
+                    }
                 });
             });
 
@@ -243,18 +266,5 @@ module.exports = class CrawlerFr extends CRAWLER {
         }
     
         return null;
-    }
-    
-    
-    async start() {
-        const crawlerPromises = [];
-    
-        for (let processIndex = 0; processIndex < this.nbParallelProcess; ++processIndex) {
-            const crawlerPromise = this.crawlLoopPromise();
-    
-            crawlerPromises.push(crawlerPromise);
-        }
-    
-        await Promise.all(crawlerPromises);
     }
 }
