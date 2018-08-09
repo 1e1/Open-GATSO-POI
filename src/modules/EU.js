@@ -243,8 +243,8 @@ module.exports = class CrawlerEu extends CRAWLER {
         const content = FS.readFileSync(csv_path, 'utf8');
         const lines = content.split(/\r?\n/);
         const line_pattern = /^(?:(-?\d*(?:\.\d*))\s*,\s*)(?:(-?\d*(?:\.\d*))\s*,\s*)(.*)$/;
-
-        lines.forEach(line => {
+        
+        for (const line of lines) {
             const lon_lat_comments = line.match(line_pattern);
 
             if (null !== lon_lat_comments) {
@@ -260,7 +260,9 @@ module.exports = class CrawlerEu extends CRAWLER {
 
                 this.parseInfo(json, entry);
             }
-        });
+
+            await this.sleep(10);
+        }
     }
 
     
