@@ -104,21 +104,22 @@ String.prototype.format = function(opts) { return this.replace(/\{([^\}]+)\}/g, 
 
 
 module.exports = class Crawler {
-
+    
     static async from(options) {
         const crawlerPromises = [];
 
         resetDirectory(OUTPUT_PATH);
         FILES.listen(options.formats);
-
+        
         options.countries.forEach(async country => {
             const launcher = require(`./${country}.js`);
             const crawler = new launcher();
 
             crawler.options = options;
 
-            const crawlerPromise = await crawler.run();
+            const crawlerPromise = crawler.run();
 
+            crawlerPromise.catch(err => crawler.kill(err));
             crawlerPromises.push(crawlerPromise);
         });
 
@@ -217,9 +218,26 @@ module.exports = class Crawler {
     }
 
     async run() {
-        return await this.getMainPromise();
+        await this.prepare();
+        await this.start();
+    }
+
+    async sleep(ms) {
+        const sleepPromise = new Promise((resolve, reject) => {
+            setTimeout(resolve, ms);
+        });
+
+        await sleepPromise;
+    }
+    
+    kill(err) {
+        console.log(err);
+
+        process.exit(1);
     }
 
     getCode() { throw "getCode() undefined" };
-    getMainPromise() { throw "getMainPromise() undefined" };
+    
+    async prepare() { throw "start() undefined" };
+    async start() { throw "start() undefined" };
 }
