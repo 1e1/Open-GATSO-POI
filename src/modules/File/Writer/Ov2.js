@@ -14,15 +14,15 @@ module.exports = class Ov2 extends WRITER {
             if (geoJsonLength > 1) {
                 switch (i) {
                     case 0: 
-                    extra += BOUND_FIRST_PREFIX;
+                    extra += this.options.zoneEntryPrefix;
                     break;
     
                     case geoJsonLength -1:
-                    extra += BOUND_LAST_PREFIX;
+                    extra += this.options.zoneExitPrefix;
                     break;
     
                     default:
-                    extra += BOUND_MIDDLE_PREFIX;
+                    extra += this.options.zoneInsidePrefix;
                 }
             }
     

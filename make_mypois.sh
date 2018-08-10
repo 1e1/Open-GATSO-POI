@@ -33,7 +33,7 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
     echo "Name=$NAME" >> config.ini
     echo 'Warning=True' >> config.ini
     echo "Source=./BUILD_csv_h/${FILENAME}_h.csv" >> config.ini
-    echo "Icon=./src/assets/${FILENAME}.png" >> config.ini
+    echo "Icon=./src/assets/icn/${FILENAME}.png" >> config.ini
     echo 'Disabled=False' >> config.ini
     echo '' >> config.ini
 done < ./BUILD/manifest.txt

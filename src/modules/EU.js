@@ -121,7 +121,7 @@ module.exports = class CrawlerEu extends CRAWLER {
 
 
     parseInfo(gatso, entry) {
-        const basenames = [];
+        const basenamesList = [];
 
         const type = this.getTypeByEntry(entry);
         const rule = this.getRuleByEntry(entry, entry.speedLimit);
@@ -134,11 +134,12 @@ module.exports = class CrawlerEu extends CRAWLER {
                 displayRules.push(rule.alert);
             }
 
-            basenames.push(rule.basename);
+            basenamesList.push(rule.basenames);
         }
     
         const displayType = this.displayTypesToString(displayTypes);
         const displayRule = this.displayRulesToString(displayRules);
+        const basenames = basenamesList.concatInside();
 
         const point = new POINT();
 
