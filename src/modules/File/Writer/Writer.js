@@ -1,8 +1,10 @@
-const BOUND_FIRST_PREFIX = '⚑ ';
-const BOUND_MIDDLE_PREFIX = '↕︎ ';
-const BOUND_LAST_PREFIX = '⚐ ';
-
 const FILE_ENCODING = 'utf8';
+
+const OPTIONS = {
+    zoneEntryPrefix: '⚑ ',
+    zoneInsidePrefix: '↕︎ ',
+    zoneExitPrefix: '⚐ ',
+};
 
 
 String.prototype.format = function(opts) { return this.replace(/\{([^\}]+)\}/g, (match, name) => opts[name]) }
@@ -27,6 +29,7 @@ module.exports = class Writer {
         this.footer = new Buffer.alloc(0);
         this.fs = null;
         this.fileEncoding = FILE_ENCODING;
+        this.options = OPTIONS;
     }
 
     open(filePath) {

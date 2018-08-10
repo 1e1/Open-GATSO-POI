@@ -53,14 +53,18 @@ function createMatrix(path) {
         if (0 < line.length) { 
             const matrix_entry = {};
             const [filename, counter, name] = line.split('/');
-            const [shortname, countryString] = name.split(' - ');
+            const [shortname, countryString] = name.split('| ');
             const countries = countryString.split(' ');
+            const shortnameClean = shortname.replace(/^[^A-Za-z0-9]*/, '');
 
             countries.forEach(country => {
                 matrix_entry[country] = parseInt(counter);
             });
 
-            matrix[shortname] = matrix_entry;
+            matrix[shortnameClean] = {
+                counters: matrix_entry,
+                filename: filename,
+            };
         }
     });
 
@@ -81,8 +85,10 @@ function getCounters(matrix) {
     const counters = {};
 
     Object.values(matrix).forEach(entry => {
-        Object.keys(entry).forEach(country => {
-            const counter = entry[country];
+        const countries = entry.counters;
+
+        Object.keys(countries).forEach(country => {
+            const counter = countries[country];
 
             if (undefined === counters[country]) {
                 counters[country] = counter;
@@ -114,11 +120,13 @@ function getMatrixHTML(matrix) {
     let tbody = '<tbody>';
     shortnames.forEach(shortname => {
         const line = matrix[shortname];
+        const filename = line.filename;
+        const img = `<img alt="${shortname}" src="./src/assets/img/${filename}_tn.png" />`;
         let counter = 0;
 
-        tbody += `<tr><th>${shortname}</th>`;
+        tbody += `<tr><th nowrap>${img} ${shortname}</th>`;
         countries.forEach(country => {
-            const _counter = line[country];
+            const _counter = line.counters[country];
 
             if (undefined === _counter) {
                 tbody += `<td></td>`;
