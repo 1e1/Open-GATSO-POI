@@ -19,7 +19,7 @@ body {
   background-size: cover;
   background-repeat: no-repeat;
   background-position: 50% 100%;
-  background-image: url(./../img/map.png);
+  background-image: url(./../img/cover.png);
   color: #000;
   text-shadow: #FEC 0 0 2px;
 }
@@ -49,6 +49,12 @@ section {
 img, 
 section + section {
   border-top: 1px solid #FEC;
+}
+
+table img {
+  border-top: 0 none;
+  height: 24px;
+  margin-bottom: -0.25em;
 }
 
 fieldset,
@@ -95,6 +101,7 @@ th,
 td {
   border: 1px solid #000;
   background-color: #333;
+  padding: 2px;
 }
 
 thead td:empty,

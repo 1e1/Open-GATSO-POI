@@ -91,7 +91,7 @@ module.exports = class CrawlerFr extends CRAWLER {
     }
 
     parseInfo(gatso, entry) {
-        const basenames = [];
+        const basenamesList = [];
         const displayTypes = [];
         const displayRules = [];
 
@@ -110,13 +110,14 @@ module.exports = class CrawlerFr extends CRAWLER {
                 if (null !== ref.alert && !displayRules.includes(rule.alert)) {
                     displayRules.push(ref.alert);
                 }
-
-                basenames.push(ref.basename);
+                
+                basenamesList.push(ref.basenames);
             }
         });
-    
+        
         const displayType = this.displayTypesToString(displayTypes);
         const displayRule = this.displayRulesToString(displayRules);
+        const basenames = basenamesList.concatInside();
     
         const point = new POINT();
 
