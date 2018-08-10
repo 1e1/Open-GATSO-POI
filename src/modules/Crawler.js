@@ -46,8 +46,9 @@ const FS = require('fs');
 const OS = require('os');
 const FILE_LIST = require('./File/FileList');
 
+const NB_PARALLEL_PROCESS_MAX = 4;
 const NB_PARALLEL_PROCESS_PER_CORE = 1;
-const NB_PARALLEL_PROCESS = OS.cpus().length * NB_PARALLEL_PROCESS_PER_CORE;
+const NB_PARALLEL_PROCESS = Math.min(NB_PARALLEL_PROCESS_MAX, OS.cpus().length * NB_PARALLEL_PROCESS_PER_CORE);
 
 const OUTPUT_DIR = './BUILD';
 const ICON_DIR = './src/assets/icn';
