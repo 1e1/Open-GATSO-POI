@@ -169,9 +169,13 @@ module.exports = class Launcher {
             const cleanFilename = basename.replace('GATSO_', '').replace('_0', '');
             const countries = file.countries.sort();
             const counter = file.size;
+            const timestamp = file.timestampMax;
+            const date = new Date(timestamp * 1000);
+            const datetimeISO = date.toISOString();
+            const dateISO = datetimeISO.substring(0, 10);
 
             const name = POI_NAME_PREFIX + cleanFilename + POI_NAME_INFO_PREFIX + countries.join(POI_NAME_INFO_SEPARATOR);
-            const line = [basename, counter, name].join('/');
+            const line = [basename, dateISO, counter, name].join('/');
 
             lines.push(line);
         });
