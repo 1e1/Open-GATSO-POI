@@ -24,8 +24,9 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
     # split filename/counter/name
     IFS='/' read -ra cells <<< "$line"
     FILENAME=${cells[0]}
-    COUNTER=${cells[1]}
-    NAME=${cells[2]}
+    DATE=${cells[1]}
+    COUNTER=${cells[2]}
+    NAME=${cells[3]}
 
     echo "Source=./BUILD_csv_h/${FILENAME}_h.csv"
 
