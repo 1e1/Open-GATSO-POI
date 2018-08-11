@@ -75,7 +75,7 @@ function getCounterSum(matrix) {
     let sum = 0;
 
     Object.values(matrix).forEach(entry => {
-        sum += Object.values(entry)[0];
+        sum += Object.values(entry.counters)[0];
     });
 
     return sum;

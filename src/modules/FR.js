@@ -130,7 +130,7 @@ module.exports = class CrawlerFr extends CRAWLER {
             .setLastUpdateTimestamp(gatso.changed)
             ;
     
-        this.fileList.addPoint(point, basenames);
+        this.storage.addPoint(this.getCode(), point, basenames);
     }
 
     getTypeById(id) {
