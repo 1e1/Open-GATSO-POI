@@ -1,6 +1,6 @@
 const WRITER = require('./Writer.js');
 
-module.exports = class Csv extends WRITER {
+module.exports = class Log extends WRITER {
 
     convertToBuffer(point) {
         const geoJsonLength = point.geoJson.length;
@@ -46,4 +46,5 @@ module.exports = class Csv extends WRITER {
     
         return Buffer.from(lines.join(''), this.fileEncoding);
     }
+
 }

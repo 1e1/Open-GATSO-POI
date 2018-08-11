@@ -152,7 +152,7 @@ module.exports = class CrawlerEu extends CRAWLER {
             .setLastUpdateTimestamp(entry.lastUpdateTimestamp)
             ;
     
-        this.fileList.addPoint(point, basenames);
+        this.storage.addPoint(this.getCode(), point, basenames);
     }
 
 
@@ -272,10 +272,6 @@ module.exports = class CrawlerEu extends CRAWLER {
             await this.crawlPromise(entry);
     
             entry = this.getEntry();
-
-            if (null !== entry) {
-                await this.sleep(123); // let writing another big file
-            }
         }
     }
     
