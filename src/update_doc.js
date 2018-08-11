@@ -52,7 +52,7 @@ function createMatrix(path) {
     manifestLines.forEach(line => {
         if (0 < line.length) { 
             const matrix_entry = {};
-            const [filename, counter, name] = line.split('/');
+            const [filename, dateISO, counter, name] = line.split('/');
             const [shortname, countryString] = name.split('| ');
             const countries = countryString.split(' ');
             const shortnameClean = shortname.replace(/^[^A-Za-z0-9]*/, '');
