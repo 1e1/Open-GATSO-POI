@@ -26,14 +26,14 @@ Daily it gives the latest set of speed cameras on the EU.
 3 methods:
 
 1. Quick (on SD Card)
-    - download the lastest [⤓](https://github.com/1e1/Garmin-Open-GATSO/releases/download/travis_master/sd_image.iso.zip)`sd_image.iso.zip` from the [releases page](https://github.com/1e1/Garmin-Open-GATSO/releases)
+    - download the lastest `sd_image.iso.zip` from the [releases page](https://github.com/1e1/Garmin-Open-GATSO/releases)
     - unzip it
     - burn it on a SD Card
     - insert the SD Card in your GPS
     - you should manually import the POI (see [howto for VW](#explanations)) 
 
 2. Official on SD Card
-    - download the lastest [⤓](https://github.com/1e1/Garmin-Open-GATSO/releases/download/travis_master/all_files.zip)`all_files.zip` from the [releases page](https://github.com/1e1/Garmin-Open-GATSO/releases)
+    - download the lastest `all_files.zip` from the [releases page](https://github.com/1e1/Garmin-Open-GATSO/releases)
     - unzip it
     - download [Garmin POI Loader](https://www8.garmin.com/support/collection.jsp?product=999-99999-12)
     - run Garmin POI Loader and let the wizard lead you
@@ -41,7 +41,7 @@ Daily it gives the latest set of speed cameras on the EU.
     - you should manually import the POI (see [howto for VW](#explanations)) 
 
 3. Official online
-    - download the lastest [⤓](https://github.com/1e1/Garmin-Open-GATSO/releases/download/travis_master/all_files.zip)`all_files.zip` from the [releases page](https://github.com/1e1/Garmin-Open-GATSO/releases)
+    - download the lastest `all_files.zip` from the [releases page](https://github.com/1e1/Garmin-Open-GATSO/releases)
     - unzip it
     - go to the website of your car maker (eg VW: https://www.volkswagen-car-net.com) (please, contact me for others links)
     - upload every CSV as new POIs
