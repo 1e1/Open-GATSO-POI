@@ -1,7 +1,7 @@
 # Open GATSO POI
 
 * Latest version: **<!-- [VERSION[ -->2018-08-10T09:03:10.000Z<!-- ]VERSION] -->**
-* Number of POIs: **<!-- [AMOUNT[ -->0[object Object][object Object][object Object][object Object][object Object][object Object][object Object][object Object][object Object][object Object][object Object][object Object][object Object][object Object][object Object][object Object][object Object]<!-- ]AMOUNT] -->**
+* Number of POIs: **<!-- [AMOUNT[ -->79635<!-- ]AMOUNT] -->**
 
 ![preview](./src/assets/img/cover.png)
 

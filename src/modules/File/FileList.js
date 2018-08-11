@@ -1,34 +1,63 @@
-const FILE = require('./File.js');
+const FILE = require('./FileMatrix.js');
 
 module.exports = class FileList {
 
     static from(directory, basenames) {
-        const files = new this();
+        const fileList = new this();
 
-        files.setBasenames(basenames, directory);
+        fileList.directory = directory;
+        fileList.setBasenames(basenames);
 
-        return files;
+        return fileList;
     }
 
     constructor() {
-        this.files = {};
+        this.directory = '';
+        this.fileList = {};
+        this.timestampMax = 0;
     }
 
-    setBasenames(basenames, directory) {
-        basenames.forEach(basename => {
-            if (undefined === this.files[basename]) {
-                const file = FILE.from(directory, basename);
+    addBasename(basename) {
+        if (undefined === this.fileList[basename]) {
+            const filePath = this.directory + '/' + basename;
+            const file = FILE.from(filePath);
 
-                this.files[basename] = file;
-            }
+            this.fileList[basename] = file;
+        }
+
+        return this;
+    }
+
+    setBasenames(basenames) {
+        basenames.forEach(basename => {
+            this.addBasename(basename);
         });
 
         return this;
     }
 
-    listen(formats) {
-        Object.values(this.files).forEach(file => {
+    foreachUniqueFiles(callback) {
+        const filePaths = [];
+
+        Object.values(this.fileList).forEach(file => {
+            Object.values(file.pointers).forEach(pointer => {
+                const filePath = pointer.filePath;
+
+                if (!filePaths.includes(filePath)) {
+                    filePaths.push(filePath);
+
+                    callback(pointer);
+                }
+            });
+        });
+
+        return this;
+    }
+
+    open(sources, formats) {
+        Object.values(this.fileList).forEach(file => {
             file
+                .setSources(sources)
                 .setFormats(formats)
                 .open()
                 ;
@@ -37,44 +66,46 @@ module.exports = class FileList {
         return this;
     }
 
-    addPoint(point, basenames) {
+    addPoint(source, point, basenames) {
         basenames.forEach(basename => {
-            this.files[basename].addPoint(point);
+            this.fileList[basename].addPoint(source, point);
         });
 
         return this;
     }
 
-    package() {
-        let timestampMax = 0;
+    close() {
+        Object.values(this.fileList).forEach(file => {
+            file
+                .close()
+                .clean()
+                .package()
+                ;
 
-        for (let basename in this.files) {
-            const file = this.files[basename];
-
-            file.close();
-
-            timestampMax = Math.max(timestampMax, file.timestampMax);
-
-            if (0 === file.getSize()) {
-                file.delete();
-
-                delete this.files[basename];
-            }
+            this.timestampMax = Math.max(this.timestampMax, file.timestampMax);
 
             console.log(file.toString());
-        }
+        });
 
-        return timestampMax;
+        return this;
     }
 
-    getBasenames() {
-        const basenames = Object.keys(this.files);
+    getSizedBasenames() {
+        const basenames = [];
+
+        for (const basename in this.fileList) {
+            const file = this.fileList[basename];
+
+            if (0 !== file.size) {
+                basenames.push(basename);
+            }
+        }
 
         return basenames;
     }
 
     toString() {
-        return Object.values(this.files).join("\n");
+        return Object.values(this.fileList).join("\n");
     }
 
 }

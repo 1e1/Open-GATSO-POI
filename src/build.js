@@ -1,13 +1,13 @@
-const CRAWLER = require('./modules/Crawler.js');
+const LAUNCHER = require('./modules/Launcher.js');
 
-const COUNTRIES = [ 'FR', 'EU' ];
+const SOURCES = [ 'FR', 'EU' ];
 const FORMATS = [ 'csv', 'ov2', 'gpx' ];
 
 
 (async () => {
     const formats = process.argv.slice(2);
     const options = {
-        countries: COUNTRIES,
+        sources: SOURCES,
         formats: [],
         isTruck: false,
     };
@@ -18,5 +18,11 @@ const FORMATS = [ 'csv', 'ov2', 'gpx' ];
         options.formats = formats.filter(format => FORMATS.includes(format));
     }
 
-    await CRAWLER.from(options);
+    const launcher = LAUNCHER.from(options);
+
+    launcher.prepare();
+
+    await launcher.runSingle();
+
+    launcher.package();
 })();
