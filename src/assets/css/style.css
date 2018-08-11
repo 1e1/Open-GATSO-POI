@@ -39,7 +39,7 @@ body {
 
 article {
   margin: 4em auto;
-  max-width: 600px;
+  max-width: 800px;
 }
 
 section {
@@ -86,9 +86,12 @@ section a[href$=zip]:hover::before {
 
 .cover img,
 .download a {
-  font-size: 1.5em;
   margin: 0 2em; 
   flex-grow: 1;
+}
+
+.download a {
+  font-size: 1.5em;
 }
 
 table {
@@ -120,12 +123,43 @@ tbody th:last-child {
 
 aside.download,
 .cover,
+.package,
+.set,
 footer {
   display: flex;
   text-align: center;
   margin: 1em;
+  padding: 0;
   flex-wrap: nowrap;
   align-content: stretch;
+  list-style: none;
+}
+
+.package {
+  text-align: left;
+  margin-left: 2px;
+  margin-right: 2px;
+}
+
+.package > fieldset {
+  flex-grow: 1;
+  margin: 2px;
+}
+
+.set {
+  flex-direction: column;
+  flex-wrap: wrap;
+  max-height: 128px;
+  border-radius: 4px;
+  background-color: #333;
+}
+
+.set > img {
+  flex-grow: 0;
+  width: 24px;
+  height: 24px;
+  border: none;
+  margin: 2px;
 }
 
 mark {
