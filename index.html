@@ -5,11 +5,52 @@
         <title>Open GATSO POI</title>
         <meta name="viewport" content="width=device-width, initial-scale=1"/>
         <link rel="icon" href="./src/assets/icn/GATSO_ALL.png" type="image/png"/>
-        <link rel="stylesheet" href="./src/assets/css/style.css?v=1"/>
+        <link rel="stylesheet" href="./src/assets/css/style.css?v=2"/>
+        <script type="text/javascript">
+            Node.prototype.firstPrevious = function(nodeName) {
+                var previousNode = this;
+                while (previousNode = previousNode.previousSibling) {
+                    if (nodeName.toUpperCase() === previousNode.nodeName.toUpperCase()) {
+                        return previousNode;
+                    }
+                }
+
+                return null;
+            }
+
+            window.addEventListener('load', function(ev) {
+                var tutimgs = document.querySelectorAll('*[data-tutimg]');
+
+                tutimgs.forEach(function(node) {
+                    var filename = node.dataset.tutimg;
+                    var parent = node;
+                    var img = null;
+                    
+                    while (parent = parent.parentNode) {
+                        img = parent.firstPrevious('img');
+                        if (img) {
+                            break;
+                        }
+                    }
+                    
+                    var src = img.src;
+                    var p = src.lastIndexOf('/');
+                    var path = src.substring(0, p+1) + filename;
+                    
+                    node.addEventListener('click', function(evt) {
+                        img.src = path;
+
+                        return false;
+                    });
+
+                    node.style.cursor = 'pointer';
+                });
+            });
+        </script>
     </head>
     <body>
         <div class="head">
-            <h3>Latest version: <!-- [VERSION[ -->2018-08-10T09:03:10.000Z<!-- ]VERSION] --></h3>
+            <h3>Latest version: <!-- [VERSION[ -->2018-08-10<!-- ]VERSION] --></h3>
             <h3>Number of POIs: <!-- [AMOUNT[ -->79635<!-- ]AMOUNT] --></h3>
             <h1>Open GATSO POI</h1>
         </div>
@@ -105,7 +146,7 @@
             </section>
 
             <div class="cover">
-                <img alt="VW website" src="./src/assets/img/ScreenShot2018-08-01at11.10.13.png" />
+                <img alt="VW website" src="./src/assets/img/carnet.png" />
             </div>
 
             <section>
@@ -157,20 +198,25 @@
 
             <section>
                 <h2>explanations</h2>
+                It is interactive, you can click on the buttons in the text.
 
                 <h3>VW Discover Media</h3>
+                <img alt="tuto" src="./src/assets/man/off.jpg"/>
                 <ul>
-                    <li>press the <span class="button">NAV</span> button</li>
+                    <li>press the <span class="button" data-tutimg="screen_eu.jpg">NAV</span> button</li>
                     <li>insert the SD Card into the second card connector of your GPS</li>
-                    <li>select <span class="menu">Configuration</span></li>
-                    <li>select <span class="menu">Gérer la mémoire</span></li>
-                    <li>select <span class="menu">Mise à jour my POI</span></li>
-                    <li>waiting for <span class="menu">Logiciel de mise à jour disponible</span> then press *mise à jour* then press *suivant*</li>
-                    <li>while it terminated, press the <span class="button">NAV</span> button</li>
-                    <li>select <span class="menu">Carte</span></li>
-                    <li>select <span class="menu">Afficher les POI</span></li>
-                    <li>select <span class="menu">Afficher les catégories</span></li>
+                    <li>select <span class="menu" data-tutimg="settings.jpg">Configuration</span></li>
+                    <li>select <span class="menu" data-tutimg="storage.jpg">Gérer la mémoire</span></li>
+                    <li>select <span class="menu" data-tutimg="update.jpg">Mettre à jour mes destinations spéciales</span></li>
+                    <li>waiting for <span class="menu">Logiciel de mise à jour disponible</span>then press <span class="menu" data-tutimg="updating.jpg">mise à jour</span> then press <span class="menu" data-tutimg="updated.jpg">Continuer</span></li>
+                    <li>while it terminated, press the <span class="button" data-tutimg="screen_eu.jpg">NAV</span> button</li>
+                    <li>select <span class="menu" data-tutimg="settings.jpg">Configuration</span></li>
+                    <li>select <span class="menu" data-tutimg="map.jpg">Carte</span></li>
+                    <li>select <span class="menu" data-tutimg="check.jpg">Afficher les POI</span></li>
+                    <li>select <span class="menu" data-tutimg="checking.jpg">Sélectionner catégories de destinations spéciales</span></li>
                     <li>scroll down to GATSO and check which POI you want</li>
+                    <li><span class="check" data-tutimg="checked.jpg">check</span> your POIs</li>
+                    <li>press the <span class="button" data-tutimg="screen_eu.jpg">NAV</span> button</li>
                     <li>enjoy</li>
                 </ul>
             </section>
@@ -178,6 +224,7 @@
         </article>
         
         <footer>
+            <img alt="version" src="./version.svg" />
             <a alt="fork me on github" href="https://github.com/1e1/Open-GATSO-POI/">
                 <svg height="24" class="octicon octicon-mark-github" viewBox="0 0 16 16" version="1.1" width="24" aria-hidden="true">
                     <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z">

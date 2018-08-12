@@ -1,7 +1,7 @@
 const BUILD_DIRECTORY = 'BUILD';
 const MANIFEST_FILENAME = 'manifest.txt';
 const VERSION_FILENAME = 'version.txt';
-const UPDATE_FILENAMES = [ './index.html', './readme.md' ];
+const UPDATE_FILENAMES = [ './index.html', './readme.md', './version.svg' ];
 
 const FS = require('fs');
 const PATH = require('path');
@@ -149,7 +149,8 @@ function getMatrixHTML(matrix) {
 (async () => {
     const matrix = createMatrix(MANIFEST_PATH);
     const date = getLastupdateDate(VERSION_PATH);
-    const dateISO = date.toISOString();
+    const datetimeISO = date.toISOString();
+    const dateISO = datetimeISO.substring(0, 10);
 
     const amount = getCounterSum(matrix);
     const table = getMatrixHTML(matrix);

@@ -1,6 +1,6 @@
 # Open GATSO POI
 
-* Latest version: **<!-- [VERSION[ -->2018-08-10T09:03:10.000Z<!-- ]VERSION] -->**
+* Latest version: **<!-- [VERSION[ -->2018-08-10<!-- ]VERSION] -->**
 * Number of POIs: **<!-- [AMOUNT[ -->79635<!-- ]AMOUNT] -->**
 
 ![preview](./src/assets/img/cover.png)
@@ -22,7 +22,7 @@ Daily it gives the latest set of speed cameras on the EU.
 
 ## installation
 
-![VW website](./src/assets/img/ScreenShot2018-08-01at11.10.13.png)
+![VW website](./src/assets/img/carnet.png)
 3 methods:
 
 1. Quick (on SD Card)
@@ -116,10 +116,12 @@ REST service from:
 > - select *Mise à jour my POI*
 > - waiting for *Logiciel de mise à jour disponible* then press *mise à jour* then press *suivant*
 > - while it terminated, press the **NAV** button
+> - select *Configuration*
 > - select *Carte*
 > - select *Afficher les POI*
 > - select *Afficher les catégories*
 > - scroll down to GATSO and check which POI you want
+> - press the **NAV** button
 > - enjoy
 
 #### others
@@ -128,4 +130,5 @@ REST service from:
 
 ---
 
+![version](https://raw.githubusercontent.com/1e1/Open-GATSO-POI/gh-pages/version.svg)
 ![Travis CI](https://api.travis-ci.org/1e1/Open-GATSO-POI.svg?branch=master)
