@@ -122,6 +122,7 @@ REST service from:
 > - select *Afficher les catégories*
 > - scroll down to GATSO and check which POI you want
 > - press the **NAV** button
+> - remove your SD Card
 > - enjoy
 
 #### others
