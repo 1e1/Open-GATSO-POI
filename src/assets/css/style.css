@@ -46,7 +46,7 @@ section {
   margin: 2em 1em;
 }
 
-img, 
+article img, 
 section + section {
   border-top: 1px solid #FEC;
 }
@@ -183,6 +183,30 @@ a[href^="mailto"]::after {
 
 a[href^="mailto"]::before {
   content: "📧 " attr(data-user);
+}
+
+.button,
+.menu {
+  font-family: mono;
+  padding: 2px;
+}
+
+.button {
+  text-transform: uppercase;
+  border-radius: 2px;
+  color: #AAA;
+  background-color: #333;
+}
+
+.menu {
+  border: 1px solid #000;
+  color: #000;
+  background-color: #AAA;
+}
+
+.check {
+  border: 1px solid #AAA;
+  color: #AAA;
 }
 
 .octicon {
