@@ -22,20 +22,26 @@ module.exports = class Crawler {
         this.storage = null;
     }
 
-    getType(name) {
-        if (undefined === CONFIG.types[name]) {
-            throw "undefined CONFIG.types." + name;
+    getConfig(section, name) {
+        const output = CONFIG[section][name];
+
+        if (undefined === output) {
+            throw `undefined CONFIG.${section}.${name}`;
         }
 
-        return CONFIG.types[name];
+        return output;
+    }
+
+    getType(name) {
+        return this.getConfig('types', name);
     }
 
     getRule(name) {
-        if (undefined === CONFIG.rules[name]) {
-            throw "undefined CONFIG.rules." + name;
-        }
+        return this.getConfig('rules', name);
+    }
 
-        return CONFIG.rules[name];
+    getService(name) {
+        return this.getConfig('services', name);
     }
 
     displayTypesToString(displayTypes) {
@@ -50,6 +56,10 @@ module.exports = class Crawler {
         const min = displayRules.reduce((min,val) => Math.min(min,val));
 
         return '' + min;
+    }
+
+    displayServicesToString(displayServices) {
+        return displayServices.join(' ');
     }
 
     async run() {
