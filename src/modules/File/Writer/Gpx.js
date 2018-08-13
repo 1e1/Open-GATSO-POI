@@ -63,7 +63,7 @@ module.exports = class Gpx extends WRITER {
                 const rtept = '<trkpt lon="{lon}" lat="{lat}"></trkpt>'.format({
                     lon: point.geoJson[i][0],
                     lat: point.geoJson[i][1],
-                    title: (title + extra.trim()).escapeXml(),
+                    title: (title + extra).trim().escapeXml(),
                     desc: point.description.escapeXml(),
                 });
     

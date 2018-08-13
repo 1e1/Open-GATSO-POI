@@ -8,11 +8,12 @@ const POINT = require('./POI.js');
 
 HTTPS.globalAgent.options.rejectUnauthorized = false;
 
+const COUNTRY_CODE = 'FR';
 const REQUEST_RETRY = 5;
 
 
 
-module.exports = class CrawlerFr extends CRAWLER {
+module.exports = class CrawlerGatsoFR extends CRAWLER {
     
     constructor() {
         super();
@@ -21,7 +22,7 @@ module.exports = class CrawlerFr extends CRAWLER {
     }
 
     getCode() {
-        return 'FR';
+        return 'gatso-FR';
     }
 
     async prepare() {
@@ -122,7 +123,7 @@ module.exports = class CrawlerFr extends CRAWLER {
         const point = new POINT();
 
         point
-            .setCountry(this.getCode())
+            .setCountry(COUNTRY_CODE)
             .setGeoJson(entry.geoJson)
             .setType(displayType)
             .setRule(displayRule)

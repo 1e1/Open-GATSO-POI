@@ -37,7 +37,7 @@ String.prototype.unescapeCsv = function() {
 }
 
 
-module.exports = class CrawlerEu extends CRAWLER {
+module.exports = class CrawlerGatsoEU extends CRAWLER {
     
     constructor() {
         super();
@@ -46,7 +46,7 @@ module.exports = class CrawlerEu extends CRAWLER {
     }
 
     getCode() {
-        return 'EU';
+        return 'gatso-EU';
     }
 
     async prepare() {
@@ -71,34 +71,17 @@ module.exports = class CrawlerEu extends CRAWLER {
 
         const mainPromise = new Promise((resolve, reject) => {
             HTTPS.get(options, (request) => {
-                if (200 === request.statusCode) {
-                    request.pipe(zip_file);
-                } else {
-                    console.log('status: ' + request.statusCode);
-
-                    reject();
-                }
-                
-                request.on('error', function (err) {
-                    console.error('[ERROR]', err); 
-                    FS.unlink(zip_path);
-
-                    reject();
-                });
-                
-                request.on('end', async () => {
-                    zip_file.end();
-
-                    await this.unzip(zip_path, lastUpdateTimestamp);
-                    
-                    resolve();
-                });
+                request.pipe(zip_file).on('close', resolve);
             });
         });
 
         mainPromise.catch(err => this.kill(err));
 
         await mainPromise;
+        
+        zip_file.end();
+
+        await this.unzip(zip_path, lastUpdateTimestamp);
     }
     
     

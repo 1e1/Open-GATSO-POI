@@ -35,7 +35,7 @@ module.exports = class Log extends WRITER {
             const data = {
                 longitude: lng_lat[0],
                 latitude: lng_lat[1],
-                name: (title + extra.trim()).escapeCsv(),
+                name: (title + extra).trim().escapeCsv(),
                 comment: point.description.escapeCsv(),
             };
          

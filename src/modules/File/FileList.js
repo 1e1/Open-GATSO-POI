@@ -67,8 +67,10 @@ module.exports = class FileList {
     }
 
     addPoint(source, point, basenames) {
-        basenames.forEach(basename => {
-            this.fileList[basename].addPoint(source, point);
+        basenames.forEach((basename, index) => {
+            if (index === basenames.indexOf(basename)) {
+                this.fileList[basename].addPoint(source, point);
+            }
         });
 
         return this;
