@@ -8,6 +8,7 @@
   "author": "1e1",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.18.0",
     "node-stream-zip": "^1.7.0"
   }
 }

@@ -24,7 +24,7 @@ const VERSION_PATH = PATH.resolve(__dirname, '../..', OUTPUT_DIR, 'version.txt')
 const OUTPUT_PATH = PATH.resolve(__dirname, '../..', OUTPUT_DIR);
 const ICON_PATH = PATH.resolve(__dirname, '../..', ICON_DIR);
 
-const BASENAMES_LIST = Object.values(CONFIG.rules).map(rule => rule.basenames);
+const BASENAMES_LIST = [Object.values(CONFIG.rules), Object.values(CONFIG.services)].concatInside().map(rule => rule.basenames);
 const BASENAMES = BASENAMES_LIST.concatInside().unique();
 
 
@@ -166,7 +166,12 @@ module.exports = class Launcher {
 
         basenames.forEach(basename => {
             const file = this.storage.fileList[basename];
-            const cleanFilename = basename.replace('GATSO_', '').replace('_0', '');
+            let cleanFilename = basename
+                .replace('GATSO_', '')
+                .replace('_0', '')
+                .replace('FUEL_', '')
+                ;
+
             const countries = file.countries.sort();
             const counter = file.size;
             const timestamp = file.timestampMax;
@@ -174,6 +179,10 @@ module.exports = class Launcher {
             const datetimeISO = date.toISOString();
             const dateISO = datetimeISO.substring(0, 10);
 
+            if ('ALL' === cleanFilename) {
+                cleanFilename = basename.split('_', 2).join(' ');
+            }
+            
             const name = POI_NAME_PREFIX + cleanFilename + POI_NAME_INFO_PREFIX + countries.join(POI_NAME_INFO_SEPARATOR);
             const line = [basename, dateISO, counter, name].join('/');
 

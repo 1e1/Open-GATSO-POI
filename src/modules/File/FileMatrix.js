@@ -162,27 +162,29 @@ module.exports = class FileMatrix {
     }
 
     package() {
-        this.formats.forEach(format => {
-            const filePath = this.getFullFilePath(format);
-            const pointer = POINTER.from(filePath);
+        if (0 !== this.size) {
+            this.formats.forEach(format => {
+                const filePath = this.getFullFilePath(format);
+                const pointer = POINTER.from(filePath);
 
-            pointer.open();
-            pointer.addHeader();
+                pointer.open();
+                pointer.addHeader();
 
-            this.sources.forEach(source => {
-                const key = this.makeKey(source, format);
-                const file = this.pointers[key];
+                this.sources.forEach(source => {
+                    const key = this.makeKey(source, format);
+                    const file = this.pointers[key];
 
-                if (undefined !== file) {
-                    const part = FS.readFileSync(file.filePath);
+                    if (undefined !== file) {
+                        const part = FS.readFileSync(file.filePath);
 
-                    FS.writeSync(pointer.fs, part);
-                }
+                        FS.writeSync(pointer.fs, part);
+                    }
+                });
+
+                pointer.addFooter();
+                pointer.close();
             });
-
-            pointer.addFooter();
-            pointer.close();
-        });
+        }
 
         this.delete();
 

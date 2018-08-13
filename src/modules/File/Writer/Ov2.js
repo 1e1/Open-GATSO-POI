@@ -30,7 +30,7 @@ module.exports = class Ov2 extends WRITER {
                 extra += point.rule;
             }
     
-            const title = point.type + extra.trim();
+            const title = (point.type + extra).trim();
     
             const data = {
                 longitude: Math.round(lng_lat[0] * 100000),

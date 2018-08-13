@@ -29,5 +29,18 @@ rules: {
     traffic_light: { label: 'Franchissement de feux', type: 'redlight', alert: null, filter: true, basenames: [ 'GATSO_ALL', 'GATSO_stop_0', 'GATSO_redlight_0' ] },
     railroad: { label: 'Franchissement de voie ferrée', type: 'redlight', alert: null, filter: true, basenames: [ 'GATSO_ALL', 'GATSO_stop_0', 'GATSO_railway_0' ] },
     tunnel: { label: 'Franchissement de tunnel', type: 'unknown', alert: null, filter: true, basenames: [ 'GATSO_ALL', 'GATSO_speed_0', 'GATSO_tunnel_0' ] },
+},
+
+services: {
+    gazole: { label: 'Gazole', type: 'gazo', basenames: [ 'FUEL_ALL', 'FUEL_gazole' ] },
+    e10: { label: 'E10', type: 'e10', basenames: [ 'FUEL_ALL', 'FUEL_petrol', 'FUEL_e10' ] },
+    sp95: { label: 'SP95', type: 'sp95', basenames: [ 'FUEL_ALL', 'FUEL_petrol', 'FUEL_sp95' ] },
+    e85: { label: 'E85', type: 'e85', basenames: [ 'FUEL_ALL', 'FUEL_petrol', 'FUEL_e85' ] },
+    sp98: { label: 'SP98', type: 'sp98', basenames: [ 'FUEL_ALL', 'FUEL_petrol', 'FUEL_sp98' ] },
+    gpl: { label: 'GPL', type: 'gpl', basenames: [ 'FUEL_ALL', 'FUEL_gaz', 'FUEL_gpl' ] },
+    gnv: { label: 'GNV', type: 'gnv', basenames: [ 'FUEL_ALL', 'FUEL_gaz', 'FUEL_gnv' ] },
+    electricity: { label: 'Bornes électriques', type: 'elec', basenames: [ 'FUEL_ALL', 'FUEL_electricity' ] },
+    pressure: { label: 'Station de gonflage', type:'tyre', basenames: [ 'FUEL_pressure' ]  },
+    adblue: { label: 'Carburant additivé', type:'adblue', basenames: [ 'FUEL_ALL', 'FUEL_adblue' ]  },
 }
 }
