@@ -42,5 +42,19 @@ services: {
     electricity: { label: 'Bornes électriques', type: 'elec', basenames: [ 'FUEL_ALL', 'FUEL_electricity' ] },
     pressure: { label: 'Station de gonflage', type:'tyre', basenames: [ 'FUEL_pressure' ]  },
     adblue: { label: 'Carburant additivé', type:'adblue', basenames: [ 'FUEL_ALL', 'FUEL_adblue' ]  },
-}
+},
+
+basenameToString: (basename) => {
+    const cleanFilename = basename
+        .replace('GATSO_', '')
+        .replace('_0', '')
+        .replace('FUEL_', '')
+        ;
+    
+    switch (cleanFilename) {
+        case 'ALL': return basename.split('_', 2).join(' ');
+    }
+    
+    return cleanFilename;
+},
 }
