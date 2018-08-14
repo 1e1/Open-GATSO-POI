@@ -100,7 +100,7 @@ section a[href$=zip]:hover::before {
 }
 
 table {
-  margin: auto;
+  margin: 2em auto;
   text-align: center;
   border-collapse: collapse;
 }
@@ -108,8 +108,22 @@ table {
 th,
 td {
   border: 1px solid #000;
-  background-color: #333;
+}
+
+th,
+th span,
+td {
   padding: 2px;
+  background-color: #333;
+}
+
+thead th {
+  text-align: left;
+  transform: rotate(-45deg);
+  max-width: 2em;
+  text-overflow: visible;
+  white-space: nowrap;
+  
 }
 
 thead td:empty,
