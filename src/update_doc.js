@@ -5,6 +5,7 @@ const UPDATE_FILENAMES = [ './index.html', './readme.md', './version.svg' ];
 
 const FS = require('fs');
 const PATH = require('path');
+const CONFIG = require('./modules/config.js');
 
 const PROJECT_PATH = PATH.resolve(__dirname, '..');
 const BUILD_PATH = PATH.resolve(PROJECT_PATH, BUILD_DIRECTORY);
@@ -44,7 +45,7 @@ function getLastupdateDate(path) {
     return date;
 };
 
-function createMatrix(path) {
+function createCountryMatrix(path) {
     const matrix = {};
     const manifestContent = FS.readFileSync(path);
     const manifestLines = manifestContent.toString().split(/\r?\n/);
@@ -69,6 +70,40 @@ function createMatrix(path) {
     });
 
     return matrix;
+}
+
+function createConfigMatrix(config) {
+    const matrix = {};
+
+    for (const key in config) {
+        const line = config[key];
+        const header = key; // line.label;
+        
+        if (undefined === line.filter || true === line.filter) {
+            line.basenames.forEach(basename => {
+                const shortnameClean = CONFIG.basenameToString(basename);
+
+                if (undefined === matrix[shortnameClean]) {
+                    matrix[shortnameClean] = {
+                        counters: {},
+                        filename: basename,
+                    }
+                }
+                
+                matrix[shortnameClean].counters[key] = 1;
+            });
+        }
+    }
+
+    return matrix;
+}
+
+function createGatsoMatrix() {
+    return createConfigMatrix(CONFIG.rules);
+}
+
+function createServiceMatrix() {
+    return createConfigMatrix(CONFIG.services);
 }
 
 function getCounterSum(matrix) {
@@ -101,21 +136,27 @@ function getCounters(matrix) {
     return counters;
 }
 
-function getMatrixHTML(matrix) {
+function getMatrixHTML(matrix, hasCounter) {
     const counters = getCounters(matrix);
     const countries = Object.keys(counters).sort();
     const shortnames = Object.keys(matrix);
 
     let thead = '<thead><tr><td></td>';
-    let tfoot = '<thead><tr><td></td>';
+    let tfoot = '<tfoot><tr><td></td>';
     countries.forEach(country => {
         const counter = counters[country];
 
-        thead += `<th>${country}</th>`;
+        thead += `<th><span>${country}</span></th>`;
         tfoot += `<th>${counter}</th>`;
     });
-    thead += '<td></td></tr></thead>';
-    tfoot += '<td></td></tr></thead>';
+
+    if (true === hasCounter) {
+        thead += '<td></td>';
+        tfoot += '<td></td>';
+    }
+
+    thead += '</tr></thead>';
+    tfoot += '</tr></tfoot>';
 
     let tbody = '<tbody>';
     shortnames.forEach(shortname => {
@@ -136,10 +177,17 @@ function getMatrixHTML(matrix) {
             }
         });
 
-        tbody += `<th>${counter}</th></tr>`;
+        if (true === hasCounter) {
+            tbody += `<th>${counter}</th>`;
+        }
+
+        tbody += '</tr>';
     });
     tbody += '</tbody>';
 
+    if (true !== hasCounter) {
+        tfoot = '';
+    }
 
     const table = `<table>${thead}${tbody}${tfoot}</table>`;
 
@@ -147,20 +195,26 @@ function getMatrixHTML(matrix) {
 }
 
 (async () => {
-    const matrix = createMatrix(MANIFEST_PATH);
+    const countryMatrix = createCountryMatrix(MANIFEST_PATH);
     const date = getLastupdateDate(VERSION_PATH);
+    const gatsoMatrix = createGatsoMatrix();
+    const serviceMatrix = createServiceMatrix();
     const datetimeISO = date.toISOString();
     const dateISO = datetimeISO.substring(0, 10);
 
-    const amount = getCounterSum(matrix);
-    const table = getMatrixHTML(matrix);
+    const amount = getCounterSum(countryMatrix);
+    const countryTable = getMatrixHTML(countryMatrix, true);
+    const gatsoTable = getMatrixHTML(gatsoMatrix, false);
+    const serviceTable = getMatrixHTML(serviceMatrix, false);
 
     UPDATE_PATHS.forEach(path => {
         const input = FS.readFileSync(path, 'utf8');
         const output = input
             .replaceToken('VERSION', dateISO)
             .replaceToken('AMOUNT', amount)
-            .replaceToken('MATRIX', table)
+            .replaceToken('X_COUNTRY', countryTable)
+            .replaceToken('X_GATSO', gatsoTable)
+            .replaceToken('X_SERVICE', serviceTable)
             ;
     
         FS.writeFileSync(path, output);
