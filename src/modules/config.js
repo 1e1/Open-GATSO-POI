@@ -52,7 +52,7 @@ basenameToString: (basename) => {
         ;
     
     switch (cleanFilename) {
-        case 'ALL': return basename.split('_', 2).join(' ');
+        case 'ALL': return basename.split('_', 1).join(' ');
     }
     
     return cleanFilename;
