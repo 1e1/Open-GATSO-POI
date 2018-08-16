@@ -29,7 +29,7 @@ module.exports = class Csv extends WRITER {
             }
     
             if (point.rule) { 
-                extra += point.rule;
+                extra += '@' + point.rule;
             }
     
             const data = {
