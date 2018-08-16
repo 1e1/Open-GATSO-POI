@@ -16,6 +16,7 @@ branches:
 
 
 before_install:
+  - printenv
   - ls -al
   - cd src
   - npm install

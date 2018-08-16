@@ -34,7 +34,7 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
         const options = {
             responseType: 'stream',
             maxRedirects: 6,
-            httpsAgent: new https.Agent({ 
+            httpsAgent: new HTTPS.Agent({ 
                 keepAlive: true, 
                 rejectUnauthorized: false,
             }),
