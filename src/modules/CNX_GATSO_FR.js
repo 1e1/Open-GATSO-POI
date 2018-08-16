@@ -108,7 +108,7 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
             const ref = this.getRuleById(rule.tid);
             
             if (true === ref.filter) {
-                if (null !== ref.alert && !displayRules.includes(rule.alert)) {
+                if (null !== ref.alert && !displayRules.includes(ref.alert)) {
                     displayRules.push(ref.alert);
                 }
                 
@@ -120,7 +120,7 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
             const ref = this.getRuleById('');
             
             if (true === ref.filter) {
-                if (null !== ref.alert && !displayRules.includes(rule.alert)) {
+                if (null !== ref.alert && !displayRules.includes(ref.alert)) {
                     displayRules.push(ref.alert);
                 }
                 
