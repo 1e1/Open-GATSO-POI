@@ -10,7 +10,7 @@ const HTTPS = require('https');
 const CRAWLER = require('./Crawler.js');
 const POINT = require('./POI.js');
 
-HTTPS.globalAgent.options.rejectUnauthorized = false;
+//HTTPS.globalAgent.options.rejectUnauthorized = false;
 
 const COUNTRY_CODE = 'FR';
 const WORKSPACE = FS.mkdtempSync(PATH.join(OS.tmpdir(), 'roulez-eco-'));
@@ -31,6 +31,14 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
     async prepare() {
         const zip_path = PATH.join(WORKSPACE, 'source.zip');
         const zip_file = FS.createWriteStream(zip_path, { encoding: null });
+        const options = {
+            responseType: 'stream',
+            maxRedirects: 6,
+            httpsAgent: new https.Agent({ 
+                keepAlive: true, 
+                rejectUnauthorized: false,
+            }),
+        };
         
         zip_file.on('error', function(err) {
             console.error('[ERROR]', err); 
@@ -42,7 +50,7 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
         
         const mainPromise = new Promise((resolve, reject) => {
             AXIOS
-                .get(SOURCE_URL, {responseType:'stream'})
+                .get(SOURCE_URL, options)
                 .then(function(response) {
                     response.data.pipe(zip_file).on('close', resolve);
                 });
