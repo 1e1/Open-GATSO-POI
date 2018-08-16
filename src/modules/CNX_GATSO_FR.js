@@ -115,6 +115,18 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
                 basenamesList.push(ref.basenames);
             }
         });
+
+        if (0 === basenamesList.length) {
+            const ref = this.getRuleById('');
+            
+            if (true === ref.filter) {
+                if (null !== ref.alert && !displayRules.includes(rule.alert)) {
+                    displayRules.push(ref.alert);
+                }
+                
+                basenamesList.push(ref.basenames);
+            }
+        }
         
         const displayType = this.displayTypesToString(displayTypes);
         const displayRule = this.displayRulesToString(displayRules);
@@ -198,6 +210,9 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
 
             case '17':
             return this.getRule('railroad');
+
+            case '':
+            return this.getRule('empty');
         }
 
         throw `unknown rule id=${id}`;
