@@ -1,7 +1,7 @@
 # Open GATSO POI
 
-* Latest version: **<!-- [VERSION[ -->2018-08-13<!-- ]VERSION] -->**
-* Number of POIs: **<!-- [AMOUNT[ -->141316<!-- ]AMOUNT] -->**
+* Number of POIs: **<!-- [AMOUNT[ -->141316<!-- ]AMOUNT] -->** @ **<!-- [VERSION[ -->2018-08-13<!-- ]VERSION] -->**
+* Get the latest build on the [website](https://1e1.github.io/Open-GATSO-POI/)
 
 ![preview](./src/assets/img/cover.png)
 
