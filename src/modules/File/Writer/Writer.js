@@ -1,9 +1,9 @@
 const FILE_ENCODING = 'utf8';
 
 const OPTIONS = {
-    zoneEntryPrefix: '⚑ ',
-    zoneInsidePrefix: '↕︎ ',
-    zoneExitPrefix: '⚐ ',
+    zoneEntryPrefix: '! ',
+    zoneInsidePrefix: '= ',
+    zoneExitPrefix: '! ',
 };
 
 
