@@ -11,6 +11,7 @@ types: {
 },
 
 rules: { 
+    empty: { label: 'Sur toute la longueur de cet itinéraire, il peut y avoir de un à plusieurs radars, de plusieurs types.', type: 'unknown', alert: 0, filter: true, basename: [ 'GATSO_ALL', 'GATSO_unknown_0' ] },
     car30: { label: 'Vitesse VL 30', type: 'speed', alert: 30, filter: true, basenames: [ 'GATSO_ALL', 'GATSO_speed_0', 'GATSO_30' ] },
     car40: { label: 'Vitesse VL 40', type: 'speed', alert: 50, filter: true, basenames: [ 'GATSO_ALL', 'GATSO_speed_0', 'GATSO_40' ] },
     car50: { label: 'Vitesse VL 50', type: 'speed', alert: 50, filter: true, basenames: [ 'GATSO_ALL', 'GATSO_speed_0', 'GATSO_50' ] },
