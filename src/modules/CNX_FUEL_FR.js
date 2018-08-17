@@ -237,8 +237,8 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
         const gasName_pattern = /<prix\b([^>]*)>/gmi;
 
         pdvs.forEach(pdv => {
-            const longitudes = pdv.match(longitude_pattern);
-            const latitudes = pdv.match(latitude_pattern);
+            const longitudes = pdv.match(longitude_pattern) || [ 0 ];
+            const latitudes = pdv.match(latitude_pattern) || [ 0 ];
             const serviceNames = pdv.match(serviceName_pattern) || [];
             const gasNodes = pdv.match(gasName_pattern) || [];
 

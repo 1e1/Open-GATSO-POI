@@ -191,7 +191,9 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
             unzip.on('entry', (entry) => {
                 const infos = entry.name.match(FILE_PATTERN);
 
-                if (null !== infos) {
+                if (null === infos) {
+                    console.log('REJECT', entry.name);
+                } else {
                     const file = {
                         filename: entry.name,
                         country: infos[1].toUpperCase(),
