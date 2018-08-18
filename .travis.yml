@@ -22,7 +22,7 @@ before_install:
   - npm install
   - cd ..
   - pip install --user configparser pandas pillow
-  - wget -O=mypois-master.tar.gz https://github.com/jimmyH/mypois/archive/master.tar.gz
+  - curl -sSL -D - 'https://github.com/jimmyH/mypois/archive/master.tar.gz' -o mypois-master.tar.gz
   - tar -xzf mypois-master.tar.gz
   - rm mypois-master.tar.gz
   - ls -al
