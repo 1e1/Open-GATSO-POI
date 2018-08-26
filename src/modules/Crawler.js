@@ -66,6 +66,12 @@ module.exports = class Crawler {
         await this.prepare();
         await this.start();
     }
+
+    async sleep(ms) {
+        return new Promise(resolve => {
+            setTimeout(resolve, ms);
+        });
+    }
     
     kill(err) {
         console.log(err);
