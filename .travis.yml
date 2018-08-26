@@ -110,7 +110,7 @@ deploy:
   - provider: pages
     github-token: $GITHUB_TOKEN
     skip-cleanup: true
-    keep-history: true
+    keep-history: false
     #target-branch: $TRAVIS_BRANCH
     on:
       branch: 
