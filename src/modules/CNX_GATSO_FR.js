@@ -10,6 +10,7 @@ HTTPS.globalAgent.options.rejectUnauthorized = false;
 
 const COUNTRY_CODE = 'FR';
 const REQUEST_RETRY = 5;
+const WAITING_TIME_ON_ERROR = 5000;
 
 
 
@@ -225,8 +226,9 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
             const request = new Promise((resolve, reject) => {
                 console.log(this.getCode() + ' ' + entry.url + ' #' + (1 + REQUEST_RETRY - retryLeft));
     
-                HTTPS.get(entry.url, (request) => {
-                    if (200 === request.statusCode) {
+                HTTPS.get(entry.url, async (request) => {
+                    switch (request.statusCode) {
+                        case 200: 
                         let data = '';
                 
                         request.on('data', (chunk) => {
@@ -241,7 +243,12 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
                             this.parseInfo(json, entry);
                             resolve();
                         });
-                    } else {
+                        break;
+
+                        case 503:
+                        await this.sleep(WAITING_TIME_ON_ERROR);
+
+                        default: 
                         console.log('status: ' + request.statusCode);
     
                         resolve();
