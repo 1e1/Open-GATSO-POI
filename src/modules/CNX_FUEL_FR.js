@@ -1,4 +1,5 @@
-const SOURCE_URL = 'https://donnees.roulez-eco.fr/opendata/instantane';
+const BASE_URL = 'https://donnees.roulez-eco.fr/opendata';
+const INFO_PATH = '/instantane';
 // doc: https://www.prix-carburants.gouv.fr/rubrique/opendata/
 
 const PATH = require('path');
@@ -33,6 +34,7 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
         const zip_path = PATH.join(WORKSPACE, 'source.zip');
         const zip_file = FS.createWriteStream(zip_path, { encoding: null });
         const options = {
+            baseURL: BASE_URL,
             responseType: 'stream',
             maxRedirects: 6,
             httpsAgent: new HTTPS.Agent({ 
@@ -48,14 +50,14 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
         });
 
         console.log(zip_path);
-        console.log(SOURCE_URL);
+        console.log(BASE_URL + INFO_PATH);
 
         let retryLeft = REQUEST_RETRY;
         
         do {
             const request = new Promise((resolve, reject) => {
                 axios
-                    .get(SOURCE_URL)
+                    .get(INFO_PATH)
                     .then(response => {
                         response.data
                             .pipe(zip_file)
