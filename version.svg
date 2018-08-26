@@ -14,6 +14,6 @@
         <text y="15" fill="#010101" fill-opacity=".3" x="25">version</text>
         <text y="14" x="25">version</text>
         <text y="15" fill="#010101" fill-opacity=".3" x="88"><!-- [VERSION[ -->?<!-- ]VERSION] --></text>
-        <text y="14" x="88"><!-- [VERSION[ -->2018-08-16<!-- ]VERSION] --></text>
+        <text y="14" x="88"><!-- [VERSION[ -->2018-08-26<!-- ]VERSION] --></text>
     </g>
 </svg>
