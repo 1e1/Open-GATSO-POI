@@ -13,6 +13,7 @@ const POINT = require('./POI.js');
 //HTTPS.globalAgent.options.rejectUnauthorized = false;
 
 const COUNTRY_CODE = 'FR';
+const REQUEST_RETRY = 5;
 const WORKSPACE = FS.mkdtempSync(PATH.join(OS.tmpdir(), 'roulez-eco-'));
 
 
@@ -39,6 +40,7 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
                 rejectUnauthorized: false,
             }),
         };
+        const axios = AXIOS.create(options);
         
         zip_file.on('error', function(err) {
             console.error('[ERROR]', err); 
@@ -47,18 +49,34 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
 
         console.log(zip_path);
         console.log(SOURCE_URL);
+
+        let retryLeft = REQUEST_RETRY;
         
-        const mainPromise = new Promise((resolve, reject) => {
-            AXIOS
-                .get(SOURCE_URL, options)
-                .then(function(response) {
-                    response.data.pipe(zip_file).on('close', resolve);
-                });
-        });
+        do {
+            const request = new Promise((resolve, reject) => {
+                axios
+                    .get(SOURCE_URL)
+                    .then(response => {
+                        response.data
+                            .pipe(zip_file)
+                            .on('close', () => {
+                                retryLeft = -1;
 
-        mainPromise.catch(err => this.kill(err));
+                                resolve();
+                            });
+                    })
+                    .catch(ignore => null);
+            });
 
-        await mainPromise;
+            request.catch(ignore => null);
+
+            await request;
+
+        } while (0 < --retryLeft);
+
+        if (0 === retryLeft) {
+            throw `can not get ${entry.url}`;
+        }
 
         await this.unzip(zip_path);
     }
