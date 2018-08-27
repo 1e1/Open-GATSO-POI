@@ -1,6 +1,6 @@
 const LAUNCHER = require('./modules/Launcher.js');
 
-const SOURCES = [ 'CNX_GATSO_FR', 'CNX_GATSO_EU', 'CNX_FUEL_FR' ];
+const SOURCES = [ 'CNX_FUEL_FR', 'CNX_GATSO_EU', 'CNX_GATSO_FR' ];
 const FORMATS = [ 'csv', 'ov2', 'gpx' ];
 
 
