@@ -136,6 +136,7 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
             ;
     
         this.storage.addPoint(this.getCode(), point, basenames);
+        this.addTimestamp(entry.lastUpdateTimestamp);
     }
 
 

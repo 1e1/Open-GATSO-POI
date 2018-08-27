@@ -18,11 +18,18 @@ const FORMATS = [ 'csv', 'ov2', 'gpx' ];
         options.formats = formats.filter(format => FORMATS.includes(format));
     }
 
-    const launcher = LAUNCHER.from(options);
+    try {
+        const launcher = LAUNCHER.from(options);
 
-    launcher.prepare();
+        launcher.prepare();
 
-    await launcher.runSingle();
+        await launcher.runSingle();
 
-    launcher.package();
-})();
+        launcher.package();
+    } catch (err) {
+        console.log('~~~~~~~~~');
+        console.log(err);
+
+        process.exit(1);
+    }
+ })();
