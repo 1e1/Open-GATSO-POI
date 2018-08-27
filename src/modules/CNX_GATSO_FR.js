@@ -145,6 +145,7 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
             ;
     
         this.storage.addPoint(this.getCode(), point, basenames);
+        this.addTimestamp(gatso.changed);
     }
 
     getTypeById(id) {

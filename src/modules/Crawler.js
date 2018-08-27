@@ -20,6 +20,13 @@ module.exports = class Crawler {
         this.nbParallelProcess = NB_PARALLEL_PROCESS;
         
         this.storage = null;
+        this.timestampMax = 0;
+    }
+
+    addTimestamp(timestamp) {
+        this.timestampMax = Math.max(this.timestampMax, timestamp);
+
+        return this;
     }
 
     getConfig(section, name) {
