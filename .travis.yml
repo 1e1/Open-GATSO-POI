@@ -85,7 +85,6 @@ deploy:
     name: $TRAVIS_TAG
     #body: "$RELEASE_DESCRIPTION" # https://github.com/travis-ci/dpl/issues/155
     overwrite: true
-    tags: false
     prerelease: true
     skip_cleanup: true
     file:
