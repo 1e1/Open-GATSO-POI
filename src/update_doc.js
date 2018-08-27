@@ -1,7 +1,8 @@
 const BUILD_DIRECTORY = 'BUILD';
 const MANIFEST_FILENAME = 'manifest.txt';
 const VERSION_FILENAME = 'version.txt';
-const UPDATE_FILENAMES = [ './index.html', './readme.md', './version.svg' ];
+const VERSIONS_FILENAME = 'versions.txt';
+const UPDATE_FILENAMES = [ './index.html', './readme.md', './version.svg', './version-{source}.svg' ];
 
 const FS = require('fs');
 const PATH = require('path');
@@ -11,6 +12,7 @@ const PROJECT_PATH = PATH.resolve(__dirname, '..');
 const BUILD_PATH = PATH.resolve(PROJECT_PATH, BUILD_DIRECTORY);
 const MANIFEST_PATH = PATH.resolve(BUILD_PATH, MANIFEST_FILENAME);
 const VERSION_PATH = PATH.resolve(BUILD_PATH, VERSION_FILENAME);
+const VERSIONS_PATH = PATH.resolve(BUILD_PATH, VERSIONS_FILENAME);
 const UPDATE_PATHS = UPDATE_FILENAMES.map(filename => PATH.resolve(PROJECT_PATH, filename));
 
 
@@ -35,6 +37,28 @@ String.prototype.replaceToken = function (name, content) {
 
     return this;
 }
+String.prototype.replaceAllToken = function (name, content) {
+    const tokenStart = `<!-- [${name}[ -->`;
+    const tokenEnd = `<!-- ]${name}] -->`;
+    const tokenStartLength = tokenStart.length;
+
+    let string = this;
+    let start = string.length;
+    let end = string.lastIndexOf(tokenEnd, start);
+
+    while (-1 !== end) {
+        start = string.lastIndexOf(tokenStart, end);
+
+        if (-1 !== start) {
+            string = string.substring(0, start + tokenStartLength)
+                .concat(content, string.substring(end));
+        }
+
+        end = string.lastIndexOf(tokenEnd, start);
+    }
+
+    return string;
+}
 
 
 
@@ -44,6 +68,25 @@ function getLastupdateDate(path) {
 
     return date;
 };
+
+function getVersions(path) {
+    const versions = {};
+    const versionsContent = FS.readFileSync(path);
+    const versionsLines = versionsContent.toString().split(/\r?\n/);
+
+    versionsLines.forEach(line => {
+        const cleanLine = line.trim();
+        const [code, timestamp] = cleanLine.split(' ', 2);
+        const date = new Date(timestamp * 1000);
+
+        if (undefined !== timestamp) {
+            versions[code] = date;
+        }
+    });
+
+    return versions;
+};
+
 
 function createCountryMatrix(path) {
     const matrix = {};
@@ -194,31 +237,58 @@ function getMatrixHTML(matrix, hasCounter) {
     return table;
 }
 
+function replaceIntoFile(path, replacements) {
+    let content = FS.readFileSync(path, 'utf8');
+
+    for (let token in replacements) {
+        const value = replacements[token];
+
+        content = content.replaceAllToken(token, value);
+    }
+
+    FS.writeFileSync(path, content);
+
+    console.log(`updated ${path} at ${replacements.VERSION}`);
+}
+
 (async () => {
     const countryMatrix = createCountryMatrix(MANIFEST_PATH);
     const date = getLastupdateDate(VERSION_PATH);
+    const versions = getVersions(VERSIONS_PATH);
     const gatsoMatrix = createGatsoMatrix();
     const serviceMatrix = createServiceMatrix();
-    const datetimeISO = date.toISOString();
-    const dateISO = datetimeISO.substring(0, 10);
+    const dateISO = date.toISOString().substring(0, 10);
 
     const amount = getCounterSum(countryMatrix);
     const countryTable = getMatrixHTML(countryMatrix, true);
     const gatsoTable = getMatrixHTML(gatsoMatrix, false);
     const serviceTable = getMatrixHTML(serviceMatrix, false);
 
-    UPDATE_PATHS.forEach(path => {
-        const input = FS.readFileSync(path, 'utf8');
-        const output = input
-            .replaceToken('VERSION', dateISO)
-            .replaceToken('AMOUNT', amount)
-            .replaceToken('X_COUNTRY', countryTable)
-            .replaceToken('X_GATSO', gatsoTable)
-            .replaceToken('X_SERVICE', serviceTable)
-            ;
-    
-        FS.writeFileSync(path, output);
+    const replacements = {
+        VERSION: dateISO,
+        AMOUNT: amount,
+        X_COUNTRY: countryTable,
+        X_GATSO: gatsoTable,
+        X_SERVICE: serviceTable,
+    }
 
-        console.log(`updated ${path} at ${dateISO}`);
+    for (let key in versions) {
+        const _date = versions[key];
+        const _key = 'V_' + key;
+        const _dateISO = _date.toISOString().substring(0, 10);
+
+        replacements[_key] = _dateISO;
+    }
+
+    UPDATE_PATHS.forEach(path => {
+        if (-1 === path.indexOf('{source}')) {
+            replaceIntoFile(path, replacements);
+        } else {
+            Object.keys(versions).forEach(key => {
+                const realPath = path.replace('{source}', key);
+                
+                replaceIntoFile(realPath, replacements);
+            });
+        }
     });
 })();

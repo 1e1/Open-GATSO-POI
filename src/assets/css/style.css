@@ -161,6 +161,10 @@ footer {
   list-style: none;
 }
 
+footer > * {
+  margin: 0 1em;
+}
+
 .package {
   text-align: left;
   margin-left: 2px;
