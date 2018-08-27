@@ -21,6 +21,7 @@ const POI_NAME_INFO_PREFIX = '| ';
 const POI_NAME_INFO_SEPARATOR = ' ';
 const MANIFEST_PATH = PATH.resolve(__dirname, '../..', OUTPUT_DIR, 'manifest.txt');
 const VERSION_PATH = PATH.resolve(__dirname, '../..', OUTPUT_DIR, 'version.txt');
+const VERSIONS_PATH = PATH.resolve(__dirname, '../..', OUTPUT_DIR, 'versions.txt');
 const OUTPUT_PATH = PATH.resolve(__dirname, '../..', OUTPUT_DIR);
 const ICON_PATH = PATH.resolve(__dirname, '../..', ICON_DIR);
 
@@ -80,6 +81,10 @@ module.exports = class Launcher {
         this.storage = FILE_LIST.from(OUTPUT_PATH, BASENAMES);
     }
 
+    getSources() {
+        return this.crawlers.map(crawler => crawler.getCode());
+    }
+
     prepare() {
         this.resetDirectory(OUTPUT_PATH);
         
@@ -97,7 +102,7 @@ module.exports = class Launcher {
 
     async runParallel() {
         const crawlerPromises = [];
-        const sources = this.crawlers.map(crawler => crawler.getCode());
+        const sources = this.getSources();
 
         this.storage.open(sources, this.options.formats);
         
@@ -116,7 +121,7 @@ module.exports = class Launcher {
     }
 
     async runSingle() {
-        const sources = this.crawlers.map(crawler => crawler.getCode());
+        const sources = this.getSources();
 
         this.storage.open(sources, this.options.formats);
         
@@ -132,9 +137,15 @@ module.exports = class Launcher {
     package() {
         const mypoisConfiguration = this.getMypoisConfiguration();
         const timestampMax = this.storage.timestampMax;
-        
+        const versions = {};
+
+        this.crawlers.forEach(crawler => {
+            versions[crawler.getCode()] = crawler.timestampMax;
+        });
+
         this.copyAssets();
         this.generateVersion(timestampMax);
+        this.generateVersions(versions);
         this.generateManifest(mypoisConfiguration);
 
         return this;
@@ -188,6 +199,18 @@ module.exports = class Launcher {
         const fs = FS.openSync(VERSION_PATH, 'a');
 
         FS.writeSync(fs, timestampMax + "\n");
+        FS.closeSync(fs);
+    }
+
+    generateVersions(versions) {
+        const fs = FS.openSync(VERSIONS_PATH, 'a');
+
+        for (let key in versions) {
+            const line = `${key} ${versions[key]}`;
+
+            FS.writeSync(fs, line + "\n");
+        }
+
         FS.closeSync(fs);
     }
 

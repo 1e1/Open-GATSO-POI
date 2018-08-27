@@ -15,6 +15,7 @@ const POINT = require('./POI.js');
 
 const COUNTRY_CODE = 'FR';
 const REQUEST_RETRY = 5;
+const WAITING_TIME_ON_ERROR = 5000;
 const WORKSPACE = FS.mkdtempSync(PATH.join(OS.tmpdir(), 'roulez-eco-'));
 
 
@@ -32,7 +33,6 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
 
     async prepare() {
         const zip_path = PATH.join(WORKSPACE, 'source.zip');
-        const zip_file = FS.createWriteStream(zip_path, { encoding: null });
         const options = {
             baseURL: BASE_URL,
             responseType: 'stream',
@@ -43,22 +43,23 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
             }),
         };
         const axios = AXIOS.create(options);
-        
-        zip_file.on('error', function(err) {
-            console.error('[ERROR]', err); 
-            FS.unlink(zip_path);
-        });
-
-        console.log(zip_path);
-        console.log(BASE_URL + INFO_PATH);
 
         let retryLeft = REQUEST_RETRY;
         
         do {
+            if (retryLeft !== REQUEST_RETRY) {
+                this.sleep(WAITING_TIME_ON_ERROR);
+            }
+
+            console.log(zip_path);
+            console.log(BASE_URL + INFO_PATH + ' #' + (1 + REQUEST_RETRY - retryLeft));
+
             const request = new Promise((resolve, reject) => {
                 axios
                     .get(INFO_PATH)
                     .then(response => {
+                        const zip_file = FS.createWriteStream(zip_path, { encoding: null });
+
                         response.data
                             .pipe(zip_file)
                             .on('close', () => {
@@ -67,7 +68,7 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
                                 resolve();
                             });
                     })
-                    .catch(ignore => null);
+                    .catch(ignore => resolve);
             });
 
             request.catch(ignore => null);
@@ -77,7 +78,7 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
         } while (0 < --retryLeft);
 
         if (0 === retryLeft) {
-            throw `can not get ${entry.url}`;
+            throw `can not get ${BASE_URL + INFO_PATH}`;
         }
 
         await this.unzip(zip_path);
@@ -145,6 +146,7 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
             ;
     
         this.storage.addPoint(this.getCode(), point, basenames);
+        this.addTimestamp(lastUpdateTimestamp);
     }
 
 
