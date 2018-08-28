@@ -83,9 +83,9 @@ zip -r sd_image.iso.zip sd_image.iso
 
 ### Speed Camera
 REST service from:
-* ![version](https://raw.githubusercontent.com/1e1/Open-GATSO-POI/gh-pages/version-gatso-FR.svg?sanitize=true) https://radars.securite-routiere.gouv.fr/ 
-* ![version](https://raw.githubusercontent.com/1e1/Open-GATSO-POI/gh-pages/version-gatso-EU.svg?sanitize=true) https://lufop.net/zones-de-danger-france-et-europe-asc-et-csv/
-* ![version](https://raw.githubusercontent.com/1e1/Open-GATSO-POI/gh-pages/version-fuel-FR.svg?sanitize=true) https://www.prix-carburants.gouv.fr/rubrique/opendata/
+* ![version GATSO FR](https://raw.githubusercontent.com/1e1/Open-GATSO-POI/gh-pages/cnx/gatso-FR.svg?sanitize=true) https://radars.securite-routiere.gouv.fr/ 
+* ![version GATSO EU](https://raw.githubusercontent.com/1e1/Open-GATSO-POI/gh-pages/cnx/gatso-EU.svg?sanitize=true) https://lufop.net/zones-de-danger-france-et-europe-asc-et-csv/
+* ![version FUEL FR](https://raw.githubusercontent.com/1e1/Open-GATSO-POI/gh-pages/cnx/fuel-FR.svg?sanitize=true) https://www.prix-carburants.gouv.fr/rubrique/opendata/
 
 ### GFX tool
 * draw 24x24 icons on https://www.piskelapp.com/
