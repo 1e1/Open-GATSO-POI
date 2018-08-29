@@ -195,7 +195,7 @@ function getMatrixHTML(matrix, hasCounter) {
 
     if (true === hasCounter) {
         thead += '<td></td>';
-        tfoot += '<td></td>';
+        tfoot += '<td>#</td>';
     }
 
     thead += '</tr></thead>';
