@@ -8,7 +8,7 @@ const OPTIONS = {
 
 
 String.prototype.format = function(opts) { return this.replace(/\{([^\}]+)\}/g, (match, name) => opts[name]) }
-String.prototype.escapeCsv = function() { return '"' + this.replace(/"/g,'\\"') + '"' }
+String.prototype.escapeCsv = function() { return '"' + this.replace(/"/g,'\\"').replace(/,/g,';') + '"' }
 String.prototype.escapeAttribute = function() { return '"' + this.replace(/"/g,'\\"') + '"' }
 String.prototype.escapeXml = function() { return '<![CDATA[' + this.replace(/"/g,'\\"') + ']]>' }
 
