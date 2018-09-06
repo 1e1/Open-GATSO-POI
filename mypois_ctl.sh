@@ -23,7 +23,11 @@ _install()
     curl -sSL -D - 'https://github.com/jimmyH/mypois/archive/master.tar.gz' -o $MYPOIS_GZ_PATH
     tar -xzf $MYPOIS_GZ_PATH -C $MYPOIS_PATH
     rm $MYPOIS_GZ_PATH
+}
 
+
+_get_version()
+{
     CMD='gdate'
 
     if [ ! `command -v $CMD` ]
@@ -38,6 +42,7 @@ _install()
 
     echo $MYPOIS_MODIFICATION_TIMESTAMP > $MYPOIS_TS_PATH
 }
+
 
 _clean()
 {
@@ -58,6 +63,11 @@ _run()
 
 _update_version()
 {
+    if [ ! -f $MYPOIS_TS_PATH ]
+    then
+      _update_version
+    fi 
+
     MYPOIS_MODIFICATION_TIMESTAMP=`cat $MYPOIS_TS_PATH`
 
     echo "$MYPOIS_MODIFICATION_TIMESTAMP < $MYPOIS_TS_PATH"
@@ -149,6 +159,7 @@ do
     ;;
   "-i"|"--install")
     _install
+    _get_version
     ;;
   "-c"|"--clean")
     _clean
