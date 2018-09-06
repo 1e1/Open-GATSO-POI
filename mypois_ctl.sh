@@ -21,7 +21,7 @@ __() { echo $1 >> $CONFIG_PATH; }
 _install()
 {
     curl -sSL -D - 'https://github.com/jimmyH/mypois/archive/master.tar.gz' -o $MYPOIS_GZ_PATH
-    tar -xzf $MYPOIS_GZ_PATH -C $MYPOIS_PATH
+    tar -xzf $MYPOIS_GZ_PATH -C $BASE_DIR
     rm $MYPOIS_GZ_PATH
 }
 
@@ -58,7 +58,12 @@ _run()
       rm -rf $OUTPUT_PATH
     fi
 
-    python $MYPOIS_EXEC $CONFIG_PATH
+    RESULT=`python $MYPOIS_EXEC $CONFIG_PATH | tail -n 1`
+
+    if [ $RESULT != 'done' ]
+    then
+      exit 1
+    fi
 }
 
 _update_version()
@@ -148,23 +153,23 @@ _make_config()
 for opt in "$@"
 do
   case $opt in
-  "-cfg"|"--make-config")
+  "make-config")
     _make_config
     ;;
-  "-u"|"--update-version")
+  "update-version")
     _update_version
     ;;
-  "-x"|"--run")
+  "run")
     _run
     ;;
-  "-i"|"--install")
+  "install")
     _install
     _get_version
     ;;
-  "-c"|"--clean")
+  "clean")
     _clean
     ;;
-  *|"--make")
+  "make")
     _make_config
     _run
     _update_version
