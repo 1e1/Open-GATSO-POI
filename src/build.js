@@ -32,4 +32,6 @@ const FORMATS = [ 'csv', 'ov2', 'gpx' ];
 
         process.exit(1);
     }
+
+    console.log("done");
  })();

@@ -11,7 +11,7 @@ branches:
   only:
     - master
     #- stable
-    #- develop
+    - develop
     - travisci
 
 
@@ -30,23 +30,21 @@ install:
 before_script:
   - ls -al
   ############################################
-  - bash ./make.sh --init
+  - ./make.sh --install
   ############################################
   - ls -al
 
 script: 
   - ls -al
   ############################################
-  - bash ./make.sh --make
-  ############################################
-  - ls -al
-  ############################################
-  - bash ./make.sh --image
+  - ./make.sh --run --image
   ############################################
   - ls -al
 
 before_deploy:
-  - bash ./make.sh --clean
+  - ls -al
+  ############################################
+  - ./make.sh --clean
   ############################################
   - ls -al
   ############################################
@@ -56,6 +54,8 @@ before_deploy:
   - git config --local user.email "$USER_EMAIL"
   #- git tag --force "$TRAVIS_TAG" $TRAVIS_COMMIT
   - export RELEASE_DESCRIPTION=`cat ./BUILD/manifest.txt`
+  ############################################
+  - ls -al
 
 deploy:
   - provider: releases
