@@ -25,14 +25,14 @@ make_zip()
 
 _init()
 {
-    [ ! -d $BUILD_PATH ] && mkdir $BUILD_PATH
-    [ ! -d $RELEASES   ] && mkdir $RELEASES
+    [ ! -d $BUILD_PATH   ] && mkdir $BUILD_PATH
+    [ ! -d $RELEASE_PATH ] && mkdir $RELEASE_PATH
 }
 
 
 _install()
 {
-    bash $BASE_DIR/mypois_ctl.sh --install
+    $BASE_DIR/mypois_ctl.sh install
 }
 
 
@@ -40,7 +40,7 @@ _clean()
 {
     [ -d $BUILD_PATH ] && rm -rf $BUILD_PATH
 
-    bash $BASE_DIR/mypois_ctl.sh --clean
+    $BASE_DIR/mypois_ctl.sh clean
 }
 
 
@@ -62,13 +62,19 @@ _release()
 
 _unrelease()
 {
-    [ -d $RELEASES   ] && rm -rf $RELEASES
+    [ -d $RELEASE_PATH ] && rm -rf $RELEASE_PATH
 }
 
 
 _mount()
 {
-    bash $BASE_DIR/mypois_ctl.sh --make
+    $BASE_DIR/mypois_ctl.sh make
+    
+    rc=$?
+    if [ $rc != 0 ]
+    then
+      exit $rc
+    fi
 }
 
 
@@ -81,7 +87,7 @@ _image()
         CMD='mkisofs'
     fi
 
-    genisoimage -o $BUILD_PATH/sd_image.iso $MOUNT_PATH
+    $CMD -o $BUILD_PATH/sd_image.iso $MOUNT_PATH
     zip -r $RELEASE_PATH/sd_image.iso.zip $BUILD_PATH/sd_image.iso
     rm -f $BUILD_PATH/sd_image.iso
 }
@@ -89,55 +95,69 @@ _image()
 
 _update_doc()
 {
-    bash $BASE_DIR/mypois_ctl.sh --update-version
+    $BASE_DIR/mypois_ctl.sh update-version
     node $BASE_DIR/src/update_doc.js
 }
 
 
-for opt in "$@"
-do
-  case $opt in
-  "--init")
-    _init
-    ;;
-  "-i"|"--install")
-    _init
-    _install
-    ;;
-  "-c"|"--clean")
-    _clean
-    ;;
-  "--unrelease")
-    _unrelease
-    ;;
-  "-b"|"--build")
-    _build
-    ;;
-  "-z"|"--release")
-    _release
-    ;;
-  "-sd"|"--mount")
-    _mount
-    _update_doc
-    ;;
-  "-iso"|"--image")
-    _image
-    ;;
-  "-doc"|"--update-doc")
-    _update_doc
-    ;;
-  "--standalone")
-    _init
-    _build
-    _unrelease
-    _release
-    _mount
-    _update_doc
-    ;;
-  *|"--make")
-    _build
-    _release
-    _mount
-    _update_doc
-  esac
-done
+_run()
+{
+  _build
+  _release
+  _mount
+  _update_doc
+}
+
+
+if [ "$#" -gt 0 ]
+then
+  for opt in "$@"
+  do
+    case $opt in
+    "--init")
+      _init
+      ;;
+    "--install")
+      _init
+      _install
+      ;;
+    "--clean")
+      _clean
+      ;;
+    "--unrelease")
+      _unrelease
+      ;;
+    "--build")
+      _build
+      ;;
+    "--release")
+      _release
+      ;;
+    "--mount")
+      _mount
+      _update_doc
+      ;;
+    "--image")
+      _image
+      ;;
+    "--update-doc")
+      _update_doc
+      ;;
+    "--run")
+      _run
+      ;;
+    "--standalone")
+      _init
+      _build
+      _unrelease
+      _release
+      _mount
+      _update_doc
+      ;;
+    esac
+  done
+
+  ls -al
+else
+  _run
+fi
