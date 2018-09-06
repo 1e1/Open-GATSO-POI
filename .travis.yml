@@ -22,56 +22,34 @@ before_install:
   - npm install
   - cd ..
   - pip install --user configparser pandas pillow
-  - curl -sSL -D - 'https://github.com/jimmyH/mypois/archive/master.tar.gz' -o mypois-master.tar.gz
-  - tar -xzf mypois-master.tar.gz
-  - rm mypois-master.tar.gz
   - ls -al
 
 install:
   - ls -al
-  ############################################
-  - rm -rf ./BUILD
-  - mkdir ./BUILD
-  - rm -rf ./RELEASES
-  - mkdir ./RELEASES
-  ############################################
-  - node ./src/build.js
-  - ls -alR ./BUILD
-  ############################################
-  - ls -al
 
 before_script:
+  - ls -al
+  ############################################
+  - bash make.sh --init
+  ############################################
   - ls -al
 
 script: 
   - ls -al
   ############################################
-  - zip -r ./RELEASES/all_files.zip ./BUILD
-  - ./make_zip.sh csv
-  - ./make_zip.sh gpx
-  - ./make_zip.sh ov2
-  - ls -alR ./RELEASES
+  - bash make.sh --make
   ############################################
-  - ./make_mypois.sh
-  - cat ./config.ini
-  - ls -alR ./BUILD_csv_h
-  - python ./mypois-master/mypois.py ./config.ini
-  - rm ./config.ini
-  - rm -rf ./BUILD_csv_h
-  - ls -alR ./SD_CARD
+  - ls -al
   ############################################
-  - zip -r ./RELEASES/sd_files.zip SD_CARD
-  - genisoimage -o sd_image.iso SD_CARD
-  - zip -r ./RELEASES/sd_image.iso.zip sd_image.iso
-  - ls -alR ./RELEASES
-  ############################################
-  - node ./src/update_doc.js
-  ############################################
-  - rm -rf ./mypois-master
+  - bash make.sh --image
   ############################################
   - ls -al
 
 before_deploy:
+  - bash make.sh --clean
+  ############################################
+  - ls -al
+  ############################################
   - export GATSO_UPDATE_MAX=`date -d @$(cat ./BUILD/version.txt | sort -n | tail -1) +%Y-%m-%d`
   - "[[ $TRAVIS_TAG ]] || export TRAVIS_TAG=\"${TAG_PREFIX}${TRAVIS_BRANCH}.${GATSO_UPDATE_MAX}\""
   - git config --local user.name "$USER_NAME"
