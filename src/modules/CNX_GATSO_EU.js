@@ -50,19 +50,13 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
     }
 
     async prepare() {
+        const lastUpdateTimestamps = await this.getLastUpdateTimestamps();
+        const lastUpdateTimestamp = lastUpdateTimestamps.reduce((min,val) => Math.max(min,val));
+
         let zip_path = this.options.cache + '.zip';
-        let lastUpdateTimestamp;
 
-        if (FS.existsSync(zip_path)) {
-            const stat = FS.statSync(zip_path);
-            const mtime = stat.mtime;
-            const mDate = new Date(mtime);
-            const timestamp = mDate.getTime();
-
-            lastUpdateTimestamp = Math.trunc(timestamp / 1000);
-        } else {
+        if (!FS.existsSync(zip_path)) {
             zip_path = PATH.join(WORKSPACE, 'source.zip');
-            lastUpdateTimestamp = this.downloadSource(zip_path);
         }
         
         await this.unzip(zip_path, lastUpdateTimestamp);
@@ -83,10 +77,6 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
         console.log(zip_path);
         console.log(SOURCE_URL);
 
-        await this.addLastUpdateTimestampsInto(lastUpdateTimestamps);
-        
-        const lastUpdateTimestamp = lastUpdateTimestamps.reduce((min,val) => Math.max(min,val));
-
         const mainPromise = new Promise((resolve, reject) => {
             HTTPS.get(options, (request) => {
                 request.pipe(zip_file).on('close', resolve);
@@ -98,8 +88,6 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
         await mainPromise;
         
         zip_file.end();
-
-        return lastUpdateTimestamp;
     }
     
     
@@ -295,9 +283,13 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
     }
 
 
-    async addLastUpdateTimestampsInto(timestamps) {
+    async getLastUpdateTimestamps() {
+        const timestamps = [];
         const options = URL.parse(META_URL);
-        options.headers = { 'User-Agent': 'Mozilla/5.0' };
+
+        options.headers = { 
+            'User-Agent': 'Mozilla/5.0',
+         };
 
         const requestPromise = new Promise((resolve, reject) => {
             HTTPS.get(options, (request) => {
@@ -329,5 +321,7 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
         });
 
         await requestPromise;
+
+        return timestamps;
     }
 }
