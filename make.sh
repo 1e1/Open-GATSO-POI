@@ -37,15 +37,15 @@ cache_dl()
 
 _cache()
 {
-    [ ! -d $CACHE_PATH   ] && mkdir $CACHE_PATH
-    cache_dl $CACHE_FUEL_FR_URL $CACHE_FUEL_FR_FILENAME
-    cache_dl $CACHE_GATSO_EU_URL $CACHE_GATSO_EU_FILENAME
+    [ ! -d $CACHE_PATH ] && mkdir $CACHE_PATH
+    [ ! -f $CACHE_FUEL_FR_FILENAME  ] && cache_dl $CACHE_FUEL_FR_URL  $CACHE_FUEL_FR_FILENAME
+    [ ! -f $CACHE_GATSO_EU_FILENAME ] && cache_dl $CACHE_GATSO_EU_URL $CACHE_GATSO_EU_FILENAME
 }
 
 
 _uncache()
 {
-    [ -d $CACHE_PATH   ] && rm -rf $CACHE_PATH
+    [ -d $CACHE_PATH ] && rm -rf $CACHE_PATH
 }
 
 
@@ -201,8 +201,6 @@ then
       ;;
     esac
   done
-
-  ls -al
 else
   _run
 fi

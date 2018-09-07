@@ -6,6 +6,10 @@ addons:
     update: true
     packages:
     - genisoimage
+
+cache:
+  directories:
+    - ./CACHE
     
 branches:
   only:
@@ -26,6 +30,10 @@ before_install:
 
 install:
   - ls -al
+  ############################################
+  - find ./CACHE -type f -mmin +360 -delete
+  ############################################
+  - ls -al
 
 before_script:
   - ls -al
@@ -44,16 +52,17 @@ script:
 before_deploy:
   - ls -al
   ############################################
-  - ./make.sh --clean
-  ############################################
-  - ls -al
-  ############################################
   - export GATSO_UPDATE_MAX=`date -d @$(cat ./BUILD/version.txt | sort -n | tail -1) +%Y-%m-%d`
   - echo "TRAVIS_TAG=$TRAVIS_TAG;"
   - echo "TAG_PREFIX=$TAG_PREFIX;"
   - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH;"
   - echo "GATSO_UPDATE_MAX=$GATSO_UPDATE_MAX;"
   - "[[ $TRAVIS_TAG ]] || export TRAVIS_TAG=\"${TAG_PREFIX}${TRAVIS_BRANCH}.${GATSO_UPDATE_MAX}\""
+  ############################################
+  - ./make.sh --clean
+  ############################################
+  - ls -al
+  ############################################
   - git config --local user.name "$USER_NAME"
   - git config --local user.email "$USER_EMAIL"
   - git tag --force "$TRAVIS_TAG" $TRAVIS_COMMIT
