@@ -58,12 +58,7 @@ _run()
       rm -rf $OUTPUT_PATH
     fi
 
-    RESULT=`python $MYPOIS_EXEC $CONFIG_PATH | tail -n 1`
-
-    if [ $RESULT != 'done' ]
-    then
-      exit 1
-    fi
+    python $MYPOIS_EXEC $CONFIG_PATH
 }
 
 _update_version()
