@@ -32,7 +32,17 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
     }
 
     async prepare() {
-        const zip_path = PATH.join(WORKSPACE, 'source.zip');
+        let zip_path = this.options.cache + '.zip';
+
+        if (!FS.existsSync(zip_path)) {
+            zip_path = PATH.join(WORKSPACE, 'source.zip');
+            await this.downloadSource(zip_path);
+        }
+        
+        await this.unzip(zip_path);
+    }
+
+    async downloadSource(zip_path) {
         const options = {
             baseURL: BASE_URL,
             responseType: 'stream',
@@ -80,8 +90,6 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
         if (0 === retryLeft) {
             throw `can not get ${BASE_URL + INFO_PATH}`;
         }
-
-        await this.unzip(zip_path);
     }
     
     

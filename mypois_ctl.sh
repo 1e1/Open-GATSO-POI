@@ -12,7 +12,7 @@ SRC_PATH="$BASE_DIR/src"
 BUILD_CSV_H_PATH="$BASE_DIR/BUILD_csv_h"
 MANIFEST_PATH="$BUILD_PATH/manifest.txt"
 VERSIONS_PATH="$BUILD_PATH/versions.txt"
-OUTPUT_PATH="$BASE_DIR/SD_CARD"
+MOUNT_PATH="$BASE_DIR/SD_CARD"
 
 
 __() { echo $1 >> $CONFIG_PATH; }
@@ -23,6 +23,12 @@ _install()
     curl -sSL -D - 'https://github.com/jimmyH/mypois/archive/master.tar.gz' -o $MYPOIS_GZ_PATH
     tar -xzf $MYPOIS_GZ_PATH -C $BASE_DIR
     rm $MYPOIS_GZ_PATH
+}
+
+
+_uninstall()
+{
+    [ -d $MYPOIS_PATH ] && mkdir $MYPOIS_PATH
 }
 
 
@@ -51,11 +57,26 @@ _clean()
     [ -d $BUILD_CSV_H_PATH ] && rm -rf $BUILD_CSV_H_PATH
 }
 
+
+_unmount()
+{
+    [ -d $MOUNT_PATH ] && rm -rf $MOUNT_PATH
+}
+
+
+_erase()
+{
+    _uninstall
+    _clean
+    _unmount
+}
+
+
 _run()
 {
-    if [ -d $OUTPUT_PATH ]
+    if [ -d $MOUNT_PATH ]
     then
-      rm -rf $OUTPUT_PATH
+      rm -rf $MOUNT_PATH
     fi
 
     python $MYPOIS_EXEC $CONFIG_PATH
@@ -105,7 +126,7 @@ _make_config()
     echo "Writing config.ini"
 
     __ '[General]'
-    __ "OutputDirectory=$OUTPUT_PATH"
+    __ "OutputDirectory=$MOUNT_PATH"
     __ 'SkipMIB2HIGH=no'
     __ 'SkipMIB2TSD=no'
     __ 
@@ -161,8 +182,14 @@ do
     _install
     _get_version
     ;;
+  "uninstall")
+    _uninstall
+    ;;
   "clean")
     _clean
+    ;;
+  "erase")
+    _erase
     ;;
   "make")
     _make_config

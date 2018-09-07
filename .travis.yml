@@ -11,7 +11,7 @@ branches:
   only:
     - master
     #- stable
-    #- develop
+    - develop
     - travisci
 
 
@@ -30,7 +30,7 @@ install:
 before_script:
   - ls -al
   ############################################
-  - ./make.sh --install
+  - ./make.sh --install --cache
   ############################################
   - ls -al
 
@@ -49,6 +49,10 @@ before_deploy:
   - ls -al
   ############################################
   - export GATSO_UPDATE_MAX=`date -d @$(cat ./BUILD/version.txt | sort -n | tail -1) +%Y-%m-%d`
+  - echo "TRAVIS_TAG=$TRAVIS_TAG;"
+  - echo "TAG_PREFIX=$TAG_PREFIX;"
+  - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH;"
+  - echo "GATSO_UPDATE_MAX=$GATSO_UPDATE_MAX;"
   - "[[ $TRAVIS_TAG ]] || export TRAVIS_TAG=\"${TAG_PREFIX}${TRAVIS_BRANCH}.${GATSO_UPDATE_MAX}\""
   - git config --local user.name "$USER_NAME"
   - git config --local user.email "$USER_EMAIL"

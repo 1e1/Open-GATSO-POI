@@ -1,22 +1,33 @@
 const LAUNCHER = require('./modules/Launcher.js');
 
-const SOURCES = [ 'CNX_FUEL_FR', 'CNX_GATSO_EU', 'CNX_GATSO_FR' ];
-const FORMATS = [ 'csv', 'ov2', 'gpx' ];
+const DEFAULTS = {
+    sources: [ 'CNX_FUEL_FR', 'CNX_GATSO_EU', 'CNX_GATSO_FR' ],
+    formats: [ 'csv', 'ov2', 'gpx' ],
+};
+
 
 
 (async () => {
-    const formats = process.argv.slice(2);
+    const arguments = process.argv.slice(2);
     const options = {
-        sources: SOURCES,
+        sources: [],
         formats: [],
         isTruck: false,
     };
 
-    if (0 === formats.length) {
-        options.formats = FORMATS;
-    } else {
-        options.formats = formats.filter(format => FORMATS.includes(format));
+    for (let optionName in DEFAULTS) {
+        const optionValues = DEFAULTS[optionName];
+
+        if (Array.isArray(optionValues)) {
+            options[optionName] = arguments.filter(argument => optionValues.includes(argument));
+
+            if (0 === options[optionName].length) {
+                options[optionName] = optionValues;
+            }
+        }
     }
+
+    console.log(options);
 
     try {
         const launcher = LAUNCHER.from(options);
