@@ -3,10 +3,17 @@
 
 BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )
 BUILD_PATH="$BASE_DIR/BUILD"
+CACHE_PATH="$BASE_DIR/CACHE"
 RELEASE_PATH="$BASE_DIR/RELEASES"
 MOUNT_PATH="$BASE_DIR/SD_CARD"
 MANIFEST_PATH="$BUILD_PATH/manifest.txt"
 VERSIONS_PATH="$BUILD_PATH/versions.txt"
+
+CACHE_FUEL_FR_URL='https://donnees.roulez-eco.fr/opendata/instantane'
+CACHE_FUEL_FR_FILENAME='fuel-FR.zip'
+
+CACHE_GATSO_EU_URL='https://lufop.net/wp-content/plugins/downloads-manager/upload/Lufop-Zones-de-danger-EU-CSV.zip'
+CACHE_GATSO_EU_FILENAME='gatso-EU.zip'
 
 
 make_zip()
@@ -20,6 +27,25 @@ make_zip()
       zip -r "${RELEASE_PATH}/${EXT}_files.zip" "${BUILD_PATH}_${EXT}/"
       rm -rf "${BUILD_PATH}_${EXT}"
     fi
+}
+
+cache_dl()
+{
+    curl -sSL -H 'User-Agent: Mozilla/5.0' -D - $1 -o "$CACHE_PATH/$2"
+}
+
+
+_cache()
+{
+    [ ! -d $CACHE_PATH   ] && mkdir $CACHE_PATH
+    cache_dl $CACHE_FUEL_FR_URL $CACHE_FUEL_FR_FILENAME
+    cache_dl $CACHE_GATSO_EU_URL $CACHE_GATSO_EU_FILENAME
+}
+
+
+_uncache()
+{
+    [ -d $CACHE_PATH   ] && rm -rf $CACHE_PATH
 }
 
 
@@ -44,6 +70,15 @@ _clean()
 }
 
 
+_erase()
+{
+    _uncache
+    $BASE_DIR/mypois_ctl.sh erase
+    _clean
+    _unrelease
+}
+
+
 _build()
 {
     node $BASE_DIR/src/build.js
@@ -52,11 +87,11 @@ _build()
 
 _release()
 {
-    [ -d $BUILD_PATH   ] && zip -r $RELEASE_PATH/all_files.zip $BUILD_PATH
+    [ -d $BUILD_PATH ] && zip -r $RELEASE_PATH/all_files.zip $BUILD_PATH
     make_zip csv
     make_zip gpx
     make_zip ov2
-    [ -d $MOUNT_PATH   ] && zip -r $RELEASE_PATH/sd_files.zip $MOUNT_PATH
+    [ -d $MOUNT_PATH ] && zip -r $RELEASE_PATH/sd_files.zip $MOUNT_PATH
 }
 
 
@@ -118,12 +153,21 @@ then
     "--init")
       _init
       ;;
+    "--cache")
+      _cache
+      ;;
+    "--uncache")
+      _uncache
+      ;;
     "--install")
       _init
       _install
       ;;
     "--clean")
       _clean
+      ;;
+    "--erase")
+      _erase
       ;;
     "--unrelease")
       _unrelease

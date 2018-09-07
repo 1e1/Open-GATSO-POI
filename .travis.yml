@@ -30,7 +30,7 @@ install:
 before_script:
   - ls -al
   ############################################
-  - ./make.sh --install
+  - ./make.sh --install --cache
   ############################################
   - ls -al
 
