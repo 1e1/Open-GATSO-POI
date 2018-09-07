@@ -16,8 +16,16 @@ CACHE_GATSO_EU_URL='https://lufop.net/wp-content/plugins/downloads-manager/uploa
 CACHE_GATSO_EU_FILENAME='gatso-EU.zip'
 
 
+¶() {
+    echo
+    echo '=========='
+    echo $1
+    echo '=========='
+}
+
 make_zip()
 {
+    ¶ 'make_zip'
     if [ -d $BUILD_PATH ]
     then
       EXT=$1
@@ -31,12 +39,14 @@ make_zip()
 
 cache_dl()
 {
+    ¶ 'cache_dl'
     curl -sSL -H 'User-Agent: Mozilla/5.0' -D - $1 -o "$CACHE_PATH/$2"
 }
 
 
 _cache()
 {
+    ¶ '_cache'
     [ ! -d $CACHE_PATH ] && mkdir $CACHE_PATH
     [ ! -f $CACHE_FUEL_FR_FILENAME  ] && cache_dl $CACHE_FUEL_FR_URL  $CACHE_FUEL_FR_FILENAME
     [ ! -f $CACHE_GATSO_EU_FILENAME ] && cache_dl $CACHE_GATSO_EU_URL $CACHE_GATSO_EU_FILENAME
@@ -45,12 +55,14 @@ _cache()
 
 _uncache()
 {
+    ¶ '_uncache'
     [ -d $CACHE_PATH ] && rm -rf $CACHE_PATH
 }
 
 
 _init()
 {
+    ¶ '_init'
     [ ! -d $BUILD_PATH   ] && mkdir $BUILD_PATH
     [ ! -d $RELEASE_PATH ] && mkdir $RELEASE_PATH
 }
@@ -58,12 +70,14 @@ _init()
 
 _install()
 {
+    ¶ '_install'
     $BASE_DIR/mypois_ctl.sh install
 }
 
 
 _clean()
 {
+    ¶ '_clean'
     [ -d $BUILD_PATH ] && rm -rf $BUILD_PATH
 
     $BASE_DIR/mypois_ctl.sh clean
@@ -72,6 +86,7 @@ _clean()
 
 _erase()
 {
+    ¶ '_erase'
     _uncache
     $BASE_DIR/mypois_ctl.sh erase
     _clean
@@ -81,12 +96,14 @@ _erase()
 
 _build()
 {
+    ¶ '_build'
     node $BASE_DIR/src/build.js
 }
 
 
 _release()
 {
+    ¶ '_release'
     [ -d $BUILD_PATH ] && zip -r $RELEASE_PATH/all_files.zip $BUILD_PATH
     make_zip csv
     make_zip gpx
@@ -97,12 +114,14 @@ _release()
 
 _unrelease()
 {
+    ¶ '_unrelease'
     [ -d $RELEASE_PATH ] && rm -rf $RELEASE_PATH
 }
 
 
 _mount()
 {
+    ¶ '_mount'
     $BASE_DIR/mypois_ctl.sh make
     
     rc=$?
@@ -115,6 +134,7 @@ _mount()
 
 _image()
 {
+    ¶ '_image'
     CMD='genisoimage'
 
     if [ ! `command -v $CMD` ]
@@ -130,6 +150,7 @@ _image()
 
 _update_doc()
 {
+    ¶ '_update_doc'
     $BASE_DIR/mypois_ctl.sh update-version
     node $BASE_DIR/src/update_doc.js
 }
@@ -137,11 +158,12 @@ _update_doc()
 
 _run()
 {
-  _init
-  _build
-  _release
-  _mount
-  _update_doc
+    ¶ '_run'
+    _init
+    _build
+    _release
+    _mount
+    _update_doc
 }
 
 

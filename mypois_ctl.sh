@@ -16,10 +16,17 @@ MOUNT_PATH="$BASE_DIR/SD_CARD"
 
 
 __() { echo $1 >> $CONFIG_PATH; }
+¶() {
+    echo
+    echo '----------'
+    echo $1
+    echo '----------'
+}
 
 
 _install()
 {
+    ¶ '_install'
     curl -sSL -D - 'https://github.com/jimmyH/mypois/archive/master.tar.gz' -o $MYPOIS_GZ_PATH
     tar -xzf $MYPOIS_GZ_PATH -C $BASE_DIR
     rm $MYPOIS_GZ_PATH
@@ -28,12 +35,14 @@ _install()
 
 _uninstall()
 {
+    ¶ '_uninstall'
     [ -d $MYPOIS_PATH ] && mkdir $MYPOIS_PATH
 }
 
 
 _get_version()
 {
+    ¶ '_get_version'
     CMD='gdate'
 
     if [ ! `command -v $CMD` ]
@@ -52,6 +61,7 @@ _get_version()
 
 _clean()
 {
+    ¶ '_clean'
     [ -f $MYPOIS_TS_PATH   ] && rm -f  $MYPOIS_TS_PATH
     [ -f $CONFIG_PATH      ] && rm -f  $CONFIG_PATH
     [ -d $BUILD_CSV_H_PATH ] && rm -rf $BUILD_CSV_H_PATH
@@ -60,12 +70,14 @@ _clean()
 
 _unmount()
 {
+    ¶ '_unmount'
     [ -d $MOUNT_PATH ] && rm -rf $MOUNT_PATH
 }
 
 
 _erase()
 {
+    ¶ '_erase'
     _uninstall
     _clean
     _unmount
@@ -74,6 +86,7 @@ _erase()
 
 _run()
 {
+    ¶ '_run'
     if [ -d $MOUNT_PATH ]
     then
       rm -rf $MOUNT_PATH
@@ -84,6 +97,7 @@ _run()
 
 _update_version()
 {
+    ¶ '_update_version'
     if [ ! -f $MYPOIS_TS_PATH ]
     then
       _update_version
@@ -105,6 +119,7 @@ _update_version()
 
 _make_config()
 {
+    ¶ '_make_config'
     echo -n > $CONFIG_PATH 
 
     if [ ! -d $BUILD_CSV_H_PATH ]
