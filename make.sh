@@ -46,12 +46,7 @@ _clean()
 
 _build()
 {
-    RESULT=`node $BASE_DIR/src/build.js | tail -n 1`
-
-    if [ $RESULT != 'done' ]
-    then
-      exit 1
-    fi
+    node $BASE_DIR/src/build.js
 }
 
 
@@ -107,6 +102,7 @@ _update_doc()
 
 _run()
 {
+  _init
   _build
   _release
   _mount
