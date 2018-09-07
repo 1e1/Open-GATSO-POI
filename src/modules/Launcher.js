@@ -14,6 +14,7 @@ const CONFIG = require('./config.js');
 const FILE_LIST = require('./File/FileList.js');
 
 const OUTPUT_DIR = './BUILD';
+const CACHE_DIR = './CACHE';
 const ICON_DIR = './src/assets/icn';
 
 const POI_NAME_PREFIX = '|';
@@ -23,6 +24,7 @@ const MANIFEST_PATH = PATH.resolve(__dirname, '../..', OUTPUT_DIR, 'manifest.txt
 const VERSION_PATH = PATH.resolve(__dirname, '../..', OUTPUT_DIR, 'version.txt');
 const VERSIONS_PATH = PATH.resolve(__dirname, '../..', OUTPUT_DIR, 'versions.txt');
 const OUTPUT_PATH = PATH.resolve(__dirname, '../..', OUTPUT_DIR);
+const CACHE_PATH = PATH.resolve(__dirname, '../..', CACHE_DIR);
 const ICON_PATH = PATH.resolve(__dirname, '../..', ICON_DIR);
 
 const BASENAMES_LIST = [Object.values(CONFIG.rules), Object.values(CONFIG.services)].concatInside().map(rule => rule.basenames);
@@ -69,7 +71,10 @@ module.exports = class Launcher {
     static from(options) {
         const launcher = new this();
 
-        launcher.options = options;
+        launcher.options = Object.assign(
+            launcher.options,
+            options
+        );
 
         return launcher;
     }
@@ -92,7 +97,8 @@ module.exports = class Launcher {
             const launcher = require(`./${source}.js`);
             const crawler = launcher.from(this.storage);
 
-            crawler.options = this.options;
+            crawler.options = Object.assign(crawler.options, this.options);
+            crawler.options.cache = PATH.resolve(CACHE_PATH, crawler.getCode());
 
             this.crawlers.push(crawler);
         });

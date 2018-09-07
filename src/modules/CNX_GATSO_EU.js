@@ -50,8 +50,26 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
     }
 
     async prepare() {
+        let zip_path = this.options.cache + '.zip';
+        let lastUpdateTimestamp;
+
+        if (FS.existsSync(zip_path)) {
+            const stat = FS.statSync(zip_path);
+            const mtime = stat.mtime;
+            const mDate = new Date(mtime);
+            const timestamp = mDate.getTime();
+
+            lastUpdateTimestamp = Math.trunc(timestamp / 1000);
+        } else {
+            zip_path = PATH.join(WORKSPACE, 'source.zip');
+            lastUpdateTimestamp = this.downloadSource(zip_path);
+        }
+        
+        await this.unzip(zip_path, lastUpdateTimestamp);
+    }
+
+    async downloadSource(zip_path) {
         const options = URL.parse(SOURCE_URL);
-        const zip_path = PATH.join(WORKSPACE, 'source.zip');
         const zip_file = FS.createWriteStream(zip_path);
         const lastUpdateTimestamps = [ 0 ];
  
@@ -81,7 +99,7 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
         
         zip_file.end();
 
-        await this.unzip(zip_path, lastUpdateTimestamp);
+        return lastUpdateTimestamp;
     }
     
     

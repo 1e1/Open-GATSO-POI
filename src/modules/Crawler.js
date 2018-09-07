@@ -18,7 +18,8 @@ module.exports = class Crawler {
 
     constructor() {
         this.nbParallelProcess = NB_PARALLEL_PROCESS;
-        
+
+        this.options = {};
         this.storage = null;
         this.timestampMax = 0;
     }
