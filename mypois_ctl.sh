@@ -64,7 +64,7 @@ _clean()
     ¶ '_clean'
     [ -f $MYPOIS_TS_PATH   ] && rm -f  $MYPOIS_TS_PATH
     [ -f $CONFIG_PATH      ] && rm -f  $CONFIG_PATH
-    [ -d $BUILD_CSV_H_PATH ] && rm -rf $BUILD_CSV_H_PATH
+    [ -d $BUILD_CSV_H_PATH ] && rm -fr $BUILD_CSV_H_PATH
 }
 
 
@@ -89,7 +89,7 @@ _run()
     ¶ '_run'
     if [ -d $MOUNT_PATH ]
     then
-      rm -rf $MOUNT_PATH
+        rm -rf $MOUNT_PATH
     fi
 
     python $MYPOIS_EXEC $CONFIG_PATH
@@ -100,7 +100,7 @@ _update_version()
     ¶ '_update_version'
     if [ ! -f $MYPOIS_TS_PATH ]
     then
-      _update_version
+        _get_version
     fi 
 
     MYPOIS_MODIFICATION_TIMESTAMP=`cat $MYPOIS_TS_PATH`
