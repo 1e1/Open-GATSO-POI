@@ -75,6 +75,13 @@ _install()
 }
 
 
+_uninstall()
+{
+    ¶ '_uninstall'
+    $BASE_DIR/mypois_ctl.sh erase
+}
+
+
 _clean()
 {
     ¶ '_clean'
@@ -186,6 +193,9 @@ then
       _init
       _install
       ;;
+    "--uninstall")
+      _uninstall
+      ;;
     "--clean")
       _clean
       ;;
@@ -223,3 +233,6 @@ then
 else
   _run
 fi
+
+echo 
+echo 'done'

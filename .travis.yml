@@ -15,7 +15,7 @@ branches:
   only:
     - master
     #- stable
-    - develop
+    #- develop
     - travisci
 
 
@@ -59,7 +59,7 @@ before_deploy:
   - echo "GATSO_UPDATE_MAX=$GATSO_UPDATE_MAX;"
   - "[[ $TRAVIS_TAG ]] || export TRAVIS_TAG=\"${TAG_PREFIX}${TRAVIS_BRANCH}.${GATSO_UPDATE_MAX}\""
   ############################################
-  - ./make.sh --clean
+  - ./make.sh --uninstall
   ############################################
   - ls -al
   ############################################
