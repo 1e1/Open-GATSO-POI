@@ -168,5 +168,6 @@ do
     _make_config
     _run
     _update_version
+    ;;
   esac
 done
