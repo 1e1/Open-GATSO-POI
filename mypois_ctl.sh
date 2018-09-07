@@ -36,7 +36,7 @@ _install()
 _uninstall()
 {
     ¶ '_uninstall'
-    [ -d $MYPOIS_PATH ] && mkdir $MYPOIS_PATH
+    [ -d $MYPOIS_PATH ] && rm -rf $MYPOIS_PATH
 }
 
 
