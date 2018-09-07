@@ -46,7 +46,12 @@ _clean()
 
 _build()
 {
-    node $BASE_DIR/src/build.js
+    RESULT=`node $BASE_DIR/src/build.js | tail -n 1`
+
+    if [ $RESULT != 'done' ]
+    then
+      exit 1
+    fi
 }
 
 
