@@ -78,9 +78,9 @@ _install()
 _clean()
 {
     ¶ '_clean'
-    [ -d $BUILD_PATH ] && rm -rf $BUILD_PATH
-
     $BASE_DIR/mypois_ctl.sh clean
+    
+    [ -d $BUILD_PATH ] && rm -rf $BUILD_PATH
 }
 
 
@@ -104,6 +104,7 @@ _build()
 _release()
 {
     ¶ '_release'
+    [ ! -d $RELEASE_PATH ] && mkdir $RELEASE_PATH
     [ -d $BUILD_PATH ] && zip -r $RELEASE_PATH/all_files.zip $BUILD_PATH
     make_zip csv
     make_zip gpx
@@ -214,12 +215,8 @@ then
       _run
       ;;
     "--standalone")
-      _init
-      _build
       _unrelease
-      _release
-      _mount
-      _update_doc
+      _run
       ;;
     esac
   done
