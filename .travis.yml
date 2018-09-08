@@ -55,7 +55,7 @@ before_deploy:
   - export GATSO_UPDATE_MAX=`date -d @$(cat ./BUILD/version.txt | sort -n | tail -1) +%Y-%m-%d`
   - export RELEASE_DESCRIPTION=`cat ./BUILD/manifest.txt`
   ############################################
-  #- echo "TRAVIS_TAG=$TRAVIS_TAG;"
+  - echo "TRAVIS_TAG=$TRAVIS_TAG;"
   #- echo "TAG_PREFIX=$TAG_PREFIX;"
   #- echo "TRAVIS_BRANCH=$TRAVIS_BRANCH;"
   #- echo "GATSO_UPDATE_MAX=$GATSO_UPDATE_MAX;"
