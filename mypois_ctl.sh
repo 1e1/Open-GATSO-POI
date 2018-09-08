@@ -87,10 +87,7 @@ _erase()
 _run()
 {
     ¶ '_run'
-    if [ -d $MOUNT_PATH ]
-    then
-        rm -rf $MOUNT_PATH
-    fi
+    _unmount
 
     python $MYPOIS_EXEC $CONFIG_PATH
 }
@@ -181,6 +178,33 @@ _make_config()
 }
 
 
+_help()
+{
+read -d '' CONFIG <<- EOM
+clean
+    _clean
+erase
+    _erase
+help
+    _help
+install
+    _install
+    _get_version
+make
+    _make_config
+    _run
+    _update_version
+make-config
+    _make_config
+run
+    _run
+update-version
+    _update_version
+EOM
+echo "$CONFIG"
+}
+
+
 for opt in "$@"
 do
   case $opt in
@@ -211,5 +235,7 @@ do
     _run
     _update_version
     ;;
+  "help")
+    _help
   esac
 done
