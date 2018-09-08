@@ -247,7 +247,7 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
         let json = null;
 
         if (FS.existsSync(cache_path)) {
-            console.log(this.getCode() + ' ' + entry.id);
+            // console.log(this.getCode() + ' ' + entry.id);
 
             const content = FS.readFileSync(cache_path);
 
