@@ -32,7 +32,7 @@ const BASENAMES = BASENAMES_LIST.concatInside().unique();
 
 
 
-FS.mkdirRecursiveSync = function(path) {
+FS.mkdirRecursiveSync = path => {
     const paths = path.split('/');
     let fullPath = '';
 
@@ -45,7 +45,7 @@ FS.mkdirRecursiveSync = function(path) {
     });
 };
 
-FS.rmdirRecursiveSync = function(dir) {
+FS.rmdirRecursiveSync = dir => {
     const list = FS.readdirSync(dir);
     
     for(let i = 0; i < list.length; i++) {
@@ -92,6 +92,12 @@ module.exports = class Launcher {
 
     prepare() {
         this.resetDirectory(OUTPUT_PATH);
+
+        if (true !== this.options.hasCache) {
+            this.resetDirectory(CACHE_PATH);
+        } else {
+            FS.mkdirRecursiveSync(CACHE_PATH);
+        }
         
         this.options.sources.forEach(source => {
             const launcher = require(`./${source}.js`);
@@ -202,28 +208,22 @@ module.exports = class Launcher {
     }
 
     generateVersion(timestampMax) {
-        const fs = FS.openSync(VERSION_PATH, 'a');
-
-        FS.writeSync(fs, timestampMax + "\n");
-        FS.closeSync(fs);
+        FS.writeFileSync(VERSION_PATH, timestampMax);
     }
 
     generateVersions(versions) {
-        const fs = FS.openSync(VERSIONS_PATH, 'a');
+        const lines = [];
 
         for (let key in versions) {
             const line = `${key} ${versions[key]}`;
 
-            FS.writeSync(fs, line + "\n");
+            lines.push(line);
         }
 
-        FS.closeSync(fs);
+        FS.writeFileSync(VERSIONS_PATH, lines.join("\n"));
     }
 
     generateManifest(content) {
-        const fs = FS.openSync(MANIFEST_PATH, 'a');
-
-        FS.writeSync(fs, content + "\n");
-        FS.closeSync(fs);
+        FS.writeFileSync(MANIFEST_PATH, content);
     }
 }
