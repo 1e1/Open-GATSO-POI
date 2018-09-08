@@ -39,12 +39,16 @@ make_zip()
     ¶ 'make_zip'
     if [ -d $BUILD_PATH ]
     then
-      EXT=$1
+        EXT=$1
+        count=`ls -1 *.$EXT 2>/dev/null | wc -l`
 
-      mkdir "${BUILD_PATH}_${EXT}"
-      cp -R ${BUILD_PATH}/*.{bmp,$EXT} "${BUILD_PATH}_${EXT}/"
-      zip -r "${RELEASE_PATH}/${EXT}_files.zip" "${BUILD_PATH}_${EXT}/"
-      rm -rf "${BUILD_PATH}_${EXT}"
+        if [ $count != 0 ]
+        then
+            mkdir "${BUILD_PATH}_${EXT}"
+            cp -R ${BUILD_PATH}/*.{bmp,$EXT} "${BUILD_PATH}_${EXT}/"
+            zip -r "${RELEASE_PATH}/${EXT}_files.zip" "${BUILD_PATH}_${EXT}/"
+            rm -rf "${BUILD_PATH}_${EXT}"
+        fi
     fi
 }
 
