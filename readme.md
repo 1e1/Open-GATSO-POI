@@ -66,17 +66,10 @@ node ./build.js csv gpx
 require [cdrtools](http://cdrtools.sourceforge.net/private/cdrecord.html) and [mypois](https://github.com/jimmyH/mypois)
 
 ```bash
-# get latest GATSO
-node ./src/build.js csv
-# append headers to CSV
-./make_mypois.sh
-# make SD_CARD structure
-python ./mypois-master/mypois.py ./config.ini
-# create disk image
-mkisofs -o sd_image.iso SD_CARD
-# archive it
-zip -r sd_image.iso.zip sd_image.iso
+./make.sh
 ```
+
+you should read `./make.sh --help` and `./mypois_ctl.sh help`
 
 
 ## documentation
