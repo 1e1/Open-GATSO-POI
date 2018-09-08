@@ -237,5 +237,6 @@ do
     ;;
   "help")
     _help
+    ;;
   esac
 done

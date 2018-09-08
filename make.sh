@@ -15,6 +15,17 @@ CACHE_FUEL_FR_FILENAME='fuel-FR.zip'
 CACHE_GATSO_EU_URL='https://lufop.net/wp-content/plugins/downloads-manager/upload/Lufop-Zones-de-danger-EU-CSV.zip'
 CACHE_GATSO_EU_FILENAME='gatso-EU.zip'
 
+NODE_ARGS=()
+
+for opt in "$@"
+do
+  case $opt in
+    -arg=*)
+      NODE_ARGS+=(${opt#*=})
+      ;;
+esac
+done
+
 
 ¶() {
     echo
@@ -104,7 +115,7 @@ _erase()
 _build()
 {
     ¶ '_build'
-    node $BASE_DIR/src/build.js
+    node $BASE_DIR/src/build.js ${NODE_ARGS[*]}
 }
 
 
@@ -169,8 +180,8 @@ _run()
     ¶ '_run'
     _init
     _build
-    _release
     _mount
+    _release
     _update_doc
 }
 
@@ -181,8 +192,8 @@ read -d '' CONFIG <<- EOM
 <nothing>
     _init
     _build
-    _release
     _mount
+    _release
     _update_doc
 --init
     _init
@@ -215,15 +226,15 @@ read -d '' CONFIG <<- EOM
 --run
     _init
     _build
-    _release
     _mount
+    _release
     _update_doc
 --standalone
     _unrelease
     _init
     _build
-    _release
     _mount
+    _release
     _update_doc
 --help
     _help
@@ -287,6 +298,7 @@ then
       ;;
     "--help")
       _help
+      ;;
     esac
   done
 else

@@ -2,6 +2,7 @@ const BASE_URL = 'https://radars.securite-routiere.gouv.fr';
 const LIST_PATH = '/radars/all?_format=json';
 const INFO_PATH = '/radars/{id}?_format=json';
 
+const FS = require('fs');
 const HTTPS = require('https');
 const CRAWLER = require('./Crawler.js');
 const POINT = require('./POI.js');
@@ -27,7 +28,26 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
     }
 
     async prepare() {
-        this.entryList = [];
+        const index_path = this.options.cache + '.json';
+
+        if (FS.existsSync(index_path)) {
+            const json = FS.readFileSync(index_path);
+
+            this.entryList = JSON.parse(json);
+        } else {
+            this.entryList = await this.downloadEntries();
+
+            const json = JSON.stringify(this.entryList);
+            FS.writeFileSync(index_path, json);
+        }
+
+        if (! FS.existsSync(this.options.cache)) {
+            FS.mkdirSync(this.options.cache);
+        }
+    }
+
+    async downloadEntries() {
+        let entryList = [];
 
         const mainPromise = new Promise((resolve, reject) => {
             HTTPS.get(BASE_URL + LIST_PATH, (request) => {
@@ -39,7 +59,7 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
                     });
         
                     request.on('end', async () => {
-                        this.entryList = this.parseList(JSON.parse(data));
+                        entryList = this.parseList(JSON.parse(data));
                         
                         resolve();
                     });
@@ -54,6 +74,8 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
         mainPromise.catch(err => this.kill(err));
 
         await mainPromise;
+
+        return entryList;
     }
     
     
@@ -221,7 +243,28 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
     }
 
     async crawlPromise(entry) {
+        const cache_path = `${this.options.cache}/${entry.id}.json`;
+        let json = null;
+
+        if (FS.existsSync(cache_path)) {
+            console.log(this.getCode() + ' ' + entry.id);
+
+            const content = FS.readFileSync(cache_path);
+
+            json = JSON.parse(content);
+        } else {
+            json = await this.downloadEntry(entry);
+
+            const content = JSON.stringify(json);
+            FS.writeFileSync(cache_path, content);
+        }
+
+        this.parseInfo(json, entry);
+    }
+
+    async downloadEntry(entry) {
         let retryLeft = REQUEST_RETRY;
+        let json = null;
     
         do {
             const request = new Promise((resolve, reject) => {
@@ -237,11 +280,9 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
                         });
         
                         request.on('end', () => {
-                            const json = JSON.parse(data);
+                            json = JSON.parse(data);
                             
                             retryLeft = -1;
-        
-                            this.parseInfo(json, entry);
                             resolve();
                         });
                         break;
@@ -266,6 +307,8 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
         if (0 === retryLeft) {
             throw `can not get ${entry.url}`;
         }
+
+        return json;
     }
     
     async crawlLoopPromise() {

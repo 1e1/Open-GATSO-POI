@@ -32,10 +32,9 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
     }
 
     async prepare() {
-        let zip_path = this.options.cache + '.zip';
+        const zip_path = this.options.cache + '.zip';
 
         if (!FS.existsSync(zip_path)) {
-            zip_path = PATH.join(WORKSPACE, 'source.zip');
             await this.downloadSource(zip_path);
         }
         
