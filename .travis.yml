@@ -45,7 +45,24 @@ before_script:
 script: 
   - ls -al
   ############################################
-  - ./make.sh --run --image
+  - CNX='CNX_GATSO_FR'
+  - ./make.sh -arg=hasCache --run -arg="$CNX" -arg=csv
+  - cp ./RELEASES ./RELEASES_GATSO_FR
+  ############################################
+  - CNX='CNX_GATSO_FR CNX_GATSO_EU'
+  - ./make.sh -arg=hasCache --run -arg="$CNX" -arg=csv
+  - cp ./RELEASES ./RELEASES_GATSO_EU
+  ############################################
+  - CNX='CNX_FUEL_FR'
+  - ./make.sh -arg=hasCache --run -arg="$CNX" -arg=csv
+  - cp ./RELEASES ./RELEASES_FUEL_FR
+  ############################################
+  - CNX='CNX_GATSO_FR CNX_FUEL_FR'
+  - ./make.sh -arg=hasCache --run -arg="$CNX" -arg=csv
+  - cp ./RELEASES ./RELEASES_ALL_FR
+  ############################################
+  - ./make.sh -arg=hasCache --run --image
+  - cp ./RELEASES
   ############################################
   - ls -al
 
@@ -55,7 +72,7 @@ before_deploy:
   - export GATSO_UPDATE_MAX=`date -d @$(cat ./BUILD/version.txt | sort -n | tail -1) +%Y-%m-%d`
   - export RELEASE_DESCRIPTION=`cat ./BUILD/manifest.txt`
   ############################################
-  #- echo "TRAVIS_TAG=$TRAVIS_TAG;"
+  - echo "TRAVIS_TAG=$TRAVIS_TAG;"
   #- echo "TAG_PREFIX=$TAG_PREFIX;"
   #- echo "TRAVIS_BRANCH=$TRAVIS_BRANCH;"
   #- echo "GATSO_UPDATE_MAX=$GATSO_UPDATE_MAX;"
@@ -95,7 +112,7 @@ deploy:
     prerelease: false
     skip_cleanup: true
     file_glob: true
-    file: "./RELEASES/*"
+    file: "./RELEASES*/*"
     on:
       tags: true
   - provider: pages
