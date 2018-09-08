@@ -59,7 +59,7 @@ before_deploy:
   #- echo "TAG_PREFIX=$TAG_PREFIX;"
   #- echo "TRAVIS_BRANCH=$TRAVIS_BRANCH;"
   #- echo "GATSO_UPDATE_MAX=$GATSO_UPDATE_MAX;"
-  - "[[ $TRAVIS_TAG ]] || export TRAVIS_TAG=\"${TAG_PREFIX}${TRAVIS_BRANCH}.${GATSO_UPDATE_MAX}\""
+  #- "[[ $TRAVIS_TAG ]] || export TRAVIS_TAG=\"${TAG_PREFIX}${TRAVIS_BRANCH}.${GATSO_UPDATE_MAX}\""
   ############################################
   - ./make.sh --uninstall
   ############################################
