@@ -175,6 +175,63 @@ _run()
 }
 
 
+_help()
+{
+read -d '' CONFIG <<- EOM
+<nothing>
+    _init
+    _build
+    _release
+    _mount
+    _update_doc
+--init
+    _init
+--uncache
+    _uncache
+--cache
+    _cache
+--uninstall
+    _uninstall
+--install
+    _init
+    _install
+--clean
+    _clean
+--erase
+    _erase
+--unrelease
+    _unrelease
+--build
+    _build
+--release
+    _release
+--mount
+    _mount
+    _update_doc
+--image
+    _image
+--update-doc
+    _update_doc
+--run
+    _init
+    _build
+    _release
+    _mount
+    _update_doc
+--standalone
+    _unrelease
+    _init
+    _build
+    _release
+    _mount
+    _update_doc
+--help
+    _help
+EOM
+echo "$CONFIG"
+}
+
+
 if [ "$#" -gt 0 ]
 then
   for opt in "$@"
@@ -228,6 +285,8 @@ then
       _unrelease
       _run
       ;;
+    "--help")
+      _help
     esac
   done
 else
