@@ -16,12 +16,19 @@ CACHE_GATSO_EU_URL='https://lufop.net/wp-content/plugins/downloads-manager/uploa
 CACHE_GATSO_EU_FILENAME='gatso-EU.zip'
 
 BUILD_ARGS=()
+INSTALL_ARGS=()
 
 for opt in "$@"
 do
   case $opt in
     --build=*)
       BUILD_ARGS+=(${opt#*=})
+      ;;
+    --install-channel=*)
+      INSTALL_ARGS+=("--install-channel=${opt#*=}")
+      ;;
+    --release=*)
+      RELEASE_PATH=${opt#*=}
       ;;
 esac
 done
@@ -79,14 +86,14 @@ _init()
 {
     ¶ '_init'
     [ ! -d $BUILD_PATH   ] && mkdir $BUILD_PATH
-    [ ! -d $RELEASE_PATH ] && mkdir $RELEASE_PATH
 }
 
 
 _install()
 {
     ¶ '_install'
-    $BASE_DIR/mypois_ctl.sh install
+
+    $BASE_DIR/mypois_ctl.sh install ${INSTALL_ARGS[*]}
 }
 
 
@@ -166,6 +173,7 @@ _image()
     fi
 
     $CMD -o $BUILD_PATH/sd_image.iso $MOUNT_PATH
+    [ ! -d $RELEASE_PATH ] && mkdir $RELEASE_PATH
     zip -r $RELEASE_PATH/sd_image.iso.zip $BUILD_PATH/sd_image.iso
     rm -f $BUILD_PATH/sd_image.iso
 }

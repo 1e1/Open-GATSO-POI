@@ -2,10 +2,10 @@
 
 
 BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )
-MYPOIS_PATH="$BASE_DIR/mypois-master"
+MYPOIS_PATH="$BASE_DIR/mypois"
+MYPOIS_GZ_PATH="$MYPOIS_PATH.tar.gz"
 MYPOIS_EXEC="$MYPOIS_PATH/mypois.py"
-MYPOIS_TS_PATH="$BASE_DIR/mypois-master.ts"
-MYPOIS_GZ_PATH="$BASE_DIR/mypois-master.tar.gz"
+MYPOIS_TS_PATH="$BASE_DIR/mypois.ts"
 CONFIG_PATH="$BASE_DIR/config.ini"
 BUILD_PATH="$BASE_DIR/BUILD"
 SRC_PATH="$BASE_DIR/src"
@@ -13,6 +13,17 @@ BUILD_CSV_H_PATH="$BASE_DIR/BUILD_csv_h"
 MANIFEST_PATH="$BUILD_PATH/manifest.txt"
 VERSIONS_PATH="$BUILD_PATH/versions.txt"
 MOUNT_PATH="$BASE_DIR/SD_CARD"
+
+INSTALL_CHANNEL='master'
+
+for opt in "$@"
+do
+  case $opt in
+    --install-channel=*)
+      INSTALL_CHANNEL=${opt#*=}
+      ;;
+esac
+done
 
 
 __() { echo $1 >> $CONFIG_PATH; }
@@ -27,8 +38,17 @@ __() { echo $1 >> $CONFIG_PATH; }
 _install()
 {
     ¶ '_install'
-    curl -sSL -D - 'https://github.com/jimmyH/mypois/archive/master.tar.gz' -o $MYPOIS_GZ_PATH
-    tar -xzf $MYPOIS_GZ_PATH -C $BASE_DIR
+    GH_URL='https://github.com/jimmyH/mypois/archive/master.tar.gz'
+    
+    case $INSTALL_CHANNEL in
+        'beta')
+            GH_URL='https://github.com/1e1/mypois/archive/beta.tar.gz'
+            ;;
+    esac
+
+    curl -sSL -D - $GH_URL -o $MYPOIS_GZ_PATH
+    mkdir $MYPOIS_PATH
+    tar -xzf $MYPOIS_GZ_PATH -C $MYPOIS_PATH --strip-components 1
     rm $MYPOIS_GZ_PATH
 }
 
@@ -168,11 +188,11 @@ _make_config()
         __ "Source=$BUILD_CSV_H_PATH/${FILENAME}_h.csv"
         __ "Icon=$SRC_PATH/assets/icn/${FILENAME}.png"
         __ 'Disabled=no'
-        #if [ $WARNING == 'yes' ]
-        #then
-        #    __ "WarnMessage=$FIRST_NAME"
-        #    __ 'ActivationRadius=150000'
-        #fi
+        if [ $WARNING == 'yes' ]
+        then
+            __ "WarnMessage=$FIRST_NAME"
+            __ 'ActivationRadius=150000'
+        fi
         __ 
     done < $MANIFEST_PATH
 }
