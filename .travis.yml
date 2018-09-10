@@ -38,7 +38,7 @@ install:
 before_script:
   - ls -al
   ############################################
-  - ./make.sh --install --cache
+  - ./make.sh --install-channel=$TRAVIS_BRANCH --install --cache
   ############################################
   - ls -al
 
@@ -46,20 +46,20 @@ script:
   - ls -al
   ############################################
   - CNX='CNX_GATSO_FR'
-  - ./make.sh --build=hasCache --run --build="$CNX" --build=csv
-  - cp -R ./RELEASES ./RELEASES_GATSO_FR
+  - RLS='./RELEASES-gatso-FR'
+  - ./make.sh --build=hasCache --run --build="$CNX" --release="$RLS" --build=csv
   ############################################
   - CNX='CNX_GATSO_FR CNX_GATSO_EU'
-  - ./make.sh --build=hasCache --run --build="$CNX" --build=csv
-  - cp -R ./RELEASES ./RELEASES_GATSO_EU
+  - RLS='./RELEASES-gatso-EU'
+  - ./make.sh --build=hasCache --run --build="$CNX" --release="$RLS" --build=csv
   ############################################
   - CNX='CNX_FUEL_FR'
-  - ./make.sh --build=hasCache --run --build="$CNX" --build=csv
-  - cp -R ./RELEASES ./RELEASES_FUEL_FR
+  - RLS='./RELEASES-fuel-FR'
+  - ./make.sh --build=hasCache --run --build="$CNX" --release="$RLS" --build=csv
   ############################################
   - CNX='CNX_GATSO_FR CNX_FUEL_FR'
-  - ./make.sh --build=hasCache --run --build="$CNX" --build=csv
-  - cp -R ./RELEASES ./RELEASES_ALL_FR
+  - RLS='./RELEASES-all-FR'
+  - ./make.sh --build=hasCache --run --build="$CNX" --release="$RLS" --build=csv
   ############################################
   - ./make.sh --build=hasCache --run --image
   ############################################
@@ -79,10 +79,10 @@ before_deploy:
   ############################################
   - ./make.sh --uninstall
   ############################################
-  - ls -al
+  #- ls -al
   ############################################
-  - git config --local user.name "$USER_NAME"
-  - git config --local user.email "$USER_EMAIL"
+  #- git config --local user.name "$USER_NAME"
+  #- git config --local user.email "$USER_EMAIL"
   #- git tag --force "$TRAVIS_TAG" $TRAVIS_COMMIT
   ############################################
   - ls -al
