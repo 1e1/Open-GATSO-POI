@@ -14,7 +14,7 @@ cache:
 branches:
   only:
     - master
-    #- stable
+    - beta
     #- develop
     - travisci
 
@@ -46,22 +46,22 @@ script:
   - ls -al
   ############################################
   - CNX='CNX_GATSO_FR'
-  - ./make.sh -arg=hasCache --run --build="$CNX" --build=csv
+  - ./make.sh --build=hasCache --run --build="$CNX" --build=csv
   - cp -R ./RELEASES ./RELEASES_GATSO_FR
   ############################################
   - CNX='CNX_GATSO_FR CNX_GATSO_EU'
-  - ./make.sh -arg=hasCache --run --build="$CNX" --build=csv
+  - ./make.sh --build=hasCache --run --build="$CNX" --build=csv
   - cp -R ./RELEASES ./RELEASES_GATSO_EU
   ############################################
   - CNX='CNX_FUEL_FR'
-  - ./make.sh -arg=hasCache --run --build="$CNX" --build=csv
+  - ./make.sh --build=hasCache --run --build="$CNX" --build=csv
   - cp -R ./RELEASES ./RELEASES_FUEL_FR
   ############################################
   - CNX='CNX_GATSO_FR CNX_FUEL_FR'
-  - ./make.sh -arg=hasCache --run --build="$CNX" --build=csv
+  - ./make.sh --build=hasCache --run --build="$CNX" --build=csv
   - cp -R ./RELEASES ./RELEASES_ALL_FR
   ############################################
-  - ./make.sh -arg=hasCache --run --image
+  - ./make.sh --build=hasCache --run --image
   ############################################
   - ls -al
 
@@ -83,7 +83,7 @@ before_deploy:
   ############################################
   - git config --local user.name "$USER_NAME"
   - git config --local user.email "$USER_EMAIL"
-  - git tag --force "$TRAVIS_TAG" $TRAVIS_COMMIT
+  #- git tag --force "$TRAVIS_TAG" $TRAVIS_COMMIT
   ############################################
   - ls -al
 
@@ -95,13 +95,12 @@ deploy:
     overwrite: true
     prerelease: true
     skip_cleanup: true
-    file:
-      - "./RELEASES/all_files.zip"
-      - "./RELEASES/sd_image.iso.zip"
+    file_glob: true
+    file: "./RELEASES*/*.zip"
     on:
       tags: false
       branch: 
-        - master
+        - beta
         - travisci
   - provider: releases
     api_key: $GITHUB_TOKEN
@@ -112,6 +111,21 @@ deploy:
     skip_cleanup: true
     file_glob: true
     file: "./RELEASES*/*"
+    on:
+      tags: false
+      branch: 
+        - master
+  - provider: releases
+    api_key: $GITHUB_TOKEN
+    name: $TRAVIS_TAG
+    #body: "$RELEASE_DESCRIPTION" # https://github.com/travis-ci/dpl/issues/155
+    overwrite: true
+    prerelease: false
+    skip_cleanup: true
+    file_glob: false
+    file:
+      - "./RELEASES/all_files.zip"
+      - "./RELEASES/sd_image.iso.zip"
     on:
       tags: true
   - provider: pages
