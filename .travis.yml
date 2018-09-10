@@ -46,19 +46,19 @@ script:
   - ls -al
   ############################################
   - CNX='CNX_GATSO_FR'
-  - ./make.sh -arg=hasCache --run -arg="$CNX" -arg=csv
+  - ./make.sh -arg=hasCache --run --build="$CNX" --build=csv
   - cp -R ./RELEASES ./RELEASES_GATSO_FR
   ############################################
   - CNX='CNX_GATSO_FR CNX_GATSO_EU'
-  - ./make.sh -arg=hasCache --run -arg="$CNX" -arg=csv
+  - ./make.sh -arg=hasCache --run --build="$CNX" --build=csv
   - cp -R ./RELEASES ./RELEASES_GATSO_EU
   ############################################
   - CNX='CNX_FUEL_FR'
-  - ./make.sh -arg=hasCache --run -arg="$CNX" -arg=csv
+  - ./make.sh -arg=hasCache --run --build="$CNX" --build=csv
   - cp -R ./RELEASES ./RELEASES_FUEL_FR
   ############################################
   - CNX='CNX_GATSO_FR CNX_FUEL_FR'
-  - ./make.sh -arg=hasCache --run -arg="$CNX" -arg=csv
+  - ./make.sh -arg=hasCache --run --build="$CNX" --build=csv
   - cp -R ./RELEASES ./RELEASES_ALL_FR
   ############################################
   - ./make.sh -arg=hasCache --run --image
