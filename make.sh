@@ -44,8 +44,12 @@ done
 
 ∂()
 {
-    realpath --relative-to=$BASE_DIR $1
+    #realpath --relative-to=$BASE_DIR $1
+    ABSOLUTE_PATH=$1
+    RELATIVE_PATH=${ABSOLUTE_PATH#$BASE_DIR}
+    echo "./$RELATIVE_PATH"
 }
+
 
 make_flat_zip()
 {
@@ -57,9 +61,9 @@ make_flat_zip()
 
         if [ $count != 0 ]
         then
-            mkdir "${BUILD_PATH}_${EXT}"
+            mkdir -p "${BUILD_PATH}_${EXT}"
             cp -R ${BUILD_PATH}/*.{bmp,$EXT} "${BUILD_PATH}_${EXT}/"
-            zip -jr "${RELEASE_PATH}/${EXT}_files.zip" $(∂ "${BUILD_PATH}_${EXT}/")
+            zip -qjr "${RELEASE_PATH}/${EXT}_files.zip" $(∂ "${BUILD_PATH}_${EXT}/")
             rm -rf "${BUILD_PATH}_${EXT}"
         fi
     fi
@@ -75,7 +79,6 @@ cache_dl()
 _cache()
 {
     ¶ '_cache'
-    [ ! -d $CACHE_PATH ] && mkdir $CACHE_PATH
     [ ! -f $CACHE_FUEL_FR_FILENAME  ] && cache_dl $CACHE_FUEL_FR_URL  $CACHE_FUEL_FR_FILENAME
     [ ! -f $CACHE_GATSO_EU_FILENAME ] && cache_dl $CACHE_GATSO_EU_URL $CACHE_GATSO_EU_FILENAME
 }
@@ -98,7 +101,7 @@ _uncache()
 _init()
 {
     ¶ '_init'
-    [ ! -d $BUILD_PATH   ] && mkdir $BUILD_PATH
+    [ ! -d $BUILD_PATH   ] && mkdir -p $BUILD_PATH
 }
 
 
@@ -146,13 +149,12 @@ _build()
 _release()
 {
     ¶ '_release'
-    [ ! -d $RELEASE_PATH ] && mkdir $RELEASE_PATH
-    [ -d $BUILD_PATH ] && zip -jr $RELEASE_PATH/all_files.zip $(∂ $BUILD_PATH)
-    z $RELEASE_PATH/all_files.zip $BUILD_PATH
+    [ ! -d $RELEASE_PATH ] && mkdir -p $RELEASE_PATH
+    [ -d $BUILD_PATH ] && zip -qjr $RELEASE_PATH/all_files.zip $(∂ $BUILD_PATH)
     make_flat_zip csv
     make_flat_zip gpx
     make_flat_zip ov2
-    [ -d $MOUNT_PATH ] && zip -r $RELEASE_PATH/sd_files.zip $(∂ $MOUNT_PATH)
+    [ -d $MOUNT_PATH ] && zip -qr $RELEASE_PATH/sd_files.zip $(∂ $MOUNT_PATH)
 }
 
 
@@ -186,9 +188,9 @@ _image()
         CMD='mkisofs'
     fi
 
-    $CMD -o $BUILD_PATH/sd_image.iso $MOUNT_PATH
-    [ ! -d $RELEASE_PATH ] && mkdir $RELEASE_PATH
-    zip -r $RELEASE_PATH/sd_image.iso.zip $BUILD_PATH/sd_image.iso
+    $CMD -o $BUILD_PATH/sd_image.iso $(∂ $MOUNT_PATH)
+    [ ! -d $RELEASE_PATH ] && mkdir -p $RELEASE_PATH
+    zip -qr $RELEASE_PATH/sd_image.iso.zip  $(∂ $BUILD_PATH/sd_image.iso)
     rm -f $BUILD_PATH/sd_image.iso
 }
 
@@ -225,7 +227,10 @@ read -d '' CONFIG <<- EOM
     _init
 --uncache
     _uncache
+--cache-force
+    _cache
 --cache
+    _uncache_auto
     _cache
 --uninstall
     _uninstall

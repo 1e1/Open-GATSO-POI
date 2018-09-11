@@ -48,7 +48,7 @@ _install()
     esac
 
     curl -sSL -D - $GH_URL -o $MYPOIS_GZ_PATH
-    mkdir $MYPOIS_PATH
+    mkdir -p $MYPOIS_PATH
     tar -xzf $MYPOIS_GZ_PATH -C $MYPOIS_PATH --strip-components 1
     rm $MYPOIS_GZ_PATH
 }
@@ -142,7 +142,7 @@ _make_config()
 
     if [ ! -d $BUILD_CSV_H_PATH ]
     then
-        mkdir $BUILD_CSV_H_PATH
+        mkdir -p $BUILD_CSV_H_PATH
     fi
 
 
