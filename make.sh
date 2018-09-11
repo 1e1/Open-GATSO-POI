@@ -5,6 +5,7 @@ BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )
 BUILD_PATH="$BASE_DIR/BUILD"
 CACHE_PATH="$BASE_DIR/CACHE"
 RELEASE_PATH="$BASE_DIR/RELEASES"
+RELEASE_PREFIX=''
 MOUNT_PATH="$BASE_DIR/SD_CARD"
 MANIFEST_PATH="$BUILD_PATH/manifest.txt"
 VERSIONS_PATH="$BUILD_PATH/versions.txt"
@@ -29,6 +30,9 @@ do
       ;;
     --release=*)
       RELEASE_PATH=${opt#*=}
+      ;;
+    --release-prefix=*)
+      RELEASE_PREFIX=${opt#*=}
       ;;
 esac
 done
@@ -63,7 +67,7 @@ make_flat_zip()
         then
             mkdir -p "${BUILD_PATH}_${EXT}"
             cp -R ${BUILD_PATH}/*.{bmp,$EXT} "${BUILD_PATH}_${EXT}/"
-            zip -qjr "${RELEASE_PATH}/${EXT}_files.zip" $(∂ "${BUILD_PATH}_${EXT}/")
+            zip -qjr "${RELEASE_PATH}/${RELEASE_PREFIX}${EXT}_files.zip" $(∂ "${BUILD_PATH}_${EXT}/")
             rm -rf "${BUILD_PATH}_${EXT}"
         fi
     fi
@@ -150,11 +154,11 @@ _release()
 {
     ¶ '_release'
     [ ! -d $RELEASE_PATH ] && mkdir -p $RELEASE_PATH
-    [ -d $BUILD_PATH ] && zip -qjr $RELEASE_PATH/all_files.zip $(∂ $BUILD_PATH)
+    [ -d $BUILD_PATH ] && zip -qjr $RELEASE_PATH/${RELEASE_PREFIX}all_files.zip $(∂ $BUILD_PATH)
     make_flat_zip csv
     make_flat_zip gpx
     make_flat_zip ov2
-    [ -d $MOUNT_PATH ] && zip -qr $RELEASE_PATH/sd_files.zip $(∂ $MOUNT_PATH)
+    [ -d $MOUNT_PATH ] && zip -qr $RELEASE_PATH/${RELEASE_PREFIX}sd_files.zip $(∂ $MOUNT_PATH)
 }
 
 
@@ -190,7 +194,7 @@ _image()
 
     $CMD -o $BUILD_PATH/sd_image.iso $(∂ $MOUNT_PATH)
     [ ! -d $RELEASE_PATH ] && mkdir -p $RELEASE_PATH
-    zip -qr $RELEASE_PATH/sd_image.iso.zip  $(∂ $BUILD_PATH/sd_image.iso)
+    zip -qr $RELEASE_PATH/${RELEASE_PREFIX}sd_image.iso.zip  $(∂ $BUILD_PATH/sd_image.iso)
     rm -f $BUILD_PATH/sd_image.iso
 }
 

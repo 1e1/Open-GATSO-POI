@@ -42,23 +42,23 @@ script:
   - ls -al
   ############################################
   - CNX='CNX_GATSO_FR'
-  - RLS='./RELEASES/gatso-FR'
-  - ./make.sh --build=hasCache --run --build=csv --build="$CNX" --release="$RLS"
+  - RLS='FR-gatso:'
+  - ./make.sh --build=hasCache --run --build=csv --build="$CNX" --release-prefix="$RLS"
   - ls -R $RLS
   ############################################
   - CNX='CNX_GATSO_FR CNX_GATSO_EU'
-  - RLS='./RELEASES/gatso-EU'
-  - ./make.sh --build=hasCache --run --build=csv --build="$CNX" --release="$RLS"
+  - RLS='EU-gatso:'
+  - ./make.sh --build=hasCache --run --build=csv --build="$CNX" --release-prefix="$RLS"
   - ls -R $RLS
   ############################################
   - CNX='CNX_FUEL_FR'
-  - RLS='./RELEASES/fuel-FR'
-  - ./make.sh --build=hasCache --run --build=csv --build="$CNX" --release="$RLS"
+  - RLS='FR-fuel:'
+  - ./make.sh --build=hasCache --run --build=csv --build="$CNX" --release-prefix="$RLS"
   - ls -R $RLS
   ############################################
   - CNX='CNX_GATSO_FR CNX_FUEL_FR'
-  - RLS='./RELEASES/all-FR'
-  - ./make.sh --build=hasCache --run --build=csv --build="$CNX" --release="$RLS"
+  - RLS='FR-all:'
+  - ./make.sh --build=hasCache --run --build=csv --build="$CNX" --release-prefix="$RLS"
   - ls -R $RLS
   ############################################
   - ./make.sh --build=hasCache --run --image
@@ -99,7 +99,7 @@ deploy:
     prerelease: true
     skip_cleanup: true
     file_glob: true
-    file: ./RELEASES/**/*.zip
+    file: ./RELEASES/*.zip
     on:
       tags: false
       branch: 
