@@ -27,7 +27,8 @@ done
 
 
 __() { echo $1 >> $CONFIG_PATH; }
-¶() {
+¶()
+{
     echo
     echo '----------'
     echo $1

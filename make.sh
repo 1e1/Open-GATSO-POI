@@ -34,16 +34,22 @@ esac
 done
 
 
-¶() {
+¶()
+{
     echo
     echo '=========='
     echo $1
     echo '=========='
 }
 
-make_zip()
+∂()
 {
-    ¶ 'make_zip'
+    realpath --relative-to=$BASE_DIR $1
+}
+
+make_flat_zip()
+{
+    ¶ 'make_flat_zip'
     if [ -d $BUILD_PATH ]
     then
         EXT=$1
@@ -53,7 +59,7 @@ make_zip()
         then
             mkdir "${BUILD_PATH}_${EXT}"
             cp -R ${BUILD_PATH}/*.{bmp,$EXT} "${BUILD_PATH}_${EXT}/"
-            zip -r "${RELEASE_PATH}/${EXT}_files.zip" "${BUILD_PATH}_${EXT}/"
+            zip -jr "${RELEASE_PATH}/${EXT}_files.zip" $(∂ "${BUILD_PATH}_${EXT}/")
             rm -rf "${BUILD_PATH}_${EXT}"
         fi
     fi
@@ -72,6 +78,13 @@ _cache()
     [ ! -d $CACHE_PATH ] && mkdir $CACHE_PATH
     [ ! -f $CACHE_FUEL_FR_FILENAME  ] && cache_dl $CACHE_FUEL_FR_URL  $CACHE_FUEL_FR_FILENAME
     [ ! -f $CACHE_GATSO_EU_FILENAME ] && cache_dl $CACHE_GATSO_EU_URL $CACHE_GATSO_EU_FILENAME
+}
+
+
+_uncache_auto()
+{
+    ¶ '_uncache_auto'
+    find $CACHE_PATH -type f -mmin +360 -delete
 }
 
 
@@ -134,11 +147,12 @@ _release()
 {
     ¶ '_release'
     [ ! -d $RELEASE_PATH ] && mkdir $RELEASE_PATH
-    [ -d $BUILD_PATH ] && zip -r $RELEASE_PATH/all_files.zip $BUILD_PATH
-    make_zip csv
-    make_zip gpx
-    make_zip ov2
-    [ -d $MOUNT_PATH ] && zip -r $RELEASE_PATH/sd_files.zip $MOUNT_PATH
+    [ -d $BUILD_PATH ] && zip -jr $RELEASE_PATH/all_files.zip $(∂ $BUILD_PATH)
+    z $RELEASE_PATH/all_files.zip $BUILD_PATH
+    make_flat_zip csv
+    make_flat_zip gpx
+    make_flat_zip ov2
+    [ -d $MOUNT_PATH ] && zip -r $RELEASE_PATH/sd_files.zip $(∂ $MOUNT_PATH)
 }
 
 
@@ -263,7 +277,11 @@ then
     "--init")
       _init
       ;;
+    "--cache-force")
+      _cache
+      ;;
     "--cache")
+      _uncache_auto
       _cache
       ;;
     "--uncache")
