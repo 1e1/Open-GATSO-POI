@@ -41,15 +41,21 @@ before_script:
 script: 
   - ls -al
   ############################################
-  - ƒ() { RLS="$1"; CNX="$2"; ./make.sh --build=hasCache --build=csv --run --build="$CNX" --release="$RLS" }
+  - CNX='CNX_GATSO_FR'
+  - RLS='./RELEASES-gatso-FR'
+  - ./make.sh --build=hasCache --build=csv --run --build="$CNX" --release="$RLS"
   ############################################
-  - ƒ './RELEASES-gatso-EU' 'CNX_GATSO_FR CNX_GATSO_EU'
+  - CNX='CNX_GATSO_FR CNX_GATSO_EU'
+  - RLS='./RELEASES-gatso-EU'
+  - ./make.sh --build=hasCache --build=csv --run --build="$CNX" --release="$RLS"
   ############################################
-  - ƒ './RELEASES-gatso-FR' 'CNX_GATSO_FR'
+  - CNX='CNX_FUEL_FR'
+  - RLS='./RELEASES-fuel-FR'
+  - ./make.sh --build=hasCache --build=csv --run --build="$CNX" --release="$RLS"
   ############################################
-  - ƒ './RELEASES-fuel-FR'  'CNX_FUEL_FR'
-  ############################################
-  - ƒ './RELEASES-all-FR'   'CNX_GATSO_FR CNX_FUEL_FR'
+  - CNX='CNX_GATSO_FR CNX_FUEL_FR'
+  - RLS='./RELEASES-all-FR'
+  - ./make.sh --build=hasCache --build=csv --run --build="$CNX" --release="$RLS"
   ############################################
   - ./make.sh --build=hasCache --run --image
   ############################################
