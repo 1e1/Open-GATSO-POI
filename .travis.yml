@@ -112,8 +112,8 @@ deploy:
     overwrite: true
     prerelease: false
     skip_cleanup: true
-    file_glob: false
-    file: ./RELEASES
+    file_glob: true
+    file: ./RELEASES/**/*
     on:
       tags: false
       branch: 
