@@ -30,10 +30,6 @@ before_install:
 
 install:
   - ls -al
-  ############################################
-  - find ./CACHE -type f -mmin +360 -delete
-  ############################################
-  - ls -al
 
 before_script:
   - ls -al
@@ -45,21 +41,15 @@ before_script:
 script: 
   - ls -al
   ############################################
-  - CNX='CNX_GATSO_FR'
-  - RLS='./RELEASES-gatso-FR'
-  - ./make.sh --build=hasCache --run --build="$CNX" --release="$RLS" --build=csv
+  - ƒ() { RLS="$1"; CNX="$2"; ./make.sh --build=hasCache --build=csv --run --build="$CNX" --release="$RLS" }
   ############################################
-  - CNX='CNX_GATSO_FR CNX_GATSO_EU'
-  - RLS='./RELEASES-gatso-EU'
-  - ./make.sh --build=hasCache --run --build="$CNX" --release="$RLS" --build=csv
+  - ƒ './RELEASES-gatso-EU' 'CNX_GATSO_FR CNX_GATSO_EU'
   ############################################
-  - CNX='CNX_FUEL_FR'
-  - RLS='./RELEASES-fuel-FR'
-  - ./make.sh --build=hasCache --run --build="$CNX" --release="$RLS" --build=csv
+  - ƒ './RELEASES-gatso-FR' 'CNX_GATSO_FR'
   ############################################
-  - CNX='CNX_GATSO_FR CNX_FUEL_FR'
-  - RLS='./RELEASES-all-FR'
-  - ./make.sh --build=hasCache --run --build="$CNX" --release="$RLS" --build=csv
+  - ƒ './RELEASES-fuel-FR'  'CNX_FUEL_FR'
+  ############################################
+  - ƒ './RELEASES-all-FR'   'CNX_GATSO_FR CNX_FUEL_FR'
   ############################################
   - ./make.sh --build=hasCache --run --image
   ############################################
