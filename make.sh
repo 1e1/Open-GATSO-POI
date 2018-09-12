@@ -192,7 +192,7 @@ _image()
         CMD='mkisofs'
     fi
 
-    $CMD -o $BUILD_PATH/sd_image.iso $(∂ $MOUNT_PATH)
+    $CMD -iso-level 4 -o $BUILD_PATH/sd_image.iso $(∂ $MOUNT_PATH)
     [ ! -d $RELEASE_PATH ] && mkdir -p $RELEASE_PATH
     zip -qr $RELEASE_PATH/${RELEASE_PREFIX}sd_image.iso.zip  $(∂ $BUILD_PATH/sd_image.iso)
     rm -f $BUILD_PATH/sd_image.iso
