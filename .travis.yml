@@ -42,22 +42,22 @@ script:
   - ls -al
   ############################################
   - CNX='CNX_GATSO_FR'
-  - RLS='FR-gatso:'
+  - RLS='FR:gatso:'
   - ./make.sh --build=hasCache --run --build=csv --build="$CNX" --release-prefix="$RLS"
   - ls -R ./RELEASES
   ############################################
   - CNX='CNX_GATSO_FR CNX_GATSO_EU'
-  - RLS='EU-gatso:'
+  - RLS='EU:gatso:'
   - ./make.sh --build=hasCache --run --build=csv --build="$CNX" --release-prefix="$RLS"
   - ls -R ./RELEASES
   ############################################
   - CNX='CNX_FUEL_FR'
-  - RLS='FR-fuel:'
+  - RLS='FR:fuel:'
   - ./make.sh --build=hasCache --run --build=csv --build="$CNX" --release-prefix="$RLS"
   - ls -R ./RELEASES
   ############################################
   - CNX='CNX_GATSO_FR CNX_FUEL_FR'
-  - RLS='FR-all:'
+  - RLS='FR:gatso-fuel:'
   - ./make.sh --build=hasCache --run --build=csv --build="$CNX" --release-prefix="$RLS"
   - ls -R ./RELEASES
   ############################################
