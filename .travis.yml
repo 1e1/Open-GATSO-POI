@@ -84,6 +84,10 @@ before_deploy:
   ############################################
   - git config --local user.name "$USER_NAME"
   - git config --local user.email "$USER_EMAIL"
+  - OLD_TAGS=$(git tag -l | grep "^${TAG_PREFIX}." | tail -n +2)
+  - echo $OLD_TAGS | xargs -n 1 echo "delete:"
+  - echo $OLD_TAGS | xargs -n 1 git push --delete origin
+  - echo $OLD_TAGS | xargs -n 1 git tag -d
   #- git tag --force "$TRAVIS_TAG" $TRAVIS_COMMIT
   ############################################
   - ls -R ./RELEASES
