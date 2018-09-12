@@ -71,12 +71,14 @@ before_deploy:
   ############################################
   - export GATSO_UPDATE_MAX=`date -d @$(cat ./BUILD/version.txt | sort -n | tail -1) +%Y-%m-%d`
   - export RELEASE_DESCRIPTION=`cat ./BUILD/manifest.txt`
+  - export RELEASE_NAME="${TAG_PREFIX}${TRAVIS_BRANCH}"
   ############################################
   - echo "TRAVIS_TAG=$TRAVIS_TAG;"
   - echo "TAG_PREFIX=$TAG_PREFIX;"
   - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH;"
   - echo "GATSO_UPDATE_MAX=$GATSO_UPDATE_MAX;"
   - "[[ $TRAVIS_TAG ]] || export TRAVIS_TAG=\"${TAG_PREFIX}${TRAVIS_BRANCH}.${GATSO_UPDATE_MAX}\""
+  - echo "TRAVIS_TAG=$TRAVIS_TAG"
   ############################################
   - ./make.sh --uninstall
   ############################################
@@ -97,7 +99,7 @@ before_deploy:
 deploy:
   - provider: releases
     api_key: $GITHUB_TOKEN
-    name: $TRAVIS_TAG
+    name: $RELEASE_NAME
     #body: "$RELEASE_DESCRIPTION" # https://github.com/travis-ci/dpl/issues/155
     overwrite: true
     prerelease: true
@@ -111,7 +113,7 @@ deploy:
         - travisci
   - provider: releases
     api_key: $GITHUB_TOKEN
-    name: $TRAVIS_TAG
+    name: $RELEASE_NAME
     #body: "$RELEASE_DESCRIPTION" # https://github.com/travis-ci/dpl/issues/155
     overwrite: true
     prerelease: false
