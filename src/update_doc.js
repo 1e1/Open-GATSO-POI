@@ -2,7 +2,7 @@ const BUILD_DIRECTORY = 'BUILD';
 const MANIFEST_FILENAME = 'manifest.txt';
 const VERSION_FILENAME = 'version.txt';
 const VERSIONS_FILENAME = 'versions.txt';
-const UPDATE_FILENAMES = [ './index.html', './readme.md', './version.svg', './cnx/{source}.svg' ];
+const UPDATE_FILENAMES = [ './index.html', './version.svg', './cnx/{source}.svg' ];
 
 const FS = require('fs');
 const PATH = require('path');
