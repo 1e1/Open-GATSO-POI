@@ -5,6 +5,7 @@ Get the latest build on the [website](https://1e1.github.io/Open-GATSO-POI/)
 ![preview](./src/assets/img/cover.png)
 
 Daily it gives the latest set of speed cameras on the EU.
+Available formats are:
 
 * GPX (accurate)
     - Garmin (embeded into VolksWagen, MAN, Skoda, Seat, etc.)
@@ -29,7 +30,7 @@ Daily it gives the latest set of speed cameras on the EU.
     - insert the SD Card in your GPS
     - you should manually import the POI (see [howto for VW](#explanations)) 
 
-2. Official on SD Card
+2. Official Garmin installation
     - download the lastest `all_files.zip` from the [releases page](https://github.com/1e1/Garmin-Open-GATSO/releases)
     - unzip it
     - download [Garmin POI Loader](https://www8.garmin.com/support/collection.jsp?product=999-99999-12)
@@ -81,7 +82,7 @@ REST service from:
 * draw 24x24 icons on https://www.piskelapp.com/
 * export as animated GIF 
 * get every frame: `$ convert -coalesce ./src/assets/org/New\ Piskel.gif  frame_%02d.bmp`
-* create PNG thumbs `convert ./src/assets/icn/*.png -resize 24x24\> -depth 8 -define png:compression-filter=2 -define png:compression-level=9 -define png:compression-strategy=1 -set filename:fname '%t_tn' +adjoin './src/assets/img/%[filename:fname].png'`
+* create PNG thumbs `convert ./src/assets/icn/*.png -strip -resize 24x24\> -depth 8 -define png:compression-filter=2 -define png:compression-level=9 -define png:compression-strategy=1 -set filename:fname '%t_tn' +adjoin './src/assets/img/%[filename:fname].png'`
 * remove EXIF from photos `convert ./src/assets/import/* -strip -resize 1024x512\> -set filename:fname '%t_tn' +adjoin './src/assets/export/%[filename:fname].jpg'`
 
 ### CSV structure
@@ -91,7 +92,7 @@ REST service from:
 
 ### Gamin POI Loader
 * https://www8.garmin.com/support/collection.jsp?product=999-99999-12
-* save image: `dd if=/dev/disk2 of=./sd_image.img`
+* save image disk: `dd if=/dev/disk2 of=./sd_image.img`
 
 ### TomTom POI ov2
 * https://www.tomtom.com/lib/doc/ttnavsdk3_manual.pdf
