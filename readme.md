@@ -120,6 +120,14 @@ REST service from:
 
 [SpeedCamUpdates](http://www.speedcamupdates.fr) helps for a lot of configurations
 
+## TODO
+
+update french fuel names following: 
+https://www.ouest-france.fr/economie/transports/carburants-essence-diesel/l-essence-sans-plomb-va-disparaitre-de-nos-pompes-le-12-octobre-5995929
+waiting for an update from: 
+https://www.prix-carburants.gouv.fr/rubrique/opendata/
+
+
 ---
 
 ![version](https://raw.githubusercontent.com/1e1/Open-GATSO-POI/gh-pages/version.svg?sanitize=true)
