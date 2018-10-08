@@ -1,18 +1,19 @@
 #!/bin/bash
 
 
-BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )
-MYPOIS_PATH="$BASE_DIR/mypois"
-MYPOIS_GZ_PATH="$MYPOIS_PATH.tar.gz"
-MYPOIS_EXEC="$MYPOIS_PATH/mypois.py"
-MYPOIS_TS_PATH="$BASE_DIR/mypois.ts"
-CONFIG_PATH="$BASE_DIR/config.ini"
-BUILD_PATH="$BASE_DIR/BUILD"
-SRC_PATH="$BASE_DIR/src"
-BUILD_CSV_H_PATH="$BASE_DIR/BUILD_csv_h"
-MANIFEST_PATH="$BUILD_PATH/manifest.txt"
-VERSIONS_PATH="$BUILD_PATH/versions.txt"
-MOUNT_PATH="$BASE_DIR/SD_CARD"
+readonly BIN_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )
+readonly BASE_DIR=$( dirname $BIN_DIR)
+readonly MYPOIS_PATH="$BASE_DIR/mypois"
+readonly MYPOIS_GZ_PATH="$MYPOIS_PATH.tar.gz"
+readonly MYPOIS_EXEC="$MYPOIS_PATH/mypois.py"
+readonly MYPOIS_TS_PATH="$BASE_DIR/mypois.ts"
+readonly CONFIG_PATH="$BASE_DIR/config.ini"
+readonly BUILD_PATH="$BASE_DIR/BUILD"
+readonly SRC_PATH="$BASE_DIR/src"
+readonly BUILD_CSV_H_PATH="$BASE_DIR/BUILD_csv_h"
+readonly MANIFEST_PATH="$BUILD_PATH/manifest.txt"
+readonly VERSIONS_PATH="$BUILD_PATH/versions.txt"
+readonly MOUNT_PATH="$BASE_DIR/SD_CARD"
 
 INSTALL_CHANNEL='master'
 
