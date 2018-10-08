@@ -34,13 +34,24 @@ rules: {
 
 services: {
     gazole: { label: 'Gazole', type: 'gazo', basenames: [ 'FUEL_ALL', 'FUEL_gazole', 'FUEL_b7' ] },
-    e10: { label: 'E10', type: 'e10', basenames: [ 'FUEL_ALL', 'FUEL_petrol', 'FUEL_e10' ] },
-    sp95: { label: 'SP95', type: 'sp95', basenames: [ 'FUEL_ALL', 'FUEL_petrol', 'FUEL_sp95', 'FUEL_e5' ] },
-    e85: { label: 'E85', type: 'e85', basenames: [ 'FUEL_ALL', 'FUEL_petrol', 'FUEL_e85' ] },
-    sp98: { label: 'SP98', type: 'sp98', basenames: [ 'FUEL_ALL', 'FUEL_petrol', 'FUEL_sp98', 'FUEL_e5' ] },
-    gpl: { label: 'GPL', type: 'gpl', basenames: [ 'FUEL_ALL', 'FUEL_gaz', 'FUEL_gpl', 'FUEL_lpg' ] },
+    b7:  { label: 'B7',  type: 'b7',  basenames: [ 'FUEL_ALL', 'FUEL_gazole', 'FUEL_b7' ] },
+    b10: { label: 'B10', type: 'b10', basenames: [ 'FUEL_ALL', 'FUEL_gazole', 'FUEL_b10' ] },
+    xtl: { label: 'XTL', type: 'xtl', basenames: [ 'FUEL_ALL', 'FUEL_gazole', 'FUEL_xtl' ] },
+
+    e85:  { label: 'E85',  type: 'e85',  basenames: [ 'FUEL_ALL', 'FUEL_petrol', 'FUEL_e85' ] },
+    e10:  { label: 'E10',  type: 'e10',  basenames: [ 'FUEL_ALL', 'FUEL_petrol', 'FUEL_e10' ] },
+    sp95: { label: 'SP95', type: 'sp95', basenames: [ 'FUEL_ALL', 'FUEL_petrol', 'FUEL_e5', 'FUEL_sp95' ] },
+    e5:   { label: 'E5',   type: 'e5',   basenames: [ 'FUEL_ALL', 'FUEL_petrol', 'FUEL_e5' ] },
+    sp98: { label: 'SP98', type: 'sp98', basenames: [ 'FUEL_ALL', 'FUEL_petrol', 'FUEL_e5', 'FUEL_sp98' ] },
+
+    gpl: { label: 'GPL', type: 'gpl', basenames: [ 'FUEL_ALL', 'FUEL_gaz', 'FUEL_lpg', 'FUEL_gpl' ] },
+    lpg: { label: 'LPG', type: 'lpg', basenames: [ 'FUEL_ALL', 'FUEL_gaz', 'FUEL_lpg' ] },
     gnv: { label: 'GNV', type: 'gnv', basenames: [ 'FUEL_ALL', 'FUEL_gaz', 'FUEL_gnv' ] },
+    lng: { label: 'LNG', type: 'lng', basenames: [ 'FUEL_ALL', 'FUEL_gaz', 'FUEL_lng' ] },
+    h2: { label: 'H2', type: 'h2', basenames: [ 'FUEL_ALL', 'FUEL_gaz', 'FUEL_h2' ] },
+
     electricity: { label: 'Bornes électriques', type: 'elec', basenames: [ 'FUEL_ALL', 'FUEL_electricity' ] },
+
     pressure: { label: 'Station de gonflage', type:'tyre', basenames: [ 'FUEL_pressure' ]  },
     adblue: { label: 'Carburant additivé', type:'adblue', basenames: [ 'FUEL_ALL', 'FUEL_adblue' ]  },
 },
