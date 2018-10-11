@@ -64,10 +64,10 @@ node ./build.js csv gpx
 require [cdrtools](http://cdrtools.sourceforge.net/private/cdrecord.html) and [mypois](https://github.com/jimmyH/mypois)
 
 ```bash
-./make.sh
+./bin/make.sh
 ```
 
-you should read `./make.sh --help` and `./mypois_ctl.sh help`
+you should read `./bin/make.sh --help` and `./bin/mypois_ctl.sh help`
 
 
 ## documentation
@@ -77,6 +77,11 @@ REST service from:
 * ![version GATSO FR](https://raw.githubusercontent.com/1e1/Open-GATSO-POI/gh-pages/cnx/gatso-FR.svg?sanitize=true) https://radars.securite-routiere.gouv.fr/ 
 * ![version GATSO EU](https://raw.githubusercontent.com/1e1/Open-GATSO-POI/gh-pages/cnx/gatso-EU.svg?sanitize=true) https://lufop.net/zones-de-danger-france-et-europe-asc-et-csv/
 * ![version FUEL FR](https://raw.githubusercontent.com/1e1/Open-GATSO-POI/gh-pages/cnx/fuel-FR.svg?sanitize=true) https://www.prix-carburants.gouv.fr/rubrique/opendata/
+
+Other open data sources:
+- https://data.opendatasoft.com/
+- https://www.europeandataportal.eu/
+
 
 ### GFX tool
 * draw 24x24 icons on https://www.piskelapp.com/
@@ -130,5 +135,5 @@ https://www.prix-carburants.gouv.fr/rubrique/opendata/
 
 ---
 
-![version](https://raw.githubusercontent.com/1e1/Open-GATSO-POI/gh-pages/version.svg?sanitize=true)
+![version](https://raw.githubusercontent.com/1e1/Open-GATSO-POI/gh-pages/cnx/version.svg?sanitize=true)
 ![Travis CI](https://api.travis-ci.org/1e1/Open-GATSO-POI.svg?branch=master)

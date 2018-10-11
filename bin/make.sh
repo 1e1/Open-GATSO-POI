@@ -1,20 +1,22 @@
 #!/bin/bash
 
 
-BASE_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )
-BUILD_PATH="$BASE_DIR/BUILD"
-CACHE_PATH="$BASE_DIR/CACHE"
+readonly BIN_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )
+readonly BASE_DIR=$( dirname $BIN_DIR)
+readonly BUILD_PATH="$BASE_DIR/BUILD"
+readonly CACHE_PATH="$BASE_DIR/CACHE"
+readonly MANIFEST_PATH="$BUILD_PATH/manifest.txt"
+readonly VERSIONS_PATH="$BUILD_PATH/versions.txt"
+
 RELEASE_PATH="$BASE_DIR/RELEASES"
 RELEASE_PREFIX=''
 MOUNT_PATH="$BASE_DIR/SD_CARD"
-MANIFEST_PATH="$BUILD_PATH/manifest.txt"
-VERSIONS_PATH="$BUILD_PATH/versions.txt"
 
-CACHE_FUEL_FR_URL='https://donnees.roulez-eco.fr/opendata/instantane'
-CACHE_FUEL_FR_FILENAME='fuel-FR.zip'
+readonly CACHE_FUEL_FR_URL='https://donnees.roulez-eco.fr/opendata/instantane'
+readonly CACHE_FUEL_FR_FILENAME='fuel-FR.zip'
 
-CACHE_GATSO_EU_URL='https://lufop.net/wp-content/plugins/downloads-manager/upload/Lufop-Zones-de-danger-EU-CSV.zip'
-CACHE_GATSO_EU_FILENAME='gatso-EU.zip'
+readonly CACHE_GATSO_EU_URL='https://lufop.net/wp-content/plugins/downloads-manager/upload/Lufop-Zones-de-danger-EU-CSV.zip'
+readonly CACHE_GATSO_EU_FILENAME='gatso-EU.zip'
 
 BUILD_ARGS=()
 INSTALL_ARGS=()
@@ -113,21 +115,21 @@ _install()
 {
     ¶ '_install'
 
-    $BASE_DIR/mypois_ctl.sh install ${INSTALL_ARGS[*]}
+    $BIN_DIR/mypois_ctl.sh install ${INSTALL_ARGS[*]}
 }
 
 
 _uninstall()
 {
     ¶ '_uninstall'
-    $BASE_DIR/mypois_ctl.sh erase
+    $BIN_DIR/mypois_ctl.sh erase
 }
 
 
 _clean()
 {
     ¶ '_clean'
-    $BASE_DIR/mypois_ctl.sh clean
+    $BIN_DIR/mypois_ctl.sh clean
     
     [ -d $BUILD_PATH ] && rm -rf $BUILD_PATH
 }
@@ -137,7 +139,7 @@ _erase()
 {
     ¶ '_erase'
     _uncache
-    $BASE_DIR/mypois_ctl.sh erase
+    $BIN_DIR/mypois_ctl.sh erase
     _clean
     _unrelease
 }
@@ -172,7 +174,7 @@ _unrelease()
 _mount()
 {
     ¶ '_mount'
-    $BASE_DIR/mypois_ctl.sh make
+    $BIN_DIR/mypois_ctl.sh make
     
     rc=$?
     if [ $rc != 0 ]
@@ -202,7 +204,7 @@ _image()
 _update_doc()
 {
     ¶ '_update_doc'
-    $BASE_DIR/mypois_ctl.sh update-version
+    $BIN_DIR/mypois_ctl.sh update-version
     node $BASE_DIR/src/update_doc.js
 }
 
