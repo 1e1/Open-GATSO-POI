@@ -7,7 +7,7 @@ readonly MYPOIS_PATH="$BASE_DIR/mypois"
 readonly MYPOIS_GZ_PATH="$MYPOIS_PATH.tar.gz"
 readonly MYPOIS_EXEC="$MYPOIS_PATH/mypois.py"
 readonly MYPOIS_TS_PATH="$BASE_DIR/mypois.ts"
-readonly CONFIG_PATH="$BASE_DIR/config.ini"
+readonly CONFIG_PATH="$BASE_DIR/mypois.ini"
 readonly BUILD_PATH="$BASE_DIR/BUILD"
 readonly SRC_PATH="$BASE_DIR/src"
 readonly BUILD_CSV_H_PATH="$BASE_DIR/BUILD_csv_h"
@@ -182,7 +182,7 @@ _make_config()
             GATSO) WARNING='yes' ;;
         esac
 
-        echo "Source=./BUILD_csv_h/${FILENAME}_h.csv"
+        echo "Source=$BUILD_CSV_H_PATH/${FILENAME}_h.csv"
 
         __ "[$FILENAME]"
         __ "Name=$NAME"
