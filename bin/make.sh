@@ -116,6 +116,7 @@ _install()
     ¶ '_install'
 
     $BIN_DIR/mypois_ctl.sh install ${INSTALL_ARGS[*]}
+    #$BIN_DIR/gpsbabel_ctl.sh install ${INSTALL_ARGS[*]}
 }
 
 
@@ -123,6 +124,7 @@ _uninstall()
 {
     ¶ '_uninstall'
     $BIN_DIR/mypois_ctl.sh erase
+    #$BIN_DIR/gpsbabel_ctl.sh erase
 }
 
 
@@ -130,6 +132,7 @@ _clean()
 {
     ¶ '_clean'
     $BIN_DIR/mypois_ctl.sh clean
+    #$BIN_DIR/gpsbabel_ctl.sh clean
     
     [ -d $BUILD_PATH ] && rm -rf $BUILD_PATH
 }
@@ -140,6 +143,8 @@ _erase()
     ¶ '_erase'
     _uncache
     $BIN_DIR/mypois_ctl.sh erase
+    #$BIN_DIR/gpsbabel_ctl.sh erase
+    [ -d $MOUNT_PATH ] && rm -rf $MOUNT_PATH
     _clean
     _unrelease
 }
@@ -160,7 +165,14 @@ _release()
     make_flat_zip csv
     make_flat_zip gpx
     make_flat_zip ov2
-    [ -d $MOUNT_PATH ] && zip -qr $RELEASE_PATH/${RELEASE_PREFIX}sd_files.zip $(∂ $MOUNT_PATH)
+    if [ -d $MOUNT_PATH ]
+    then
+        for img in `ls $MOUNT_PATH`
+        do
+            img_path="$MOUNT_PATH/$img"
+            zip -qr $RELEASE_PATH/${RELEASE_PREFIX}${img}_files.zip $(∂ $img_path)
+        done
+    fi
 }
 
 
@@ -175,6 +187,7 @@ _mount()
 {
     ¶ '_mount'
     $BIN_DIR/mypois_ctl.sh make
+    #$BIN_DIR/gpsbabel_ctl.sh make
     
     rc=$?
     if [ $rc != 0 ]
@@ -194,10 +207,15 @@ _image()
         CMD='mkisofs'
     fi
 
-    $CMD -iso-level 4 -o $BUILD_PATH/sd_image.iso $(∂ $MOUNT_PATH)
-    [ ! -d $RELEASE_PATH ] && mkdir -p $RELEASE_PATH
-    zip -qr $RELEASE_PATH/${RELEASE_PREFIX}sd_image.iso.zip  $(∂ $BUILD_PATH/sd_image.iso)
-    rm -f $BUILD_PATH/sd_image.iso
+    for img in `ls $MOUNT_PATH`
+    do
+        img_path="$MOUNT_PATH/$img"
+
+        $CMD -iso-level 4 -o $BUILD_PATH/sd_image.iso $(∂ $img_path)
+        [ ! -d $RELEASE_PATH ] && mkdir -p $RELEASE_PATH
+        zip -qr $RELEASE_PATH/${RELEASE_PREFIX}${img}_image.iso.zip  $(∂ $BUILD_PATH/sd_image.iso)
+        rm -f $BUILD_PATH/sd_image.iso
+    done
 }
 
 
@@ -205,6 +223,7 @@ _update_doc()
 {
     ¶ '_update_doc'
     $BIN_DIR/mypois_ctl.sh update-version
+    #$BIN_DIR/gpsbabel_ctl.sh update-version
     node $BASE_DIR/src/update_doc.js
 }
 
