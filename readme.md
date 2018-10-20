@@ -61,13 +61,16 @@ node ./build.js csv gpx
 
 ### batch 
 
-require [cdrtools](http://cdrtools.sourceforge.net/private/cdrecord.html) and [mypois](https://github.com/jimmyH/mypois)
+require:
+- [cdrtools](http://cdrtools.sourceforge.net/private/cdrecord.html) (making Disk Image)
+- [mypois](https://github.com/jimmyH/mypois) (exporting to Discover Media: Volkswagen, Audi, Bugatti, Seat, Škoda, Porsche, Lamborghini, Bentley, Ducati, Scania, MAN)
+- [gpsbabel](https://www.gpsbabel.org) (exporting to UConnect: FIAT)
 
 ```bash
 ./bin/make.sh
 ```
 
-you should read `./bin/make.sh --help` and `./bin/mypois_ctl.sh help`
+you should read `./bin/make.sh --help`, `./bin/mypois_ctl.sh help`, and `./bin/gpsbabel_ctl.sh help`
 
 
 ## documentation
@@ -98,6 +101,7 @@ Other open data sources:
 ### Gamin POI Loader
 * https://www8.garmin.com/support/collection.jsp?product=999-99999-12
 * save image disk: `dd if=/dev/disk2 of=./sd_image.img`
+* https://www.gpsbabel.org/htmldoc-development/fmt_garmin_gpi.html
 
 ### TomTom POI ov2
 * https://www.tomtom.com/lib/doc/ttnavsdk3_manual.pdf
@@ -127,8 +131,6 @@ Other open data sources:
 
 ## TODO
 
-update french fuel names following: 
-https://www.ouest-france.fr/economie/transports/carburants-essence-diesel/l-essence-sans-plomb-va-disparaitre-de-nos-pompes-le-12-octobre-5995929
 waiting for an update from: 
 https://www.prix-carburants.gouv.fr/rubrique/opendata/
 

@@ -13,7 +13,7 @@ readonly SRC_PATH="$BASE_DIR/src"
 readonly BUILD_CSV_H_PATH="$BASE_DIR/BUILD_csv_h"
 readonly MANIFEST_PATH="$BUILD_PATH/manifest.txt"
 readonly VERSIONS_PATH="$BUILD_PATH/versions.txt"
-readonly MOUNT_PATH="$BASE_DIR/SD_CARD"
+readonly MOUNT_PATH="$BASE_DIR/SD_CARD/VAG"
 
 INSTALL_CHANNEL='master'
 
@@ -111,7 +111,7 @@ _run()
     ¶ '_run'
     _unmount
 
-    python $MYPOIS_EXEC $CONFIG_PATH
+    python3 $MYPOIS_EXEC $CONFIG_PATH
 }
 
 _update_version()
@@ -151,7 +151,8 @@ _make_config()
 
     for f in `ls $BUILD_PATH/*.csv`
     do
-        cat <(echo 'longitude,latitude,name,comment') $f > ${f//\.csv/_h.csv}
+        #cat <(echo 'longitude,latitude,name,comment') $f > ${f//\.csv/_h.csv}
+        cat <(echo 'longitude,latitude,name,description') $f > ${f//\.csv/_h.csv}
     done
 
     mv $BUILD_PATH/*_h.csv $BUILD_CSV_H_PATH/
@@ -190,7 +191,7 @@ _make_config()
         __ "Source=$BUILD_CSV_H_PATH/${FILENAME}_h.csv"
         __ "Icon=$SRC_PATH/assets/icn/${FILENAME}.png"
         __ 'Disabled=no'
-        if [ $WARNING == 'yes' ]
+        if [ $WARNING == 'yes' ] && [ $INSTALL_CHANNEL == 'beta' ]
         then
             __ "WarnMessage=$FIRST_NAME"
             __ 'ActivationRadius=150000'
