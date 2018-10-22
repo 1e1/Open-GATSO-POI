@@ -15,9 +15,9 @@ readonly MOUNT_PATH="$BASE_DIR/SD_CARD/Garmin/POI"
 ¶()
 {
     echo
-    echo '----------'
-    echo $1
-    echo '----------'
+    echo '----------------------'
+    echo "Garmin   $1"
+    echo '----------------------'
 }
 
 
@@ -35,6 +35,7 @@ _uninstall()
 
 _init()
 {
+    ¶ '_init'
     mkdir -p $MOUNT_PATH
 }
 
@@ -68,6 +69,7 @@ _unmount()
 _erase()
 {
     ¶ '_erase'
+    _uninstall
     _clean
     _unmount
 }
@@ -86,12 +88,12 @@ _update_version()
     echo "$GPSLABEL_VERSION < $GPSLABEL_VERSION_PATH"
 
     cp $VERSIONS_PATH "$VERSIONS_PATH.old"
-    grep -v '^fs ' "$VERSIONS_PATH.old" > $VERSIONS_PATH
+    grep -v '^gpsbabel ' "$VERSIONS_PATH.old" > $VERSIONS_PATH
     rm -f "$VERSIONS_PATH.old"
 
     echo "$VERSIONS_PATH < $GPSLABEL_VERSION"
 
-    echo "fs $GPSLABEL_VERSION" >> $VERSIONS_PATH
+    echo "gpsbabel $GPSLABEL_VERSION" >> $VERSIONS_PATH
 }
 
 
@@ -99,7 +101,7 @@ _run()
 {
     ¶ '_run'
     _unmount
-
+    _init
 
     while IFS='' read -r line || [[ -n "$line" ]]; do
         IFS='/' read -ra cells <<< "$line"
@@ -114,7 +116,7 @@ _run()
         SOURCE="$BUILD_PATH/${FILENAME}.gpx"
         DESTINATION="${MOUNT_PATH}/${FILENAME}.gpi"
 
-        echo $GPSLABEL_EXEC -i gpx -f $SOURCE -o garmin_gpi,bitmap="$BMP_PATH" -F "$DESTINATION"
+        $GPSLABEL_EXEC -i gpx -f $SOURCE -o garmin_gpi,bitmap="$BMP_PATH" -F "$DESTINATION"
     done < $MANIFEST_PATH
 }
 
@@ -150,28 +152,28 @@ for opt in "$@"
 do
   case $opt in
   "update-version")
-      _update_version
-      ;;
+    _update_version
+    ;;
   "run")
-      _run
-      ;;
+    _run
+    ;;
   "install")
     _install
     _get_version
     ;;
   "uninstall")
-      _uninstall
-      ;;
+    _uninstall
+    ;;
   "clean")
-      _clean
-      ;;
+    _clean
+    ;;
   "erase")
-      _erase
-      ;;
+    _erase
+    ;;
   "make")
-      _run
-      _update_version
-      ;;
+    _run
+    _update_version
+    ;;
   "help")
     _help
     ;;

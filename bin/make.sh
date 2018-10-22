@@ -124,7 +124,7 @@ _uninstall()
 {
     ¶ '_uninstall'
     $BIN_DIR/mypois_ctl.sh erase
-    #$BIN_DIR/gpsbabel_ctl.sh erase
+    $BIN_DIR/gpsbabel_ctl.sh erase
 }
 
 
@@ -132,7 +132,7 @@ _clean()
 {
     ¶ '_clean'
     $BIN_DIR/mypois_ctl.sh clean
-    #$BIN_DIR/gpsbabel_ctl.sh clean
+    $BIN_DIR/gpsbabel_ctl.sh clean
     
     [ -d $BUILD_PATH ] && rm -rf $BUILD_PATH
 }
@@ -143,7 +143,7 @@ _erase()
     ¶ '_erase'
     _uncache
     $BIN_DIR/mypois_ctl.sh erase
-    #$BIN_DIR/gpsbabel_ctl.sh erase
+    $BIN_DIR/gpsbabel_ctl.sh erase
     [ -d $MOUNT_PATH ] && rm -rf $MOUNT_PATH
     _clean
     _unrelease
