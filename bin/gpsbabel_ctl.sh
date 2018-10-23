@@ -134,7 +134,6 @@ install
     _install
     _get_version
 make
-    _make_config
     _run
     _update_version
 make-config
