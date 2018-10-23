@@ -59,6 +59,7 @@ String.prototype.replaceAllToken = function (name, content) {
 
     return string;
 }
+Number.check = x => parseInt(x) == x;
 
 
 
@@ -77,10 +78,15 @@ function getVersions(path) {
     versionsLines.forEach(line => {
         const cleanLine = line.trim();
         const [code, timestamp] = cleanLine.split(' ', 2);
-        const date = new Date(timestamp * 1000);
 
-        if (undefined !== timestamp) {
-            versions[code] = date;
+        versions[code] = timestamp;
+
+        if (Number.check(timestamp)) {
+            const date = new Date(timestamp * 1000);
+    
+            if (undefined !== timestamp) {
+                versions[code] = date.toISOString().substring(0, 10);
+            }
         }
     });
 
@@ -238,17 +244,19 @@ function getMatrixHTML(matrix, hasCounter) {
 }
 
 function replaceIntoFile(path, replacements) {
-    let content = FS.readFileSync(path, 'utf8');
+    if (FS.existsSync(path)) {
+        let content = FS.readFileSync(path, 'utf8');
 
-    for (let token in replacements) {
-        const value = replacements[token];
+        for (let token in replacements) {
+            const value = replacements[token];
 
-        content = content.replaceAllToken(token, value);
+            content = content.replaceAllToken(token, value);
+        }
+
+        FS.writeFileSync(path, content);
+
+        console.log(`updated ${path} at ${replacements.VERSION}`);
     }
-
-    FS.writeFileSync(path, content);
-
-    console.log(`updated ${path} at ${replacements.VERSION}`);
 }
 
 (async () => {
@@ -273,11 +281,10 @@ function replaceIntoFile(path, replacements) {
     }
 
     for (let key in versions) {
-        const _date = versions[key];
+        const _version = versions[key];
         const _key = 'V_' + key;
-        const _dateISO = _date.toISOString().substring(0, 10);
 
-        replacements[_key] = _dateISO;
+        replacements[_key] = _version;
     }
 
     UPDATE_PATHS.forEach(path => {
