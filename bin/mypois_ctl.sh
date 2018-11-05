@@ -111,7 +111,7 @@ _run()
     ¶ '_run'
     _unmount
 
-    python3 $MYPOIS_EXEC $CONFIG_PATH
+    python $MYPOIS_EXEC $CONFIG_PATH
 }
 
 _update_version()
