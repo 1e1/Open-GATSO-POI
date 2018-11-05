@@ -1,12 +1,14 @@
 language: node_js
+#python:
+#  - "3.6"
 node_js:
   - "11"
 addons:
   apt:
     #update: true
     packages:
-    - python3
-    - python3-pip
+    #- python3
+    #- python3-pip
     - genisoimage
 
 cache:
@@ -22,13 +24,14 @@ branches:
 
 
 before_install:
+  - node -v
   - printenv
   - ls -al
   - cd src
   - npm install
   - cd ..
-  #- pip  install --user configparser pandas pillow
-  - pip3 install --user configparser pandas pillow
+  - pip install --user configparser pandas pillow
+  #- pip3 install --user configparser pandas pillow
   - ls -al
 
 install:
@@ -47,25 +50,25 @@ script:
   - CNX='CNX_GATSO_FR'
   - RLS='FR:gatso:'
   - ./bin/make.sh --build=hasCache --run --build=csv --build="$CNX" --release-prefix="$RLS"
-  - ls -R ./RELEASES
+  - ls -lR ./RELEASES
   ############################################
   - CNX='CNX_GATSO_FR CNX_GATSO_EU'
   - RLS='EU:gatso:'
   - ./bin/make.sh --build=hasCache --run --build=csv --build="$CNX" --release-prefix="$RLS"
-  - ls -R ./RELEASES
+  - ls -lR ./RELEASES
   ############################################
   - CNX='CNX_FUEL_FR'
   - RLS='FR:fuel:'
   - ./bin/make.sh --build=hasCache --run --build=csv --build="$CNX" --release-prefix="$RLS"
-  - ls -R ./RELEASES
+  - ls -lR ./RELEASES
   ############################################
   - CNX='CNX_GATSO_FR CNX_FUEL_FR'
   - RLS='FR:gatso-fuel:'
   - ./bin/make.sh --build=hasCache --run --build=csv --build="$CNX" --release-prefix="$RLS"
-  - ls -R ./RELEASES
+  - ls -lR ./RELEASES
   ############################################
   - ./bin/make.sh --build=hasCache --run --image
-  - ls -R ./RELEASES
+  - ls -lR ./RELEASES
   ############################################
   - ls -al
 
@@ -92,7 +95,7 @@ before_deploy:
   #- git tag -l | grep "^${RELEASE_NAME}\." | tail -n +2 | xargs -n 1 -I_tag h -c 'echo "untag  _tag" ; git tag -d _tag ; git push --delete origin _tag'
   - git tag --force "$TRAVIS_TAG" $TRAVIS_COMMIT
   ############################################
-  - ls -R ./RELEASES
+  - ls -hlR ./RELEASES
   ############################################
   - ls -al
 
