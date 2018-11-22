@@ -1,5 +1,6 @@
 @import "{{ site.theme }}";
 @import url('https://fonts.googleapis.com/css?family=Roboto:300');
+@import url('./../fonts/VWThesis_MIB_Regular.ttf');
 
 html, 
 body {
@@ -20,6 +21,7 @@ body {
   background-repeat: no-repeat;
   background-position: 50% 100%;
   background-image: url(./../img/cover.png);
+  font-family: 'VWThesis MIB Regular', 'Roboto', sans-serif;
   color: #000;
   text-shadow: #FEC 0 0 2px;
 }
@@ -212,7 +214,7 @@ a[href^="mailto"]::before {
 
 .button,
 .menu {
-  font-family: mono;
+  font-family: 'VWThesis MIB Regular', mono;
   padding: 2px;
 }
 
