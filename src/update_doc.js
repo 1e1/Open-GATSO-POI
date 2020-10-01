@@ -253,7 +253,7 @@ function replaceIntoFile(path, replacements) {
             content = content.replaceAllToken(token, value);
         }
 
-        FS.writeFileSync(path, content);
+        FS.writeFileSync(path, String(content));
 
         console.log(`updated ${path} at ${replacements.VERSION}`);
     }
