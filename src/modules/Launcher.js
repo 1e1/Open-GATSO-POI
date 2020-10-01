@@ -148,7 +148,7 @@ module.exports = class Launcher {
 
     package() {
         const mypoisConfiguration = this.getMypoisConfiguration();
-        const timestampMax = this.storage.timestampMax;
+        const timestampMax = String(this.storage.timestampMax);
         const versions = {};
 
         this.crawlers.forEach(crawler => {
