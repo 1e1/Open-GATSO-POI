@@ -27,7 +27,7 @@ module.exports = class Gpx extends WRITER {
         let line;
     
         if (1 === geoJsonLength) {
-            const extra = point.rule ? ' ' + point.rule : '';
+            const extra = point.rule ? isNaN(point.rule) ? '# ' : '@' + point.rule : '';
     
             // WAYPOINT
             line = '<wpt lon="{lon}" lat="{lat}"><name>{title}</name><desc>{desc}</desc></wpt>'.format({
@@ -56,11 +56,11 @@ module.exports = class Gpx extends WRITER {
                 }
     
                 if (point.rule) { 
-                    extra += point.rule;
+                    extra += isNaN(point.rule) ? '# ' : '@' + point.rule;
                 }
     
                 //const rtept = '<rtept lon="{lon}" lat="{lat}"><name>{title}</name><desc>{desc}</desc></rtept>'.format({
-                const rtept = '<trkpt lon="{lon}" lat="{lat}"></trkpt>'.format({
+                const rtept = '<trkpt lon="{lon}" lat="{lat}"><name>{title}</name></trkpt>'.format({
                     lon: point.geoJson[i][0],
                     lat: point.geoJson[i][1],
                     title: (title + extra).trim().escapeXml(),
