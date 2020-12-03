@@ -116,7 +116,7 @@ _run()
         SOURCE="$BUILD_PATH/${FILENAME}.gpx"
         DESTINATION="${MOUNT_PATH}/${FILENAME}.gpi"
 
-        $GPSLABEL_EXEC -i gpx -f $SOURCE -o garmin_gpi,bitmap="$BMP_PATH" -F "$DESTINATION"
+        $GPSLABEL_EXEC -i gpx -f $SOURCE -o garmin_gpi,alerts=1,bitmap="$BMP_PATH" -F "$DESTINATION"
     done < $MANIFEST_PATH
 }
 
