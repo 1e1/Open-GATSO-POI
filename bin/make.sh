@@ -114,9 +114,8 @@ _init()
 _install()
 {
     ¶ '_install'
-
     $BIN_DIR/mypois_ctl.sh install ${INSTALL_ARGS[*]}
-    #$BIN_DIR/gpsbabel_ctl.sh install ${INSTALL_ARGS[*]}
+    $BIN_DIR/gpsbabel_ctl.sh install ${INSTALL_ARGS[*]}
 }
 
 
@@ -187,9 +186,10 @@ _mount()
 {
     ¶ '_mount'
     $BIN_DIR/mypois_ctl.sh make
-    #$BIN_DIR/gpsbabel_ctl.sh make
+    $BIN_DIR/gpsbabel_ctl.sh make
     
     rc=$?
+
     if [ $rc != 0 ]
     then
       exit $rc
@@ -223,7 +223,7 @@ _update_doc()
 {
     ¶ '_update_doc'
     $BIN_DIR/mypois_ctl.sh update-version
-    #$BIN_DIR/gpsbabel_ctl.sh update-version
+    $BIN_DIR/gpsbabel_ctl.sh update-version
     node $BASE_DIR/src/update_doc.js
 }
 
