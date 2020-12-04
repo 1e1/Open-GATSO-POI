@@ -63,7 +63,7 @@ make_flat_zip()
     if [ -d $BUILD_PATH ]
     then
         EXT=$1
-        count=`ls -1 *.$EXT 2>/dev/null | wc -l`
+        count=`ls -1 $BUILD_PATH/*.$EXT 2>/dev/null | wc -l`
 
         if [ $count != 0 ]
         then
@@ -163,6 +163,7 @@ _release()
     [ -d $BUILD_PATH ] && zip -qjr $RELEASE_PATH/${RELEASE_PREFIX}all_files.zip $(∂ $BUILD_PATH)
     make_flat_zip csv
     make_flat_zip gpx
+    make_flat_zip gpi
     make_flat_zip ov2
     if [ -d $MOUNT_PATH ]
     then
