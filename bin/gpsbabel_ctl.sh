@@ -116,10 +116,13 @@ _run()
         SOURCE="$BUILD_PATH/${FILENAME}.gpx"
         DESTINATION="$BUILD_PATH/${FILENAME}.gpi"
 
-        $GPSLABEL_EXEC -i gpx -f $SOURCE -o garmin_gpi,alerts=1,bitmap="$BMP_PATH" -F "$DESTINATION"
+        [ -f $SOURCE ] && $GPSLABEL_EXEC -i gpx -f $SOURCE -o garmin_gpi,alerts=1,bitmap="$BMP_PATH" -F "$DESTINATION"
     done < $MANIFEST_PATH
 
     cp $BUILD_PATH/*.gpi ${MOUNT_PATH}/
+    
+    # remove if empty
+    rmdir ${MOUNT_PATH}
 }
 
 
