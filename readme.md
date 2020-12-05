@@ -7,7 +7,7 @@ Get the latest build on the [website](https://1e1.github.io/Open-GATSO-POI/)
 Daily it gives the latest set of speed cameras on the EU.
 Available formats are:
 
-* GPX (accurate)
+* GPX/GPI (accurate)
     - Garmin (embeded into VolksWagen, MAN, Skoda, Seat, etc.)
     - Mercedes
     - Volvo

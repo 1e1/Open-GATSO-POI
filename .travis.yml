@@ -47,25 +47,26 @@ before_script:
 
 script: 
   - ls -al
+  - TYP='csv gpx'
   ############################################
   - CNX='CNX_GATSO_FR'
   - RLS='FR:gatso:'
-  - ./bin/make.sh --build=hasCache --run --build=csv --build="$CNX" --release-prefix="$RLS"
+  - ./bin/make.sh --build=hasCache --run --build="$TYP" --build="$CNX" --release-prefix="$RLS"
   - ls -lR ./RELEASES
   ############################################
   - CNX='CNX_GATSO_FR CNX_GATSO_EU'
   - RLS='EU:gatso:'
-  - ./bin/make.sh --build=hasCache --run --build=csv --build="$CNX" --release-prefix="$RLS"
+  - ./bin/make.sh --build=hasCache --run --build="$TYP" --build="$CNX" --release-prefix="$RLS"
   - ls -lR ./RELEASES
   ############################################
   - CNX='CNX_FUEL_FR'
   - RLS='FR:fuel:'
-  - ./bin/make.sh --build=hasCache --run --build=csv --build="$CNX" --release-prefix="$RLS"
+  - ./bin/make.sh --build=hasCache --run --build="$TYP" --build="$CNX" --release-prefix="$RLS"
   - ls -lR ./RELEASES
   ############################################
   - CNX='CNX_GATSO_FR CNX_FUEL_FR'
   - RLS='FR:gatso-fuel:'
-  - ./bin/make.sh --build=hasCache --run --build=csv --build="$CNX" --release-prefix="$RLS"
+  - ./bin/make.sh --build=hasCache --run --build="$TYP" --build="$CNX" --release-prefix="$RLS"
   - ls -lR ./RELEASES
   ############################################
   - ./bin/make.sh --build=hasCache --run --image
