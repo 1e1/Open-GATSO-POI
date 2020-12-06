@@ -93,7 +93,7 @@ section a[href$=zip]:hover::before {
 
 .cover img,
 .download a {
-  margin: 0 2em; 
+  margin: 2px 2em; 
   flex-grow: 1;
 }
 
@@ -158,7 +158,7 @@ footer {
   text-align: center;
   margin: 1em;
   padding: 0;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-content: stretch;
   list-style: none;
 }
