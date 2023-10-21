@@ -149,6 +149,9 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
 
         switch (typeName) {
             case 'fixe':
+            case 'mobile': 
+            case 'chantier':
+            case 'zone_temporaire':
             return this.getType('instant_speed');
 
             case 'feurouge':
@@ -156,6 +159,18 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
 
             case 'tunnel':
             return this.getType('tunnel');
+
+            case 'passageniveau':
+            return this.getType('railroad');
+
+            case 'troncondebut':
+            case 'tronconfin':
+            return this.getType('average_speed');
+
+            case '':
+            if (entry.speedLimit !== null) {
+                return this.getType('instant_speed');
+            }
         }
 
         throw `unknown type ${typeName}`;
@@ -167,7 +182,9 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
 
         switch (typeName) {
             case 'fixe':
-            const ruleName = 'car' + speedLimit;
+            case 'troncondebut':
+            case 'tronconfin':
+            const ruleName = 'car' + (speedLimit ?? '');
             return this.getRule(ruleName);
 
             case 'feurouge':
@@ -175,6 +192,21 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
 
             case 'tunnel':
             return this.getRule('tunnel');
+
+            case 'passageniveau':
+            return this.getRule('railroad');
+
+            case 'mobile': 
+            case 'chantier':
+            case 'zone_temporaire':
+            return this.getRule('empty');
+
+            case '':
+            if (speedLimit !== null) {
+                const ruleName = 'car' + speedLimit;
+                return this.getRule(ruleName);
+            }
+            return this.getRule('empty');
         }
 
         throw `unknown rule ${typeName}`;
@@ -199,11 +231,23 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
                 if (null === infos) {
                     console.log('REJECT', entry.name);
                 } else {
+                    let type = infos[2];
+                    let extra;
+
+                    if (isNaN(infos[3])) {
+                        if (undefined !== infos[3]) {
+                            type = infos[3];
+                        }
+                        extra = null;
+                    } else {
+                        extra = infos[3];
+                    }
+
                     const file = {
                         filename: entry.name,
                         country: infos[1].toUpperCase(),
-                        type: infos[2],
-                        speedLimit: undefined === infos[3] ? null : infos[3],
+                        type: type,
+                        speedLimit: extra,
                         lastUpdateTimestamp: timestamp,
                     };
 
