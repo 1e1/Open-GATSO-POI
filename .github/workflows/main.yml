@@ -6,6 +6,7 @@ on:
       - master
       - beta
       - travisci
+      - test_deploy
     tags:
       - '*'
   pull_request:
@@ -13,6 +14,7 @@ on:
       - master
       - beta
       - travisci
+      - test_deploy
 
 jobs:
   build:
