@@ -196,7 +196,7 @@ function getMatrixHTML(matrix, hasCounter) {
         const counter = counters[country];
 
         thead += `<th><span>${country}</span></th>`;
-        tfoot += `<th>${counter}</th>`;
+        tfoot += `<th>${counter.toLocaleString('en-US')}</th>`;
     });
 
     if (true === hasCounter) {
@@ -227,7 +227,7 @@ function getMatrixHTML(matrix, hasCounter) {
         });
 
         if (true === hasCounter) {
-            tbody += `<th>${counter}</th>`;
+            tbody += `<th>${counter.toLocaleString('en-US')}</th>`;
         }
 
         tbody += '</tr>';
