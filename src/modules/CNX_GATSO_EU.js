@@ -1,7 +1,8 @@
 const META_URL = 'https://lufop.net/zones-de-danger-france-et-europe-asc-et-csv/';
 const UPDATE_PATTERN = /Dernière Mise à jours ok le (?:<[^>]*>)?(\d{2})\D(\d{2})\D(\d{4})\D+(\d{2})\D(\d{2})\D(\d{2})(?:<[^>]*>)?/g;
 const SOURCE_URL = 'https://lufop.net/wp-content/plugins/downloads-manager/upload/Lufop-Zones-de-danger-EU-CSV.zip';
-const FILE_PATTERN = /^([A-Z]{2})(FeuRouge|Fixe|Tunnel)(?:[A-Z]{2})(\d+)?\.csv$/;
+// Longer tokens first so "Troncondebut" is not parsed as "Tr" + "oncondebut…"
+const FILE_PATTERN = /^([A-Z]{2})(Troncondebut|Tronconfin|FeuRouge|Fixe|Tunnel)(?:[A-Z]{2})(\d+)?\.csv$/i;
 const REJECT_COUNTRIES = [ 'FR' ];
 
 const PATH = require('path');
@@ -11,6 +12,7 @@ const URL = require('url');
 const ZIP = require('node-stream-zip');
 const HTTPS = require('https');
 const CRAWLER = require('./Crawler.js');
+const CONFIG = require('./config.js');
 const POINT = require('./POI.js');
 
 HTTPS.globalAgent.options.rejectUnauthorized = false;
@@ -149,10 +151,18 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
 
         switch (typeName) {
             case 'fixe':
-            case 'mobile': 
+            case 'mobile':
             case 'chantier':
             case 'zone_temporaire':
+            case 'troncondebut':
+            // Section start: treat as a normal fixed speed camera (same basenames as fixe). If Lufop
+            // duplicates the section for both travel directions, you get one troncondebut per direction.
             return this.getType('instant_speed');
+
+            // case 'tronconfin':
+            // Section end: not emitted as a POI for now. If the dataset lists both ends separately for
+            // the same segment, troncondebut alone can be enough; re-enable if you need the far end for
+            // one-way systems. See getCarRuleBySpeed for speed handling (cap > 130 -> car130).
 
             case 'feurouge':
             return this.getType('traffic_light');
@@ -162,10 +172,6 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
 
             case 'passageniveau':
             return this.getType('railroad');
-
-            case 'troncondebut':
-            case 'tronconfin':
-            return this.getType('average_speed');
 
             case '':
             if (entry.speedLimit !== null) {
@@ -177,15 +183,34 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
     }
 
 
+    /**
+     * Resolves carXX from numeric speed. Speeds > 130 km/h map to car130 (no extra icons). Unknown
+     * on-disk rules (e.g. 25) fall back to car.
+     */
+    getCarRuleBySpeed(speedLimit) {
+        const raw = speedLimit == null || speedLimit === '' ? null : String(speedLimit).replace(/\D/g, '');
+        const s = raw === null || raw === '' ? NaN : parseInt(raw, 10);
+        if (Number.isNaN(s) || s <= 0) {
+            return this.getRule('car');
+        }
+        if (s > 130) {
+            return this.getRule('car130');
+        }
+        const key = 'car' + s;
+        if (CONFIG.rules[key] !== undefined) {
+            return CONFIG.rules[key];
+        }
+        return this.getRule('car');
+    }
+
+
     getRuleByEntry(entry, speedLimit) {
         const typeName = entry.type.toLowerCase();
 
         switch (typeName) {
             case 'fixe':
             case 'troncondebut':
-            case 'tronconfin':
-            const ruleName = 'car' + (speedLimit ?? '');
-            return this.getRule(ruleName);
+            return this.getCarRuleBySpeed(speedLimit);
 
             case 'feurouge':
             return this.getRule('traffic_light');
@@ -196,15 +221,14 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
             case 'passageniveau':
             return this.getRule('railroad');
 
-            case 'mobile': 
+            case 'mobile':
             case 'chantier':
             case 'zone_temporaire':
             return this.getRule('empty');
 
             case '':
-            if (speedLimit !== null) {
-                const ruleName = 'car' + speedLimit;
-                return this.getRule(ruleName);
+            if (speedLimit != null && speedLimit !== '') {
+                return this.getCarRuleBySpeed(speedLimit);
             }
             return this.getRule('empty');
         }
@@ -272,24 +296,39 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
 
 
     async crawlPromise(entry) {
+        const typeLower = entry.type.toLowerCase();
+        if (typeLower === 'tronconfin') {
+            // Do not import section-end points yet: same physical zone may already be covered by
+            // troncondebut (or the opposite direction’s troncondebut if Lufop mirrors the segment).
+            console.log(this.getCode() + ' SKIP tronconfin ' + entry.filename);
+            return;
+        }
+
         console.log(this.getCode() + ' ' + entry.filename);
 
         const csv_path = entry.path;
         const content = FS.readFileSync(csv_path, 'utf8');
         const lines = content.split(/\r?\n/);
+        // One row = one WGS84 point + free-text comment (Lufop style). This cannot represent a polyline
+        // as a single POI; only one marker per row is written.
         const line_pattern = /^(?:(-?\d*(?:\.\d*))\s*,\s*)(?:(-?\d*(?:\.\d*))\s*,\s*)(.*)$/;
+
+        // A full section (average-speed zone) in WKT would look like:
+        //   LINESTRING (lon1 lat1, lon2 lat2, ...)  or  MULTIPOINT (...)
+        // We do not parse that here; each CSV line remains an independent point for Garmin / VAG pipelines.
 
         lines.forEach(line => {
             const lon_lat_comments = line.match(line_pattern);
 
             if (null !== lon_lat_comments) {
+                // One POI per valid line: keep coordinates and Lufop comment for device display.
                 const longitude = lon_lat_comments[1];
                 const latitude = lon_lat_comments[2];
                 const comment = lon_lat_comments[3];
 
                 const json = {
-                    longitude: longitude.trim(), 
-                    latitude: latitude.trim(), 
+                    longitude: longitude.trim(),
+                    latitude: latitude.trim(),
                     comment: comment.trim().unescapeCsv(),
                 };
 

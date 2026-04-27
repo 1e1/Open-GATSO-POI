@@ -1,0 +1,168 @@
+# CI + déploiement (releases + branche gh-pages) — équivalent de l'ancien .travis.yml
+# Dépôts publics: GitHub Actions ne facture pas les minutes Linux (usage standard).
+
+name: GATSO build
+
+on:
+  push:
+    branches: [master, develop]
+  pull_request:
+    branches: [master, develop]
+
+concurrency:
+  group: gatso-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: "Set install channel (mypois, master vs beta)"
+        id: channel
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "name=${{ github.event.pull_request.base.ref }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Python venv (Pillow / pandas)
+        run: |
+          python3 -m venv .ci-venv
+          echo "PATH=$GITHUB_WORKSPACE/.ci-venv/bin:$PATH" >> "$GITHUB_ENV"
+          echo "VIRTUAL_ENV=$GITHUB_WORKSPACE/.ci-venv" >> "$GITHUB_ENV"
+          python -m pip install -U pip wheel
+          python -m pip install configparser pandas pillow
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: src/package-lock.json
+
+      - name: Paquets système
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends genisoimage gpsbabel
+
+      - name: Cache sources externes
+        uses: actions/cache@v4
+        with:
+          path: CACHE
+          key: gatso-cache-v1-${{ runner.os }}-${{ hashFiles('.github/workflows/gatso.yml') }}
+          restore-keys: |
+            gatso-cache-v1-${{ runner.os }}-
+
+      - name: Install npm
+        run: |
+          cd src
+          npm ci
+          cd ..
+
+      - name: Install outils (mypois, GPSBabel)
+        run: ./bin/make.sh --install-channel=${{ steps.channel.outputs.name }} --install --cache
+
+      - name: Construire les jeux (identique à Travis)
+        run: |
+          set -eux
+          TYP='csv gpx'
+          CNX='CNX_GATSO_FR'
+          RLS='FR:gatso:'
+          ./bin/make.sh --build=hasCache --run --build="$TYP" --build="$CNX" --release-prefix="$RLS"
+          ls -lR ./RELEASES
+          CNX='CNX_GATSO_FR CNX_GATSO_EU'
+          RLS='EU:gatso:'
+          ./bin/make.sh --build=hasCache --run --build="$TYP" --build="$CNX" --release-prefix="$RLS"
+          ls -lR ./RELEASES
+          CNX='CNX_FUEL_FR'
+          RLS='FR:fuel:'
+          ./bin/make.sh --build=hasCache --run --build="$TYP" --build="$CNX" --release-prefix="$RLS"
+          ls -lR ./RELEASES
+          CNX='CNX_GATSO_FR CNX_FUEL_FR'
+          RLS='FR:gatso-fuel:'
+          ./bin/make.sh --build=hasCache --run --build="$TYP" --build="$CNX" --release-prefix="$RLS"
+          ls -lR ./RELEASES
+          ./bin/make.sh --build=hasCache --run --image
+          ls -lR ./RELEASES
+
+      - name: Archive pour déploiement (artefact)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: actions/upload-artifact@v4
+        with:
+          name: gatso-deploy
+          if-no-files-found: error
+          path: |
+            RELEASES
+            index.html
+            cnx
+            src
+            BUILD/manifest.txt
+            BUILD/version.txt
+          retention-days: 2
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Télécharger l'artefact de build
+        uses: actions/download-artifact@v4
+        with:
+          name: gatso-deploy
+          path: .
+
+      - name: Métadonnées release
+        id: meta
+        env:
+          TAG_PREFIX: ${{ secrets.TAG_PREFIX }}
+        run: |
+          set -eux
+          TAG_PREFIX="${TAG_PREFIX:-GATSO-}"
+          if [ ! -f BUILD/version.txt ]; then
+            echo "BUILD/version.txt manquant"
+            exit 1
+          fi
+          GATSO_UPDATE_MAX=$(date -d @$(cat BUILD/version.txt | sort -n | tail -1) +%Y-%m-%d)
+          TAG="${TAG_PREFIX}master.${GATSO_UPDATE_MAX}"
+          echo "GATSO_UPDATE_MAX=$GATSO_UPDATE_MAX"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "release_name=${TAG_PREFIX}master" >> "$GITHUB_OUTPUT"
+
+      - name: Publier la release (assets dans RELEASES/)
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ steps.meta.outputs.release_name }}
+          tag_name: ${{ steps.meta.outputs.tag }}
+          body_path: BUILD/manifest.txt
+          fail_on_unmatched_files: false
+          make_latest: true
+          files: |
+            RELEASES/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Préparer le site (GitHub Pages)
+        run: |
+          set -eux
+          mkdir -p _site
+          cp -a index.html cnx src RELEASES _site/
+          touch _site/.nojekyll
+          [ -f .nojekyll ] || true
+
+      - name: Déployer sur gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: _site
+          force_orphan: true
