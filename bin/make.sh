@@ -1,6 +1,11 @@
 #!/bin/bash
 
 
+# pipefail: un échec dans un pipe (ex: curl | ...) n'est plus masqué par la dernière commande.
+# (on évite set -e/-u: incompatibles avec les idiomes `[ test ] && cmd` et les tableaux vides en bash 3.2)
+set -o pipefail
+
+
 readonly BIN_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )
 readonly BASE_DIR=$( dirname $BIN_DIR)
 readonly BUILD_PATH="$BASE_DIR/BUILD"
@@ -78,36 +83,51 @@ make_flat_zip()
 cache_dl()
 {
     ¶ 'cache_dl'
-    curl -sSL -H 'User-Agent: Mozilla/5.0' -D - $1 -o "$CACHE_PATH/$2"
+    mkdir -p "$CACHE_PATH"
+    # --fail: erreur sur statut HTTP >= 400 (évite de stocker une page d'erreur en .zip)
+    # --retry: encaisse un aléa réseau transitoire (on garde l'échec net si la source est vraiment morte)
+    if ! curl -fsSL --retry 3 --retry-delay 5 --retry-all-errors -H 'User-Agent: Mozilla/5.0' "$1" -o "$CACHE_PATH/$2"
+    then
+        echo "[ERROR] téléchargement échoué: $1" >&2
+        rm -f "$CACHE_PATH/$2"
+        return 1
+    fi
 }
 
 
 _cache()
 {
     ¶ '_cache'
-    [ ! -f $CACHE_FUEL_FR_FILENAME  ] && cache_dl $CACHE_FUEL_FR_URL  $CACHE_FUEL_FR_FILENAME
-    [ ! -f $CACHE_GATSO_EU_FILENAME ] && cache_dl $CACHE_GATSO_EU_URL $CACHE_GATSO_EU_FILENAME
+    # On teste/écrit le MÊME chemin absolu (avant: test sur un chemin relatif -> re-téléchargement systématique).
+    if [ ! -f "$CACHE_PATH/$CACHE_FUEL_FR_FILENAME" ]
+    then
+        cache_dl "$CACHE_FUEL_FR_URL" "$CACHE_FUEL_FR_FILENAME" || exit 1
+    fi
+    if [ ! -f "$CACHE_PATH/$CACHE_GATSO_EU_FILENAME" ]
+    then
+        cache_dl "$CACHE_GATSO_EU_URL" "$CACHE_GATSO_EU_FILENAME" || exit 1
+    fi
 }
 
 
 _uncache_auto()
 {
     ¶ '_uncache_auto'
-    find $CACHE_PATH -type f -mmin +360 -delete
+    find "$CACHE_PATH" -type f -mmin +360 -delete
 }
 
 
 _uncache()
 {
     ¶ '_uncache'
-    [ -d $CACHE_PATH ] && rm -rf $CACHE_PATH
+    [ -d "$CACHE_PATH" ] && rm -rf "$CACHE_PATH"
 }
 
 
 _init()
 {
     ¶ '_init'
-    [ ! -d $BUILD_PATH   ] && mkdir -p $BUILD_PATH
+    [ ! -d "$BUILD_PATH" ] && mkdir -p "$BUILD_PATH"
 }
 
 
@@ -132,8 +152,8 @@ _clean()
     ¶ '_clean'
     $BIN_DIR/mypois_ctl.sh clean
     $BIN_DIR/gpsbabel_ctl.sh clean
-    
-    [ -d $BUILD_PATH ] && rm -rf $BUILD_PATH
+
+    [ -d "$BUILD_PATH" ] && rm -rf "$BUILD_PATH"
 }
 
 
@@ -143,7 +163,7 @@ _erase()
     _uncache
     $BIN_DIR/mypois_ctl.sh erase
     $BIN_DIR/gpsbabel_ctl.sh erase
-    [ -d $MOUNT_PATH ] && rm -rf $MOUNT_PATH
+    [ -d "$MOUNT_PATH" ] && rm -rf "$MOUNT_PATH"
     _clean
     _unrelease
 }
@@ -152,25 +172,26 @@ _erase()
 _build()
 {
     ¶ '_build'
-    node $BASE_DIR/src/build.js ${BUILD_ARGS[*]}
+    node "$BASE_DIR/src/build.js" ${BUILD_ARGS[*]} || exit 1
 }
 
 
 _release()
 {
     ¶ '_release'
-    [ ! -d $RELEASE_PATH ] && mkdir -p $RELEASE_PATH
-    [ -d $BUILD_PATH ] && zip -qjr $RELEASE_PATH/${RELEASE_PREFIX}all_files.zip $(∂ $BUILD_PATH)
+    [ ! -d "$RELEASE_PATH" ] && mkdir -p "$RELEASE_PATH"
+    [ -d "$BUILD_PATH" ] && zip -qjr "$RELEASE_PATH/${RELEASE_PREFIX}all_files.zip" "$(∂ "$BUILD_PATH")"
     make_flat_zip csv
     make_flat_zip gpx
     make_flat_zip gpi
     make_flat_zip ov2
-    if [ -d $MOUNT_PATH ]
+    if [ -d "$MOUNT_PATH" ]
     then
-        for img in `ls $MOUNT_PATH`
+        for img_path in "$MOUNT_PATH"/*
         do
-            img_path="$MOUNT_PATH/$img"
-            zip -qr $RELEASE_PATH/${RELEASE_PREFIX}${img}_files.zip $(∂ $img_path)
+            [ -e "$img_path" ] || continue
+            img=$(basename "$img_path")
+            zip -qr "$RELEASE_PATH/${RELEASE_PREFIX}${img}_files.zip" "$(∂ "$img_path")"
         done
     fi
 }
@@ -179,7 +200,7 @@ _release()
 _unrelease()
 {
     ¶ '_unrelease'
-    [ -d $RELEASE_PATH ] && rm -rf $RELEASE_PATH
+    [ -d "$RELEASE_PATH" ] && rm -rf "$RELEASE_PATH"
 }
 
 
@@ -203,19 +224,20 @@ _image()
     ¶ '_image'
     CMD='genisoimage'
 
-    if [ ! `command -v $CMD` ]
+    if ! command -v "$CMD" >/dev/null 2>&1
     then
         CMD='mkisofs'
     fi
 
-    for img in `ls $MOUNT_PATH`
+    for img_path in "$MOUNT_PATH"/*
     do
-        img_path="$MOUNT_PATH/$img"
+        [ -e "$img_path" ] || continue
+        img=$(basename "$img_path")
 
-        $CMD -iso-level 4 -o $BUILD_PATH/sd_image.iso $(∂ $img_path)
-        [ ! -d $RELEASE_PATH ] && mkdir -p $RELEASE_PATH
-        zip -qr $RELEASE_PATH/${RELEASE_PREFIX}${img}_image.iso.zip  $(∂ $BUILD_PATH/sd_image.iso)
-        rm -f $BUILD_PATH/sd_image.iso
+        "$CMD" -iso-level 4 -o "$BUILD_PATH/sd_image.iso" "$(∂ "$img_path")" || exit 1
+        [ ! -d "$RELEASE_PATH" ] && mkdir -p "$RELEASE_PATH"
+        zip -qr "$RELEASE_PATH/${RELEASE_PREFIX}${img}_image.iso.zip" "$(∂ "$BUILD_PATH/sd_image.iso")" || exit 1
+        rm -f "$BUILD_PATH/sd_image.iso"
     done
 }
 
