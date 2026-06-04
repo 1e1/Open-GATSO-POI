@@ -63,6 +63,17 @@ test('parseInfo: type inconnu (tid 20) + rulesmesured & changed absents -> pas d
     assert.ok(got.point.lastUpdateTimestamp > 1e9, 'epoch en secondes plausible');
 });
 
+test('backoffDelay: respecte Retry-After (plafonné 60s), sinon délai par défaut', () => {
+    assert.strictEqual(crawler.backoffDelay({ retryAfter: '10' }), 10000);
+    assert.strictEqual(crawler.backoffDelay({ retryAfter: '9999' }), 60000); // plafond
+    assert.strictEqual(crawler.backoffDelay({}), 5000);   // WAITING_TIME_ON_ERROR
+    assert.strictEqual(crawler.backoffDelay(null), 5000);
+});
+
+test('concurrence FR plafonnée (anti rate-limit)', () => {
+    assert.ok(crawler.nbParallelProcess <= 3, 'nbParallelProcess <= 3');
+});
+
 test('parseList: geoJson itinéraire [lat,lng] -> normalisé en [lng,lat]', () => {
     const out = crawler.parseList([
         { id: 'X1', geoJson: [[46.18, 5.24], [46.19, 5.25]] }, // tracé fourni en [lat,lng]

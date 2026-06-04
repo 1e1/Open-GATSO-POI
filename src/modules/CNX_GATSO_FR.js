@@ -11,15 +11,20 @@ const POINT = require('./POI.js');
 const COUNTRY_CODE = 'FR';
 const REQUEST_RETRY = 5;
 const WAITING_TIME_ON_ERROR = 5000;
+const REQUEST_DELAY = 200;        // ms entre 2 téléchargements: politesse anti rate-limit (API gouv)
+const MAX_PARALLEL_PROCESS = 3;   // concurrence plafonnée pour ne pas marteler l'API
 
 
 
 module.exports = class CrawlerGatsoFR extends CRAWLER {
-    
+
     constructor() {
         super();
 
         this.entryList = [];
+        // L'API securite-routiere rate-limite le crawl agressif (échec net en CI sinon):
+        // on plafonne la concurrence pour ne pas déclencher la limite nous-mêmes.
+        this.nbParallelProcess = Math.min(this.nbParallelProcess, MAX_PARALLEL_PROCESS);
     }
 
     getCode() {
@@ -52,35 +57,63 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
         }
     }
 
-    async downloadEntries() {
-        let entryList = [];
+    // GET unique renvoyant le corps (string). Rejette avec statusCode/retryAfter sur erreur HTTP.
+    httpGet(url) {
+        return new Promise((resolve, reject) => {
+            const req = HTTPS.get(url, (response) => {
+                const status = response.statusCode;
 
-        await new Promise((resolve, reject) => {
-            const req = HTTPS.get(BASE_URL + LIST_PATH, (response) => {
-                if (200 !== response.statusCode) {
+                if (200 !== status) {
                     response.resume();
-                    return reject(new Error('status: ' + response.statusCode));
+
+                    const err = new Error('status: ' + status);
+                    err.statusCode = status;
+                    err.retryAfter = response.headers['retry-after'];
+
+                    return reject(err);
                 }
 
                 let data = '';
-
-                response.on('data', (chunk) => {
-                    data += chunk;
-                });
-
-                response.on('end', () => {
-                    try {
-                        entryList = this.parseList(JSON.parse(data));
-                        resolve();
-                    } catch (err) {
-                        reject(new Error('réponse JSON invalide (liste radars): ' + err.message));
-                    }
-                });
+                response.on('data', (chunk) => { data += chunk; });
+                response.on('end', () => resolve(data));
             });
 
             req.on('error', reject);
-            req.setTimeout(60000, () => req.destroy(new Error('timeout liste radars')));
+            req.setTimeout(60000, () => req.destroy(new Error('timeout ' + url)));
         });
+    }
+
+    // Délai avant nouvel essai: respecte Retry-After (429/503) si présent, plafonné à 60 s.
+    backoffDelay(err) {
+        const sec = parseInt((err && err.retryAfter) || '', 10);
+
+        if (Number.isFinite(sec) && sec > 0) {
+            return Math.min(sec * 1000, 60000);
+        }
+
+        return WAITING_TIME_ON_ERROR;
+    }
+
+    async downloadEntries() {
+        let retryLeft = REQUEST_RETRY;
+        let entryList = null;
+
+        while (0 < retryLeft && null === entryList) {
+            try {
+                entryList = this.parseList(JSON.parse(await this.httpGet(BASE_URL + LIST_PATH)));
+            } catch (err) {
+                console.error('[ERROR] liste radars:', (err && err.message) || err);
+                retryLeft--;
+
+                if (0 < retryLeft) {
+                    await this.sleep(this.backoffDelay(err));
+                }
+            }
+        }
+
+        if (null === entryList) {
+            throw 'can not get ' + BASE_URL + LIST_PATH;
+        }
 
         return entryList;
     }
@@ -282,6 +315,9 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
             json = await this.downloadEntry(entry);
 
             FS.writeFileSync(cache_path, JSON.stringify(json));
+
+            // Politesse: on ne temporise que sur un vrai téléchargement (lecture cache = instantanée).
+            await this.sleep(REQUEST_DELAY);
         }
 
         this.parseInfo(json, entry);
@@ -295,37 +331,13 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
             console.log(this.getCode() + ' ' + entry.url + ' #' + (1 + REQUEST_RETRY - retryLeft));
 
             try {
-                json = await new Promise((resolve, reject) => {
-                    const req = HTTPS.get(entry.url, (response) => {
-                        if (200 !== response.statusCode) {
-                            response.resume();
-                            return reject(new Error('status: ' + response.statusCode));
-                        }
-
-                        let data = '';
-
-                        response.on('data', (chunk) => {
-                            data += chunk;
-                        });
-
-                        response.on('end', () => {
-                            try {
-                                resolve(JSON.parse(data));
-                            } catch (err) {
-                                reject(new Error('JSON invalide ' + entry.url + ': ' + err.message));
-                            }
-                        });
-                    });
-
-                    req.on('error', reject);
-                    req.setTimeout(60000, () => req.destroy(new Error('timeout ' + entry.url)));
-                });
+                json = JSON.parse(await this.httpGet(entry.url));
             } catch (err) {
                 console.error('[ERROR]', (err && err.message) || err);
                 retryLeft--;
 
                 if (0 < retryLeft) {
-                    await this.sleep(WAITING_TIME_ON_ERROR);
+                    await this.sleep(this.backoffDelay(err));
                 }
             }
         }
