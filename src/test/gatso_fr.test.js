@@ -2,83 +2,68 @@ const test = require('node:test');
 const assert = require('node:assert');
 const CrawlerGatsoFR = require('../modules/CNX_GATSO_FR.js');
 
-const crawler = new CrawlerGatsoFR();
+const crawler = CrawlerGatsoFR.from({ addPoint() {} });
 
-test('getTypeById: tous les ids connus', () => {
-    assert.strictEqual(crawler.getTypeById('1').display, 'stop');     // feux rouges
-    assert.strictEqual(crawler.getTypeById('2').display, 'max');      // fixe
-    assert.strictEqual(crawler.getTypeById('3').display, 'max');      // discriminant
-    assert.strictEqual(crawler.getTypeById('16').display, 'stop');    // passage à niveau
-    assert.strictEqual(crawler.getTypeById('18').display, 'average'); // vitesse moyenne
-    assert.strictEqual(crawler.getTypeById('19').display, 'max');     // itinéraire
-});
-
-test('getTypeById: id inconnu -> null (toléré, n\'arrête pas le build)', () => {
-    assert.strictEqual(crawler.getTypeById('999'), null);
-    assert.strictEqual(crawler.getTypeById('20'), null); // nouveau type ajouté par l'API
-});
-
-test('getRuleById: ids connus -> bonnes limites', () => {
-    assert.strictEqual(crawler.getRuleById('4').alert, 30);
-    assert.strictEqual(crawler.getRuleById('5').alert, 50);
-    assert.strictEqual(crawler.getRuleById('10').alert, 130);
-    assert.strictEqual(crawler.getRuleById('15').type, 'redlight');
-    assert.strictEqual(crawler.getRuleById('').type, 'unknown'); // empty
-});
-
-test('getRuleById: id inconnu -> null (toléré)', () => {
-    assert.strictEqual(crawler.getRuleById('999'), null);
-});
-
-// --- Non-régression: nouveau schéma de l'API (champs en minuscules) ---
-function parseWithStub(gatso, entry) {
+// Parse une ligne CSV via un storage stub qui capture le point émis.
+function parseRow(line) {
     let captured = null;
-    const stub = { addPoint(code, point, basenames) { captured = { code, point, basenames }; } };
-    const c = CrawlerGatsoFR.from(stub);
-    c.parseInfo(gatso, entry);
+    const c = CrawlerGatsoFR.from({ addPoint(code, point, basenames) { captured = { code, point, basenames }; } });
+    c.parseRow(line);
     return captured;
 }
 
-test('parseInfo: schéma minuscule (radartype/rulesmesured) -> point correct', () => {
-    const got = parseWithStub(
-        { radartype: [{ tid: '18' }], rulesmesured: [{ tid: '6' }],
-          radardirection: 'A vers B', radarroad: 'D6', changed: '1760000000' },
-        { geoJson: [[2.35, 48.85]] },
-    );
+// Format CSV officiel: Numéro;Type;Date;VMA;Latitude;Longitude
+
+test('parseRow ETT (fixe) -> type max + carXX, coords normalisées [lng,lat]', () => {
+    const got = parseRow('12345;ETT;31/10/2011 00:00;90;+45.361;+4.2526');
     assert.ok(got, 'un point doit être émis');
-    assert.strictEqual(got.point.type, 'average'); // tid 18 = Vitesse Moyenne
-    assert.strictEqual(got.point.rule, '70');       // tid 6 = car70
+    assert.strictEqual(got.point.type, 'max');
+    assert.strictEqual(got.point.rule, '90');
+    assert.deepStrictEqual(got.point.geoJson, [[4.2526, 45.361]]); // [lng, lat]
+    assert.ok(got.basenames.includes('GATSO_90'));
     assert.ok(got.basenames.includes('GATSO_speed_0'));
 });
 
-test('parseInfo: type inconnu (tid 20) + rulesmesured & changed absents -> pas de crash, timestamp valide', () => {
-    // radartype tid inconnu, rulesmesured ET changed absents -> fallback règle "empty" + timestamp courant
-    const got = parseWithStub(
-        { radartype: [{ tid: '20' }], radardirection: 'X', radarroad: '-' },
-        { geoJson: [[1.0, 47.0]] },
+test('parseRow ETVM (vitesse moyenne / tronçon) -> type average, POINT unique', () => {
+    const got = parseRow('12346;ETVM;01/01/2020 00:00;110;+46.0;+5.0');
+    assert.strictEqual(got.point.type, 'average');
+    assert.strictEqual(got.point.rule, '110');
+    assert.strictEqual(got.point.geoJson.length, 1); // point unique -> plus de bug d'import tronçon
+});
+
+test('parseRow ETFR (feu rouge) -> type stop, basenames feu rouge, sans vitesse', () => {
+    const got = parseRow('12347;ETFR;01/01/2020 00:00;NA;+48.85;+2.35');
+    assert.strictEqual(got.point.type, 'stop');
+    assert.strictEqual(got.point.rule, '');
+    assert.ok(got.basenames.includes('GATSO_redlight_0'));
+});
+
+test('parseRow ETPN (passage à niveau) -> basenames voie ferrée', () => {
+    const got = parseRow('12348;ETPN;01/01/2020 00:00;NA;+47.0;+1.0');
+    assert.strictEqual(got.point.type, 'stop');
+    assert.ok(got.basenames.includes('GATSO_railway_0'));
+});
+
+test('parseRow type inconnu -> ignoré proprement (aucun point, pas de crash)', () => {
+    assert.strictEqual(parseRow('12349;ZZZ;01/01/2020 00:00;50;+47.0;+1.0'), null);
+});
+
+test('parseRow coordonnées invalides -> ignoré', () => {
+    assert.strictEqual(parseRow('12350;ETF;01/01/2020 00:00;90;NA;NA'), null);
+});
+
+test('getCarRuleBySpeed (hérité de Crawler)', () => {
+    assert.strictEqual(crawler.getCarRuleBySpeed('90').alert, 90);
+    assert.strictEqual(crawler.getCarRuleBySpeed('200').alert, 130); // plafond
+    assert.strictEqual(crawler.getCarRuleBySpeed('NA').alert, null);  // -> car générique
+    assert.strictEqual(crawler.getCarRuleBySpeed('').alert, null);
+});
+
+test('parseServiceDate -> epoch secondes (et repli si format inattendu)', () => {
+    assert.strictEqual(
+        crawler.parseServiceDate('31/10/2011 00:00'),
+        Math.floor(Date.parse('2011-10-31T00:00:00Z') / 1000),
     );
-    assert.ok(got, 'un point doit quand même être émis');
-    assert.ok(got.basenames.includes('GATSO_ALL'));
-    assert.ok(Number.isFinite(got.point.lastUpdateTimestamp), 'timestamp numérique valide (pas NaN)');
-    assert.ok(got.point.lastUpdateTimestamp > 1e9, 'epoch en secondes plausible');
-});
-
-test('backoffDelay: respecte Retry-After (plafonné 60s), sinon délai par défaut', () => {
-    assert.strictEqual(crawler.backoffDelay({ retryAfter: '10' }), 10000);
-    assert.strictEqual(crawler.backoffDelay({ retryAfter: '9999' }), 60000); // plafond
-    assert.strictEqual(crawler.backoffDelay({}), 5000);   // WAITING_TIME_ON_ERROR
-    assert.strictEqual(crawler.backoffDelay(null), 5000);
-});
-
-test('concurrence FR plafonnée (anti rate-limit)', () => {
-    assert.ok(crawler.nbParallelProcess <= 3, 'nbParallelProcess <= 3');
-});
-
-test('parseList: geoJson itinéraire [lat,lng] -> normalisé en [lng,lat]', () => {
-    const out = crawler.parseList([
-        { id: 'X1', geoJson: [[46.18, 5.24], [46.19, 5.25]] }, // tracé fourni en [lat,lng]
-        { id: 'X2', lng: 2.35, lat: 48.85 },                   // point unique
-    ]);
-    assert.deepStrictEqual(out[0].geoJson, [[5.24, 46.18], [5.25, 46.19]]);
-    assert.deepStrictEqual(out[1].geoJson, [[2.35, 48.85]]);
+    const fb = crawler.parseServiceDate('???');
+    assert.ok(Number.isFinite(fb) && fb > 1e9, 'repli en epoch secondes plausible');
 });
