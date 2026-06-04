@@ -1,17 +1,5 @@
 const FILE_ENCODING = 'utf8';
 
-const OPTIONS = {
-    zoneEntryPrefix: '! ',
-    zoneInsidePrefix: '= ',
-    zoneExitPrefix: '! ',
-};
-
-
-String.prototype.format = function(opts) { return this.replace(/\{([^\}]+)\}/g, (match, name) => opts[name]) }
-String.prototype.escapeCsv = function() { return '"' + this.replace(/"/g,'\\"') + '"' }
-String.prototype.escapeAttribute = function() { return '"' + this.replace(/"/g,'\\"') + '"' }
-String.prototype.escapeXml = function() { return '<![CDATA[' + this.replace(/"/g,'\\"') + ']]>' }
-
 const FS = require('fs');
 
 module.exports = class Writer {
@@ -19,7 +7,7 @@ module.exports = class Writer {
     static from(filePath) {
         const p = filePath.lastIndexOf('.');
         const format = filePath.substring(p+1).toLowerCase();
-        
+
         let writer;
 
         switch (format) {
@@ -55,10 +43,9 @@ module.exports = class Writer {
     constructor() {
         this.filePath = '';
         this.fs = null;
-        this.header = new Buffer.alloc(0);
-        this.footer = new Buffer.alloc(0);
+        this.header = Buffer.alloc(0);
+        this.footer = Buffer.alloc(0);
         this.fileEncoding = FILE_ENCODING;
-        this.options = OPTIONS;
     }
 
     open() {
@@ -117,6 +104,6 @@ module.exports = class Writer {
     setFooter() { return this; }
 
     convertToBuffer(point) {
-        throw "undefined setPoint()";
+        throw "undefined convertToBuffer()";
     }
 }

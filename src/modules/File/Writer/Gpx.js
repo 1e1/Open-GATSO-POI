@@ -1,4 +1,5 @@
 const WRITER = require('./Writer.js');
+const { format, escapeXml } = require('../../utils.js');
 
 module.exports = class Gpx extends WRITER {
 
@@ -6,7 +7,7 @@ module.exports = class Gpx extends WRITER {
         const header = '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>' + "\n"
             + '<gpx version="1.1" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">'
             ;
-        
+
         this.header = Buffer.from(header, this.fileEncoding);
 
         return this;
@@ -21,63 +22,23 @@ module.exports = class Gpx extends WRITER {
     }
 
     convertToBuffer(point) {
-        const geoJsonLength = point.geoJson.length;
-        const title = point.type;
-        
-        let line;
-    
-        if (1 === geoJsonLength) {
-            const extra = point.rule ? isNaN(point.rule) ? '# ' : '@' + point.rule : '';
-    
-            // WAYPOINT
-            line = '<wpt lon="{lon}" lat="{lat}"><name>{title}</name><desc>{desc}</desc></wpt>'.format({
-                lon: point.geoJson[0][0],
-                lat: point.geoJson[0][1],
-                title: (title + extra).escapeXml(),
-                desc: point.description.escapeXml(),
-            });
-        } else {
-            // ROUTE
-            const points = [];
-            for (let i=0; i<geoJsonLength; ++i) {
-                let extra = ' ';
-    
-                switch (i) {
-                    case 0: 
-                    extra += this.options.zoneEntryPrefix;
-                    break;
-    
-                    case geoJsonLength -1:
-                    extra += this.options.zoneExitPrefix;
-                    break;
-    
-                    default:
-                    extra += this.options.zoneInsidePrefix;
-                }
-    
-                if (point.rule) { 
-                    extra += isNaN(point.rule) ? '# ' : '@' + point.rule;
-                }
-    
-                //const rtept = '<rtept lon="{lon}" lat="{lat}"><name>{title}</name><desc>{desc}</desc></rtept>'.format({
-                const rtept = '<trkpt lon="{lon}" lat="{lat}"><name>{title}</name></trkpt>'.format({
-                    lon: point.geoJson[i][0],
-                    lat: point.geoJson[i][1],
-                    title: (title + extra).trim().escapeXml(),
-                    desc: point.description.escapeXml(),
-                });
-    
-                points.push(rtept);
-            }
-    
-            line = '<trk><name>{title}</name><desc>{desc}</desc><trkseg>{points}</trkseg></trk>'.format({
-                title: point.type.escapeXml(),
-                desc: point.description.escapeXml(),
-                points: points.join(''),
-            });
-        }
-    
-        return Buffer.from(line, this.fileEncoding);
-    }
+        // Uniquement des waypoints (<wpt>) : garmin_gpi ignore les <trk>, et le MIB
+        // n'importe que des points. Les tronçons sont rendus en 2 waypoints (début/fin)
+        // via POI.getRenderPoints().
+        const ruleSuffix = point.rule ? (isNaN(point.rule) ? '#' : '@' + point.rule) : '';
+        const name = (point.type + ruleSuffix).trim();
 
+        const lines = point.getRenderPoints().map(rp => {
+            const description = (point.description + rp.suffix).trim();
+
+            return format('<wpt lon="{lon}" lat="{lat}"><name>{name}</name><desc>{desc}</desc></wpt>', {
+                lon: rp.longitude,
+                lat: rp.latitude,
+                name: escapeXml(name),
+                desc: escapeXml(description),
+            });
+        });
+
+        return Buffer.from(lines.join(''), this.fileEncoding);
+    }
 }
