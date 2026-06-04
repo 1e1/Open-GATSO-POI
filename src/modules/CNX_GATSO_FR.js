@@ -110,11 +110,14 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
         gatsoList.forEach(item => {
             const entry = { id: item.id };
             if (item.geoJson) {
-                entry.geoJson = item.geoJson;
+                // L'index fournit le tracé des itinéraires en [lat, lng] ; on normalise
+                // en [lng, lat] (ordre attendu partout ailleurs, et par le fallback
+                // point unique ci-dessous). Sinon les tronçons sortent à des coordonnées inversées.
+                entry.geoJson = item.geoJson.map(pair => [pair[1], pair[0]]);
             } else {
                 entry.geoJson = [[ item.lng, item.lat ]];
             }
-    
+
             ids.push(entry);
         });
     
@@ -126,30 +129,32 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
         const displayTypes = [];
         const displayRules = [];
 
-        gatso.radarType.forEach(type => {
+        // L'API securite-routiere sert désormais ses champs en minuscules
+        // (radartype/rulesmesured) ; on garde un fallback camelCase par sécurité.
+        (gatso.radartype || gatso.radarType || []).forEach(type => {
             const ref = this.getTypeById(type.tid);
-    
-            if (!displayTypes.includes(ref.display)) {
+
+            if (null !== ref && !displayTypes.includes(ref.display)) {
                 displayTypes.push(ref.display);
             }
         });
-    
-        gatso.rulesMesured.forEach(rule => {
+
+        (gatso.rulesmesured || gatso.rulesMesured || []).forEach(rule => {
             const ref = this.getRuleById(rule.tid);
-            
-            if (true === ref.filter) {
+
+            if (null !== ref && true === ref.filter) {
                 if (null !== ref.alert && !displayRules.includes(ref.alert)) {
                     displayRules.push(ref.alert);
                 }
-                
+
                 basenamesList.push(ref.basenames);
             }
         });
 
         if (0 === basenamesList.length) {
             const ref = this.getRuleById('');
-            
-            if (true === ref.filter) {
+
+            if (null !== ref && true === ref.filter) {
                 if (null !== ref.alert && !displayRules.includes(ref.alert)) {
                     displayRules.push(ref.alert);
                 }
@@ -169,7 +174,7 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
             .setGeoJson(entry.geoJson)
             .setType(displayType)
             .setRule(displayRule)
-            .setDescription(gatso.radarDirection + ' ' + gatso.radarRoad)
+            .setDescription((gatso.radardirection || gatso.radarDirection || '') + ' ' + (gatso.radarroad || gatso.radarRoad || ''))
             .setLastUpdateTimestamp(gatso.changed)
             ;
     
@@ -198,7 +203,11 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
             return this.getType('route');
         }
 
-        throw `unknown type id=${id}`;
+        // Nouveau type non répertorié (l'API en a ajouté, ex. tid 20): on l'ignore proprement
+        // au lieu de planter tout le build (le radar retombe sur la règle 'empty' si besoin).
+        console.log(this.getCode() + ' type radar inconnu ignoré: tid=' + id);
+
+        return null;
     }
 
     getRuleById(id) {
@@ -246,7 +255,10 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
             return this.getRule('empty');
         }
 
-        throw `unknown rule id=${id}`;
+        // Règle non répertoriée: on l'ignore proprement plutôt que de planter le build.
+        console.log(this.getCode() + ' règle radar inconnue ignorée: tid=' + id);
+
+        return null;
     }
 
     async crawlPromise(entry) {
