@@ -84,8 +84,9 @@ cache_dl()
 {
     ¶ 'cache_dl'
     mkdir -p "$CACHE_PATH"
-    # --fail: curl renvoie une erreur sur statut HTTP >= 400 (évite de stocker une page d'erreur en .zip)
-    if ! curl -fsSL -H 'User-Agent: Mozilla/5.0' "$1" -o "$CACHE_PATH/$2"
+    # --fail: erreur sur statut HTTP >= 400 (évite de stocker une page d'erreur en .zip)
+    # --retry: encaisse un aléa réseau transitoire (on garde l'échec net si la source est vraiment morte)
+    if ! curl -fsSL --retry 3 --retry-delay 5 --retry-all-errors -H 'User-Agent: Mozilla/5.0' "$1" -o "$CACHE_PATH/$2"
     then
         echo "[ERROR] téléchargement échoué: $1" >&2
         rm -f "$CACHE_PATH/$2"
