@@ -138,4 +138,4 @@ https://www.prix-carburants.gouv.fr/rubrique/opendata/
 ---
 
 ![version](https://raw.githubusercontent.com/1e1/Open-GATSO-POI/gh-pages/cnx/version.svg?sanitize=true)
-![Travis CI](https://api.travis-ci.org/1e1/Open-GATSO-POI.svg?branch=master)
+![CI GATSO](https://github.com/1e1/Open-GATSO-POI/actions/workflows/gatso.yml/badge.svg?branch=master)

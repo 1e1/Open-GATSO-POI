@@ -13,10 +13,13 @@ types: {
 rules: { 
     empty: { label: 'Sur toute la longueur de cet itinéraire, il peut y avoir de un à plusieurs radars, de plusieurs types.', type: 'unknown', alert: null, filter: true, basenames: [ 'GATSO_ALL', 'GATSO_unknown_0' ] },
     car: { label: 'Vitesse ??', type: 'speed', alert: null, filter: true, basenames: [ 'GATSO_ALL', 'GATSO_speed_0' ] },
+    // Icon reuses GATSO_30 assets until GATSO_10/GATSO_20 are generated (see org/GATSO_10.svg, bin/render_gatso_speed_icons.sh).
+    car10: { label: 'Vitesse VL 10', type: 'speed', alert: 10, filter: true, basenames: [ 'GATSO_ALL', 'GATSO_speed_0', 'GATSO_30' ] },
+    car20: { label: 'Vitesse VL 20', type: 'speed', alert: 20, filter: true, basenames: [ 'GATSO_ALL', 'GATSO_speed_0', 'GATSO_30' ] },
     car30: { label: 'Vitesse VL 30', type: 'speed', alert: 30, filter: true, basenames: [ 'GATSO_ALL', 'GATSO_speed_0', 'GATSO_30' ] },
-    car40: { label: 'Vitesse VL 40', type: 'speed', alert: 50, filter: true, basenames: [ 'GATSO_ALL', 'GATSO_speed_0', 'GATSO_40' ] },
+    car40: { label: 'Vitesse VL 40', type: 'speed', alert: 40, filter: true, basenames: [ 'GATSO_ALL', 'GATSO_speed_0', 'GATSO_40' ] },
     car50: { label: 'Vitesse VL 50', type: 'speed', alert: 50, filter: true, basenames: [ 'GATSO_ALL', 'GATSO_speed_0', 'GATSO_50' ] },
-    car60: { label: 'Vitesse VL 60', type: 'speed', alert: 70, filter: true, basenames: [ 'GATSO_ALL', 'GATSO_speed_0', 'GATSO_60' ] },
+    car60: { label: 'Vitesse VL 60', type: 'speed', alert: 60, filter: true, basenames: [ 'GATSO_ALL', 'GATSO_speed_0', 'GATSO_60' ] },
     car70: { label: 'Vitesse VL 70', type: 'speed', alert: 70, filter: true, basenames: [ 'GATSO_ALL', 'GATSO_speed_0', 'GATSO_70' ] },
     car80: { label: 'Vitesse VL 80', type: 'speed', alert: 80, filter: true, basenames: [ 'GATSO_ALL', 'GATSO_speed_0', 'GATSO_80' ] },
     car90: { label: 'Vitesse VL 90', type: 'speed', alert: 90, filter: true, basenames: [ 'GATSO_ALL', 'GATSO_speed_0', 'GATSO_90' ] },

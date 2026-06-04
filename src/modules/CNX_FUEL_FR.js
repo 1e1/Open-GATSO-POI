@@ -9,14 +9,26 @@ const AXIOS = require('axios');
 const ZIP = require('node-stream-zip');
 const HTTPS = require('https');
 const CRAWLER = require('./Crawler.js');
+const CONFIG = require('./config.js');
+const { flatten } = require('./utils.js');
 const POINT = require('./POI.js');
-
-//HTTPS.globalAgent.options.rejectUnauthorized = false;
 
 const COUNTRY_CODE = 'FR';
 const REQUEST_RETRY = 5;
 const WAITING_TIME_ON_ERROR = 5000;
 const WORKSPACE = FS.mkdtempSync(PATH.join(OS.tmpdir(), 'roulez-eco-'));
+
+// Noms de carburant de l'open-data roulez-eco -> clé de CONFIG.services.
+// Tout nom absent ici est cherché tel quel dans CONFIG.services (insensible à la casse),
+// puis ignoré proprement s'il reste inconnu (au lieu de planter tout le run).
+const GAS_SYNONYMS = {
+    gazole: 'gazole',
+    sp95: 'sp95',
+    sp98: 'sp98',
+    e10: 'e10',
+    e85: 'e85',
+    gplc: 'gpl',
+};
 
 
 module.exports = class CrawlerFuelFR extends CRAWLER {
@@ -42,51 +54,48 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
     }
 
     async downloadSource(zip_path) {
-        const options = {
+        const axios = AXIOS.create({
             baseURL: BASE_URL,
             responseType: 'stream',
             maxRedirects: 6,
-            httpsAgent: new HTTPS.Agent({ 
-                keepAlive: true, 
-                rejectUnauthorized: false,
-            }),
-        };
-        const axios = AXIOS.create(options);
+            timeout: 60000,
+            httpsAgent: new HTTPS.Agent({ keepAlive: true }),
+        });
 
         let retryLeft = REQUEST_RETRY;
-        
+        let success = false;
+
         do {
             if (retryLeft !== REQUEST_RETRY) {
-                this.sleep(WAITING_TIME_ON_ERROR);
+                await this.sleep(WAITING_TIME_ON_ERROR);
             }
 
             console.log(zip_path);
             console.log(BASE_URL + INFO_PATH + ' #' + (1 + REQUEST_RETRY - retryLeft));
 
-            const request = new Promise((resolve, reject) => {
-                axios
-                    .get(INFO_PATH)
-                    .then(response => {
-                        const zip_file = FS.createWriteStream(zip_path, { encoding: null });
+            try {
+                // axios rejette par défaut hors 2xx -> géré par le catch et un nouvel essai.
+                await new Promise((resolve, reject) => {
+                    axios
+                        .get(INFO_PATH)
+                        .then(response => {
+                            const zip_file = FS.createWriteStream(zip_path);
 
-                        response.data
-                            .pipe(zip_file)
-                            .on('close', () => {
-                                retryLeft = -1;
+                            zip_file.on('error', reject);
+                            response.data.on('error', reject);
+                            response.data.pipe(zip_file).on('close', resolve);
+                        })
+                        .catch(reject);
+                });
 
-                                resolve();
-                            });
-                    })
-                    .catch(ignore => resolve);
-            });
+                success = true;
+            } catch (err) {
+                console.error('[ERROR]', (err && err.message) || err);
+            }
 
-            request.catch(ignore => null);
+        } while (!success && 0 < --retryLeft);
 
-            await request;
-
-        } while (0 < --retryLeft);
-
-        if (0 === retryLeft) {
+        if (!success) {
             throw `can not get ${BASE_URL + INFO_PATH}`;
         }
     }
@@ -121,6 +130,10 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
             const gas = station.gas[gasName];
             const service = this.getServiceByGas(gasName);
 
+            if (null === service) {
+                continue;
+            }
+
             lastUpdateTimestamp = Math.max(lastUpdateTimestamp, gas.timestamp);
 
             gasTypeList.push(service.type);
@@ -138,7 +151,7 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
         
         const displayType = this.displayServicesToString(gasTypeList);
         const displayRule = this.displayServicesToString(serviceTypeList);
-        const basenames = basenamesList.concatInside();
+        const basenames = flatten(basenamesList);
         const description = station.services.join("\n");
 
         const point = new POINT();
@@ -159,28 +172,16 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
 
     getServiceByGas(gas) {
         const gasName = gas.toLowerCase();
+        const key = GAS_SYNONYMS[gasName] || gasName;
 
-        switch (gasName) {
-            case 'gazole':
-            return this.getService('gazole');
-
-            case 'sp95':
-            return this.getService('sp95');
-
-            case 'sp98':
-            return this.getService('sp98');
-
-            case 'e10':
-            return this.getService('e10');
-
-            case 'gplc':
-            return this.getService('gpl');
-
-            case 'e85':
-            return this.getService('e85');
+        if (undefined !== CONFIG.services[key]) {
+            return this.getService(key);
         }
 
-        throw `unknown service ${serviceName}`;
+        // Carburant non répertorié (ex: nouveau nom dans l'open-data): on l'ignore proprement.
+        console.log(this.getCode() + ' carburant inconnu ignoré: ' + gas);
+
+        return null;
     }
 
 
@@ -271,12 +272,18 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
             const serviceNames = pdv.match(serviceName_pattern) || [];
             const gasNodes = pdv.match(gasName_pattern) || [];
 
-            const longitude = longitudes[1] / 100000;
-            const latitude = latitudes[1] / 100000;
+            const longitude = parseFloat(longitudes[1]) / 100000;
+            const latitude = parseFloat(latitudes[1]) / 100000;
+
+            // Station sans coordonnées exploitables: on saute (évite des POI à coordonnées NaN).
+            if (Number.isNaN(longitude) || Number.isNaN(latitude)) {
+                return;
+            }
+
             const services = serviceNames.map(service => {
                 return service.substring('<service>'.length);
             });
-            const gas = {} 
+            const gas = {}
             
             gasNodes.forEach(gasNode => {
                 const name = this.extractAttribute(gasNode, 'nom');
