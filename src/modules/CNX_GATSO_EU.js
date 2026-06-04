@@ -176,25 +176,7 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
     }
 
 
-    /**
-     * Resolves carXX from numeric speed. Speeds > 130 km/h map to car130 (no extra icons). Unknown
-     * on-disk rules (e.g. 25) fall back to car.
-     */
-    getCarRuleBySpeed(speedLimit) {
-        const raw = speedLimit == null || speedLimit === '' ? null : String(speedLimit).replace(/\D/g, '');
-        const s = raw === null || raw === '' ? NaN : parseInt(raw, 10);
-        if (Number.isNaN(s) || s <= 0) {
-            return this.getRule('car');
-        }
-        if (s > 130) {
-            return this.getRule('car130');
-        }
-        const key = 'car' + s;
-        if (CONFIG.rules[key] !== undefined) {
-            return CONFIG.rules[key];
-        }
-        return this.getRule('car');
-    }
+    // getCarRuleBySpeed est désormais fourni par la classe de base Crawler (mutualisé avec le connecteur FR).
 
 
     getRuleByEntry(entry, speedLimit) {
