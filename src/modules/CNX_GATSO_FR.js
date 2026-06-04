@@ -1,338 +1,238 @@
-const BASE_URL = 'https://radars.securite-routiere.gouv.fr';
-const LIST_PATH = '/radars/all?_format=json';
-const INFO_PATH = '/radars/{id}?_format=json';
+// Source: jeu de données officiel "Liste des radars fixes en France" (Ministère de l'intérieur),
+// publié sur data.gouv.fr (CDN static.data.gouv.fr) au format CSV. Un seul téléchargement
+// remplace l'ancien crawl radar-par-radar de radars.securite-routiere.gouv.fr (qui était
+// rejeté par le WAF gouv depuis un runner CI). Les radars y sont des POINTS uniques
+// (y compris les vitesses moyennes / tronçons) : plus de géométrie polyligne.
+const DATASET_API = 'https://www.data.gouv.fr/api/1/datasets/liste-des-radars-fixes-en-france/';
+// Permalink stable de repli (redirige vers le CSV courant) si l'API est indisponible.
+const FALLBACK_CSV_URL = 'https://www.data.gouv.fr/fr/datasets/r/17f7cfd9-a5fe-4b6a-9f5d-3625feaa396e';
 
 const FS = require('fs');
 const HTTPS = require('https');
 const CRAWLER = require('./Crawler.js');
 const POINT = require('./POI.js');
 
-HTTPS.globalAgent.options.rejectUnauthorized = false;
-
 const COUNTRY_CODE = 'FR';
 const REQUEST_RETRY = 5;
 const WAITING_TIME_ON_ERROR = 5000;
+const USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
+// "Type de radar" (CSV) -> type d'affichage (config.types) + règle.
+// rule:'speed' => règle carXX dérivée de la VMA ; sinon nom direct dans config.rules.
+const TYPE_MAP = {
+    ETF:  { type: 'instant_speed',       rule: 'speed' },         // fixe classique
+    ETT:  { type: 'instant_speed',       rule: 'speed' },         // tourelle / nouvelle génération
+    ETU:  { type: 'instant_speed',       rule: 'speed' },         // urbain
+    ETD:  { type: 'multi_instant_speed', rule: 'speed' },         // discriminant
+    ETVM: { type: 'average_speed',       rule: 'speed' },         // vitesse moyenne (tronçon, rendu en point)
+    ETFR: { type: 'traffic_light',       rule: 'traffic_light' }, // franchissement de feu rouge
+    ETPN: { type: 'railroad',            rule: 'railroad' },      // passage à niveau
+};
 
 
 module.exports = class CrawlerGatsoFR extends CRAWLER {
-    
-    constructor() {
-        super();
-
-        this.entryList = [];
-    }
 
     getCode() {
         return 'gatso-FR';
     }
 
     async prepare() {
-        const index_path = this.options.cache + '.json';
+        const csv_path = this.options.cache + '.csv';
 
-        if (FS.existsSync(index_path)) {
-            const json = FS.readFileSync(index_path);
+        if (!FS.existsSync(csv_path)) {
+            const url = await this.resolveCsvUrl();
 
-            this.entryList = JSON.parse(json);
-        } else {
-            this.entryList = await this.downloadEntries();
-
-            const json = JSON.stringify(this.entryList);
-            FS.writeFileSync(index_path, json);
+            await this.download(url, csv_path);
         }
 
-        if (! FS.existsSync(this.options.cache)) {
-            FS.mkdirSync(this.options.cache);
-        }
+        this.csvPath = csv_path;
     }
 
-    async downloadEntries() {
-        let entryList = [];
-
-        const mainPromise = new Promise((resolve, reject) => {
-            HTTPS.get(BASE_URL + LIST_PATH, (request) => {
-                if (200 === request.statusCode) {
-                    let data = '';
-            
-                    request.on('data', (chunk) => {
-                        data += chunk;
-                    });
-        
-                    request.on('end', async () => {
-                        entryList = this.parseList(JSON.parse(data));
-                        
-                        resolve();
-                    });
-                } else {
-                    console.log('status: ' + request.statusCode);
-
-                    reject();
-                }
-            });
-        });
-
-        mainPromise.catch(err => this.kill(err));
-
-        await mainPromise;
-
-        return entryList;
-    }
-    
-    
     async start() {
-        const crawlerPromises = [];
-    
-        for (let processIndex = 0; processIndex < this.nbParallelProcess; ++processIndex) {
-            const crawlerPromise = this.crawlLoopPromise();
-    
-            crawlerPromise.catch(err => this.kill(err));
+        const content = FS.readFileSync(this.csvPath, 'latin1');
+        const lines = content.split(/\r?\n/);
 
-            crawlerPromises.push(crawlerPromise);
-        }
-    
-        await Promise.all(crawlerPromises);
+        lines.shift(); // en-tête: Numéro;Type;Date;VMA;Latitude;Longitude
+
+        lines.forEach(line => {
+            if ('' !== line.trim()) {
+                this.parseRow(line);
+            }
+        });
     }
 
 
     // ---
 
 
-    parseList(gatsoList) {
-        const ids = [];
+    parseRow(line) {
+        const cols = line.split(';');
 
-        gatsoList.forEach(item => {
-            const entry = { id: item.id };
-            if (item.geoJson) {
-                entry.geoJson = item.geoJson;
-            } else {
-                entry.geoJson = [[ item.lng, item.lat ]];
-            }
-    
-            ids.push(entry);
-        });
-    
-        return ids;
-    }
-
-    parseInfo(gatso, entry) {
-        const basenamesList = [];
-        const displayTypes = [];
-        const displayRules = [];
-
-        gatso.radarType.forEach(type => {
-            const ref = this.getTypeById(type.tid);
-    
-            if (!displayTypes.includes(ref.display)) {
-                displayTypes.push(ref.display);
-            }
-        });
-    
-        gatso.rulesMesured.forEach(rule => {
-            const ref = this.getRuleById(rule.tid);
-            
-            if (true === ref.filter) {
-                if (null !== ref.alert && !displayRules.includes(ref.alert)) {
-                    displayRules.push(ref.alert);
-                }
-                
-                basenamesList.push(ref.basenames);
-            }
-        });
-
-        if (0 === basenamesList.length) {
-            const ref = this.getRuleById('');
-            
-            if (true === ref.filter) {
-                if (null !== ref.alert && !displayRules.includes(ref.alert)) {
-                    displayRules.push(ref.alert);
-                }
-                
-                basenamesList.push(ref.basenames);
-            }
+        if (cols.length < 6) {
+            return;
         }
-        
-        const displayType = this.displayTypesToString(displayTypes);
-        const displayRule = this.displayRulesToString(displayRules);
-        const basenames = basenamesList.concatInside();
-    
+
+        const typeCode = (cols[1] || '').trim().toUpperCase();
+        const map = TYPE_MAP[typeCode];
+
+        if (undefined === map) {
+            // Nouveau code de type non répertorié: ignoré proprement (ne bloque pas le build).
+            console.log(this.getCode() + ' type radar inconnu ignoré: ' + typeCode);
+            return;
+        }
+
+        const latitude = parseFloat(cols[4]);
+        const longitude = parseFloat(cols[5]);
+
+        if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
+            return; // coordonnées inexploitables: on saute
+        }
+
+        const vma = (cols[3] || '').trim();
+        const typeRef = this.getType(map.type);
+        const ruleRef = ('speed' === map.rule) ? this.getCarRuleBySpeed(vma) : this.getRule(map.rule);
+
+        const displayType = this.displayTypesToString([typeRef.display]);
+        const displayRule = this.displayRulesToString(
+            (null !== ruleRef.alert && undefined !== ruleRef.alert) ? [ruleRef.alert] : []
+        );
+
+        const timestamp = this.parseServiceDate((cols[2] || '').trim());
+
         const point = new POINT();
 
         point
             .setCountry(COUNTRY_CODE)
-            .setGeoJson(entry.geoJson)
+            .setCoordinates(longitude, latitude)
             .setType(displayType)
             .setRule(displayRule)
-            .setDescription(gatso.radarDirection + ' ' + gatso.radarRoad)
-            .setLastUpdateTimestamp(gatso.changed)
+            .setDescription(typeRef.label)
+            .setLastUpdateTimestamp(timestamp)
             ;
-    
-        this.storage.addPoint(this.getCode(), point, basenames);
-        this.addTimestamp(gatso.changed);
+
+        this.storage.addPoint(this.getCode(), point, ruleRef.basenames);
+        this.addTimestamp(timestamp);
     }
 
-    getTypeById(id) {
-        switch (id) {
-            case '1':
-            return this.getType('traffic_light');
+    // "31/10/2011 00:00" -> epoch secondes ; repli heure courante si format inattendu.
+    parseServiceDate(value) {
+        const m = value.match(/(\d{2})\/(\d{2})\/(\d{4})/);
 
-            case '2':
-            return this.getType('instant_speed');
+        if (null !== m) {
+            const t = Date.parse(`${m[3]}-${m[2]}-${m[1]}T00:00:00Z`);
 
-            case '3':
-            return this.getType('multi_instant_speed');
-
-            case '16':
-            return this.getType('railroad');
-
-            case '18':
-            return this.getType('average_speed');
-
-            case '19':
-            return this.getType('route');
+            if (!Number.isNaN(t)) {
+                return Math.floor(t / 1000);
+            }
         }
 
-        throw `unknown type id=${id}`;
+        return Math.floor(Date.now() / 1000);
     }
 
-    getRuleById(id) {
-        switch (id) {
-            case '4':
-            return this.getRule('car30');
 
-            case '5':
-            return this.getRule('car50');
+    // --- réseau ---
 
-            case '6':
-            return this.getRule('car70');
 
-            case '7':
-            return this.getRule('car80');
+    // Résout l'URL du CSV le plus récent via l'API data.gouv.fr ; repli sur le permalink stable.
+    async resolveCsvUrl() {
+        try {
+            const meta = JSON.parse(await this.httpGet(DATASET_API));
+            const csvs = (meta.resources || [])
+                .filter(r => 'csv' === String(r.format).toLowerCase() && r.url)
+                .sort((a, b) => String(b.last_modified).localeCompare(String(a.last_modified)));
 
-            case '8':
-            return this.getRule('car90');
-
-            case '9':
-            return this.getRule('car110');
-
-            case '10':
-            return this.getRule('car130');
-
-            case '11':
-            return this.getRule('truck50');
-
-            case '12':
-            return this.getRule('truck70');
-
-            case '13':
-            return this.getRule('truck80');
-
-            case '14':
-            return this.getRule('truck90');
-
-            case '15':
-            return this.getRule('traffic_light');
-
-            case '17':
-            return this.getRule('railroad');
-
-            case '':
-            return this.getRule('empty');
+            if (0 < csvs.length) {
+                return csvs[0].url;
+            }
+        } catch (err) {
+            console.error('[ERROR] résolution dataset data.gouv.fr:', (err && err.message) || err);
         }
 
-        throw `unknown rule id=${id}`;
+        console.log(this.getCode() + ' repli sur le permalink CSV stable');
+        return FALLBACK_CSV_URL;
     }
 
-    async crawlPromise(entry) {
-        const cache_path = `${this.options.cache}/${entry.id}.json`;
-        let json = null;
-
-        if (FS.existsSync(cache_path)) {
-            // console.log(this.getCode() + ' ' + entry.id);
-
-            const content = FS.readFileSync(cache_path);
-
-            json = JSON.parse(content);
-        } else {
-            json = await this.downloadEntry(entry);
-
-            const content = JSON.stringify(json);
-            FS.writeFileSync(cache_path, content);
-        }
-
-        this.parseInfo(json, entry);
-    }
-
-    async downloadEntry(entry) {
+    async download(url, dest) {
         let retryLeft = REQUEST_RETRY;
-        let json = null;
-    
-        do {
-            const request = new Promise((resolve, reject) => {
-                console.log(this.getCode() + ' ' + entry.url + ' #' + (1 + REQUEST_RETRY - retryLeft));
-    
-                HTTPS.get(entry.url, async (request) => {
-                    switch (request.statusCode) {
-                        case 200: 
-                        let data = '';
-                
-                        request.on('data', (chunk) => {
-                            data += chunk;
-                        });
-        
-                        request.on('end', () => {
-                            json = JSON.parse(data);
-                            
-                            retryLeft = -1;
-                            resolve();
-                        });
-                        break;
+        let ok = false;
 
-                        case 503:
-                        await this.sleep(WAITING_TIME_ON_ERROR);
+        while (0 < retryLeft && !ok) {
+            console.log(this.getCode() + ' ' + url + ' #' + (1 + REQUEST_RETRY - retryLeft));
 
-                        default: 
-                        console.log('status: ' + request.statusCode);
-    
-                        resolve();
+            try {
+                await this.downloadToFile(url, dest);
+                ok = true;
+            } catch (err) {
+                console.error('[ERROR]', (err && err.message) || err);
+                retryLeft--;
+
+                if (0 < retryLeft) {
+                    await this.sleep(WAITING_TIME_ON_ERROR);
+                }
+            }
+        }
+
+        if (!ok) {
+            throw `can not get ${url}`;
+        }
+    }
+
+    // Téléchargement en flux (préserve l'encodage latin1) avec suivi des redirections.
+    downloadToFile(url, dest) {
+        return new Promise((resolve, reject) => {
+            const get = (target, redirectsLeft) => {
+                const options = { headers: { 'User-Agent': USER_AGENT } };
+                const req = HTTPS.get(target, options, (response) => {
+                    const status = response.statusCode;
+
+                    if ([301, 302, 303, 307, 308].includes(status) && response.headers.location && 0 < redirectsLeft) {
+                        response.resume();
+                        return get(new URL(response.headers.location, target).toString(), redirectsLeft - 1);
                     }
+
+                    if (200 !== status) {
+                        response.resume();
+                        return reject(new Error('status: ' + status));
+                    }
+
+                    const file = FS.createWriteStream(dest);
+                    file.on('error', reject);
+                    response.on('error', reject);
+                    response.pipe(file).on('close', resolve);
                 });
+
+                req.on('error', reject);
+                req.setTimeout(60000, () => req.destroy(new Error('timeout ' + target)));
+            };
+
+            get(url, 5);
+        });
+    }
+
+    // GET texte (API JSON data.gouv.fr) avec suivi des redirections.
+    httpGet(url) {
+        return new Promise((resolve, reject) => {
+            const options = { headers: { 'User-Agent': USER_AGENT } };
+            const req = HTTPS.get(url, options, (response) => {
+                const status = response.statusCode;
+
+                if ([301, 302, 303, 307, 308].includes(status) && response.headers.location) {
+                    response.resume();
+                    return resolve(this.httpGet(new URL(response.headers.location, url).toString()));
+                }
+
+                if (200 !== status) {
+                    response.resume();
+                    return reject(new Error('status: ' + status));
+                }
+
+                let data = '';
+                response.on('data', (chunk) => { data += chunk; });
+                response.on('end', () => resolve(data));
             });
 
-            request.catch(ignore => null);
-    
-            await request;
-    
-        } while (0 < --retryLeft);
-
-        if (0 === retryLeft) {
-            throw `can not get ${entry.url}`;
-        }
-
-        return json;
-    }
-    
-    async crawlLoopPromise() {
-        let entry = this.getEntry();
-    
-        while (null !== entry) {
-            await this.crawlPromise(entry);
-    
-            entry = this.getEntry();
-        }
-    }
-    
-    
-    getEntry() {
-        const entry = this.entryList.pop();
-    
-        if (entry) {
-            const path = INFO_PATH.format({id: entry.id});
-        
-            entry.url = BASE_URL + path;
-    
-            return entry;
-        }
-    
-        return null;
+            req.on('error', reject);
+            req.setTimeout(60000, () => req.destroy(new Error('timeout ' + url)));
+        });
     }
 }

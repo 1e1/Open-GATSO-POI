@@ -10,7 +10,7 @@ const DEFAULTS = {
 
 
 (async () => {
-    const arguments = process.argv.slice(2);
+    const argv = process.argv.slice(2);
     const options = {};
 
     for (let optionName in DEFAULTS) {
@@ -21,13 +21,13 @@ const DEFAULTS = {
                 options[optionName] = [];
             }
 
-            options[optionName] = arguments.filter(argument => optionValues.includes(argument));
+            options[optionName] = argv.filter(argument => optionValues.includes(argument));
 
             if (0 === options[optionName].length) {
                 options[optionName] = optionValues;
             }
         } else if (true === optionValues || false === optionValues) {
-            options[optionName] = arguments.includes(optionName);
+            options[optionName] = argv.includes(optionName);
         }
     }
 

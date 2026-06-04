@@ -23,7 +23,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: "Set install channel (mypois, master vs beta)"
         id: channel
@@ -43,7 +43,7 @@ jobs:
           python -m pip install configparser pandas pillow
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -55,7 +55,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends genisoimage gpsbabel
 
       - name: Cache sources externes
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: CACHE
           key: gatso-cache-v1-${{ runner.os }}-${{ hashFiles('.github/workflows/gatso.yml') }}
@@ -68,27 +68,42 @@ jobs:
           npm ci
           cd ..
 
+      - name: Tests unitaires (node:test)
+        run: |
+          cd src
+          npm test
+          cd ..
+
+      - name: Audit des dépendances (informatif)
+        continue-on-error: true
+        run: |
+          cd src
+          npm audit --audit-level=high
+          cd ..
+
       - name: Install outils (mypois, GPSBabel)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./bin/make.sh --install-channel=${{ steps.channel.outputs.name }} --install --cache
 
       - name: Construire les jeux (identique à Travis)
         run: |
           set -eux
-          TYP='csv gpx'
+          TYP='csv gpx ov2'
           CNX='CNX_GATSO_FR'
-          RLS='FR:gatso:'
+          RLS='FR-gatso-'
           ./bin/make.sh --build=hasCache --run --build="$TYP" --build="$CNX" --release-prefix="$RLS"
           ls -lR ./RELEASES
           CNX='CNX_GATSO_FR CNX_GATSO_EU'
-          RLS='EU:gatso:'
+          RLS='EU-gatso-'
           ./bin/make.sh --build=hasCache --run --build="$TYP" --build="$CNX" --release-prefix="$RLS"
           ls -lR ./RELEASES
           CNX='CNX_FUEL_FR'
-          RLS='FR:fuel:'
+          RLS='FR-fuel-'
           ./bin/make.sh --build=hasCache --run --build="$TYP" --build="$CNX" --release-prefix="$RLS"
           ls -lR ./RELEASES
           CNX='CNX_GATSO_FR CNX_FUEL_FR'
-          RLS='FR:gatso-fuel:'
+          RLS='FR-gatso-fuel-'
           ./bin/make.sh --build=hasCache --run --build="$TYP" --build="$CNX" --release-prefix="$RLS"
           ls -lR ./RELEASES
           ./bin/make.sh --build=hasCache --run --image
@@ -96,7 +111,7 @@ jobs:
 
       - name: Archive pour déploiement (artefact)
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: gatso-deploy
           if-no-files-found: error
@@ -117,7 +132,7 @@ jobs:
       contents: write
     steps:
       - name: Télécharger l'artefact de build
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: gatso-deploy
           path: .
@@ -140,7 +155,7 @@ jobs:
           echo "release_name=${TAG_PREFIX}master" >> "$GITHUB_OUTPUT"
 
       - name: Publier la release (assets dans RELEASES/)
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           name: ${{ steps.meta.outputs.release_name }}
           tag_name: ${{ steps.meta.outputs.tag }}
@@ -161,7 +176,7 @@ jobs:
           [ -f .nojekyll ] || true
 
       - name: Déployer sur gh-pages
-        uses: peaceiris/actions-gh-pages@v4
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: _site
