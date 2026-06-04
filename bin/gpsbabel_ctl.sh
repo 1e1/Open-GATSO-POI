@@ -36,7 +36,7 @@ _uninstall()
 _init()
 {
     ¶ '_init'
-    mkdir -p $MOUNT_PATH
+    mkdir -p "$MOUNT_PATH"
 }
 
 
@@ -48,21 +48,21 @@ _get_version()
 
     echo "$GPSLABEL_VERSION_PATH < $GPSBABEL_VERSION"
 
-    echo $GPSBABEL_VERSION > $GPSLABEL_VERSION_PATH
+    echo "$GPSBABEL_VERSION" > "$GPSLABEL_VERSION_PATH"
 }
 
 
 _clean()
 {
     ¶ '_clean'
-    [ -f $GPSLABEL_VERSION_PATH   ] && rm -f  $GPSLABEL_VERSION_PATH
+    [ -f "$GPSLABEL_VERSION_PATH" ] && rm -f "$GPSLABEL_VERSION_PATH"
 }
 
 
 _unmount()
 {
     ¶ '_unmount'
-    [ -d $MOUNT_PATH ] && rm -rf $MOUNT_PATH
+    [ -d "$MOUNT_PATH" ] && rm -rf "$MOUNT_PATH"
 }
 
 
@@ -78,22 +78,23 @@ _erase()
 _update_version()
 {
     ¶ '_update_version'
-    if [ ! -f $MYPOIS_TS_PATH ]
+    # Avant: test sur $MYPOIS_TS_PATH (variable d'un autre script, vide ici) -> _get_version appelé à tort.
+    if [ ! -f "$GPSLABEL_VERSION_PATH" ]
     then
         _get_version
-    fi 
+    fi
 
-    GPSLABEL_VERSION=`cat $GPSLABEL_VERSION_PATH`
+    GPSLABEL_VERSION=`cat "$GPSLABEL_VERSION_PATH"`
 
     echo "$GPSLABEL_VERSION < $GPSLABEL_VERSION_PATH"
 
-    cp $VERSIONS_PATH "$VERSIONS_PATH.old"
-    grep -v '^gpsbabel ' "$VERSIONS_PATH.old" > $VERSIONS_PATH
+    cp "$VERSIONS_PATH" "$VERSIONS_PATH.old"
+    grep -v '^gpsbabel ' "$VERSIONS_PATH.old" > "$VERSIONS_PATH"
     rm -f "$VERSIONS_PATH.old"
 
     echo "$VERSIONS_PATH < $GPSLABEL_VERSION"
 
-    echo "gpsbabel $GPSLABEL_VERSION" >> $VERSIONS_PATH
+    echo "gpsbabel $GPSLABEL_VERSION" >> "$VERSIONS_PATH"
 }
 
 
@@ -116,13 +117,13 @@ _run()
         SOURCE="$BUILD_PATH/${FILENAME}.gpx"
         DESTINATION="$BUILD_PATH/${FILENAME}.gpi"
 
-        [ -f $SOURCE ] && $GPSLABEL_EXEC -i gpx -f $SOURCE -o garmin_gpi,alerts=1,bitmap="$BMP_PATH" -F "$DESTINATION"
-    done < $MANIFEST_PATH
+        [ -f "$SOURCE" ] && $GPSLABEL_EXEC -i gpx -f "$SOURCE" -o garmin_gpi,alerts=1,bitmap="$BMP_PATH" -F "$DESTINATION"
+    done < "$MANIFEST_PATH"
 
-    cp $BUILD_PATH/*.gpi ${MOUNT_PATH}/
-    
-    # remove if empty
-    rmdir ${MOUNT_PATH}
+    cp "$BUILD_PATH"/*.gpi "${MOUNT_PATH}/" 2>/dev/null
+
+    # retire le dossier s'il est resté vide (aucun .gpi généré)
+    rmdir "${MOUNT_PATH}" 2>/dev/null
 }
 
 
