@@ -51,14 +51,16 @@ test('parseInfo: schéma minuscule (radartype/rulesmesured) -> point correct', (
     assert.ok(got.basenames.includes('GATSO_speed_0'));
 });
 
-test('parseInfo: type inconnu (tid 20) + champs absents -> pas de crash, fallback', () => {
-    // radartype tid inconnu, rulesmesured absent -> doit retomber sur la règle "empty"
+test('parseInfo: type inconnu (tid 20) + rulesmesured & changed absents -> pas de crash, timestamp valide', () => {
+    // radartype tid inconnu, rulesmesured ET changed absents -> fallback règle "empty" + timestamp courant
     const got = parseWithStub(
-        { radartype: [{ tid: '20' }], radardirection: 'X', radarroad: '-', changed: '1760000000' },
+        { radartype: [{ tid: '20' }], radardirection: 'X', radarroad: '-' },
         { geoJson: [[1.0, 47.0]] },
     );
     assert.ok(got, 'un point doit quand même être émis');
     assert.ok(got.basenames.includes('GATSO_ALL'));
+    assert.ok(Number.isFinite(got.point.lastUpdateTimestamp), 'timestamp numérique valide (pas NaN)');
+    assert.ok(got.point.lastUpdateTimestamp > 1e9, 'epoch en secondes plausible');
 });
 
 test('parseList: geoJson itinéraire [lat,lng] -> normalisé en [lng,lat]', () => {

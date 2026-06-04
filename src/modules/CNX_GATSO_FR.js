@@ -167,6 +167,10 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
         const displayRule = this.displayRulesToString(displayRules);
         const basenames = flatten(basenamesList);
 
+        // 'changed' est un epoch (string) ; on le force en nombre valide. Un champ manquant
+        // donnerait NaN -> version.txt = "NaN" -> tag de release CI cassé.
+        const changed = Number(gatso.changed) || Math.floor(Date.now() / 1000);
+
         const point = new POINT();
 
         point
@@ -175,11 +179,11 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
             .setType(displayType)
             .setRule(displayRule)
             .setDescription((gatso.radardirection || gatso.radarDirection || '') + ' ' + (gatso.radarroad || gatso.radarRoad || ''))
-            .setLastUpdateTimestamp(gatso.changed)
+            .setLastUpdateTimestamp(changed)
             ;
-    
+
         this.storage.addPoint(this.getCode(), point, basenames);
-        this.addTimestamp(gatso.changed);
+        this.addTimestamp(changed);
     }
 
     getTypeById(id) {
