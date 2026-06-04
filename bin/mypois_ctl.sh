@@ -48,10 +48,14 @@ _install()
             ;;
     esac
 
-    curl -sSL -D - $GH_URL -o $MYPOIS_GZ_PATH
-    mkdir -p $MYPOIS_PATH
-    tar -xzf $MYPOIS_GZ_PATH -C $MYPOIS_PATH --strip-components 1
-    rm $MYPOIS_GZ_PATH
+    if ! curl -fsSL "$GH_URL" -o "$MYPOIS_GZ_PATH"
+    then
+        echo "[ERROR] téléchargement mypois échoué: $GH_URL" >&2
+        exit 1
+    fi
+    mkdir -p "$MYPOIS_PATH"
+    tar -xzf "$MYPOIS_GZ_PATH" -C "$MYPOIS_PATH" --strip-components 1 || exit 1
+    rm -f "$MYPOIS_GZ_PATH"
 }
 
 
@@ -67,33 +71,47 @@ _get_version()
     ¶ '_get_version'
     CMD='gdate'
 
-    if [ ! `command -v $CMD` ]
+    if ! command -v "$CMD" >/dev/null 2>&1
     then
         CMD='date'
     fi
 
-    MYPOIS_MODIFICATION_DATETIME=`curl -ssL -X GET 'https://api.github.com/repos/jimmyH/mypois/commits' | grep '"date"' | head -1 | cut -d '"' -f 4`
-    MYPOIS_MODIFICATION_TIMESTAMP=`$CMD -d "$MYPOIS_MODIFICATION_DATETIME" +"%s"`
+    # Auth optionnelle: si GITHUB_TOKEN est présent (CI), on évite le rate-limit de l'API publique.
+    AUTH=()
+    if [ -n "${GITHUB_TOKEN:-}" ]
+    then
+        AUTH=(-H "Authorization: Bearer ${GITHUB_TOKEN}")
+    fi
+
+    MYPOIS_MODIFICATION_DATETIME=`curl -fsSL "${AUTH[@]}" 'https://api.github.com/repos/jimmyH/mypois/commits' 2>/dev/null | grep '"date"' | head -1 | cut -d '"' -f 4`
+    MYPOIS_MODIFICATION_TIMESTAMP=`$CMD -d "$MYPOIS_MODIFICATION_DATETIME" +"%s" 2>/dev/null`
+
+    # Fallback si l'API GitHub est indisponible/rate-limitée: heure courante (sinon on écrirait une valeur vide).
+    if [ -z "$MYPOIS_MODIFICATION_TIMESTAMP" ]
+    then
+        echo "[WARN] date mypois indisponible (API GitHub), fallback heure courante" >&2
+        MYPOIS_MODIFICATION_TIMESTAMP=`$CMD +"%s"`
+    fi
 
     echo "$MYPOIS_TS_PATH < $MYPOIS_MODIFICATION_TIMESTAMP"
 
-    echo $MYPOIS_MODIFICATION_TIMESTAMP > $MYPOIS_TS_PATH
+    echo "$MYPOIS_MODIFICATION_TIMESTAMP" > "$MYPOIS_TS_PATH"
 }
 
 
 _clean()
 {
     ¶ '_clean'
-    [ -f $MYPOIS_TS_PATH   ] && rm -f  $MYPOIS_TS_PATH
-    [ -f $CONFIG_PATH      ] && rm -f  $CONFIG_PATH
-    [ -d $BUILD_CSV_H_PATH ] && rm -fr $BUILD_CSV_H_PATH
+    [ -f "$MYPOIS_TS_PATH"   ] && rm -f  "$MYPOIS_TS_PATH"
+    [ -f "$CONFIG_PATH"      ] && rm -f  "$CONFIG_PATH"
+    [ -d "$BUILD_CSV_H_PATH" ] && rm -fr "$BUILD_CSV_H_PATH"
 }
 
 
 _unmount()
 {
     ¶ '_unmount'
-    [ -d $MOUNT_PATH ] && rm -rf $MOUNT_PATH
+    [ -d "$MOUNT_PATH" ] && rm -rf "$MOUNT_PATH"
 }
 
 
@@ -111,7 +129,7 @@ _run()
     ¶ '_run'
     _unmount
 
-    python $MYPOIS_EXEC $CONFIG_PATH
+    python "$MYPOIS_EXEC" "$CONFIG_PATH"
 }
 
 _update_version()
@@ -126,13 +144,13 @@ _update_version()
 
     echo "$MYPOIS_MODIFICATION_TIMESTAMP < $MYPOIS_TS_PATH"
 
-    cp $VERSIONS_PATH "$VERSIONS_PATH.old"
-    grep -v '^fs ' "$VERSIONS_PATH.old" > $VERSIONS_PATH
+    cp "$VERSIONS_PATH" "$VERSIONS_PATH.old"
+    grep -v '^fs ' "$VERSIONS_PATH.old" > "$VERSIONS_PATH"
     rm -f "$VERSIONS_PATH.old"
 
     echo "$VERSIONS_PATH < $MYPOIS_MODIFICATION_TIMESTAMP"
 
-    echo "fs $MYPOIS_MODIFICATION_TIMESTAMP" >> $VERSIONS_PATH
+    echo "fs $MYPOIS_MODIFICATION_TIMESTAMP" >> "$VERSIONS_PATH"
 }
 
 
@@ -149,13 +167,14 @@ _make_config()
 
     echo "Stuffing ./BUILD_csv_h/"
 
-    for f in `ls $BUILD_PATH/*.csv`
+    for f in "$BUILD_PATH"/*.csv
     do
-        #cat <(echo 'longitude,latitude,name,comment') $f > ${f//\.csv/_h.csv}
-        cat <(echo 'longitude,latitude,name,description') $f > ${f//\.csv/_h.csv}
+        [ -e "$f" ] || continue
+        #cat <(echo 'longitude,latitude,name,comment') "$f" > "${f//\.csv/_h.csv}"
+        cat <(echo 'longitude,latitude,name,description') "$f" > "${f//\.csv/_h.csv}"
     done
 
-    mv $BUILD_PATH/*_h.csv $BUILD_CSV_H_PATH/
+    mv "$BUILD_PATH"/*_h.csv "$BUILD_CSV_H_PATH/" 2>/dev/null
 
 
     echo "Writing config.ini"
