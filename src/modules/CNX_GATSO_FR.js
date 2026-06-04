@@ -9,6 +9,9 @@ const { format, flatten } = require('./utils.js');
 const POINT = require('./POI.js');
 
 const COUNTRY_CODE = 'FR';
+// Le connecteur n'envoyait aucun User-Agent (≠ EU/FUEL) ; un WAF gouv bloque souvent
+// les requêtes sans UA, en particulier depuis une IP datacenter (runner CI).
+const USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 const REQUEST_RETRY = 5;
 const WAITING_TIME_ON_ERROR = 5000;
 const REQUEST_DELAY = 200;        // ms entre 2 téléchargements: politesse anti rate-limit (API gouv)
@@ -59,8 +62,10 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
 
     // GET unique renvoyant le corps (string). Rejette avec statusCode/retryAfter sur erreur HTTP.
     httpGet(url) {
+        const options = { headers: { 'User-Agent': USER_AGENT } };
+
         return new Promise((resolve, reject) => {
-            const req = HTTPS.get(url, (response) => {
+            const req = HTTPS.get(url, options, (response) => {
                 const status = response.statusCode;
 
                 if (200 !== status) {
