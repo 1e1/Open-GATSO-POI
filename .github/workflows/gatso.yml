@@ -23,7 +23,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: "Set install channel (mypois, master vs beta)"
         id: channel
@@ -43,7 +43,7 @@ jobs:
           python -m pip install configparser pandas pillow
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -55,7 +55,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends genisoimage gpsbabel
 
       - name: Cache sources externes
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: CACHE
           key: gatso-cache-v1-${{ runner.os }}-${{ hashFiles('.github/workflows/gatso.yml') }}
@@ -111,7 +111,7 @@ jobs:
 
       - name: Archive pour déploiement (artefact)
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: gatso-deploy
           if-no-files-found: error
@@ -132,7 +132,7 @@ jobs:
       contents: write
     steps:
       - name: Télécharger l'artefact de build
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: gatso-deploy
           path: .
