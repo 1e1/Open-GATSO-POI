@@ -52,6 +52,31 @@ module.exports = class Crawler {
         return this.getConfig('services', name);
     }
 
+    /**
+     * Résout la règle carXX depuis une vitesse (km/h). > 130 -> car130 ; valeur inconnue/NA -> car.
+     * Partagé par les connecteurs FR (CSV data.gouv.fr) et EU (CSV Lufop).
+     */
+    getCarRuleBySpeed(speedLimit) {
+        const raw = (speedLimit === null || speedLimit === undefined || speedLimit === '')
+            ? null
+            : String(speedLimit).replace(/\D/g, '');
+        const s = (raw === null || raw === '') ? NaN : parseInt(raw, 10);
+
+        if (Number.isNaN(s) || s <= 0) {
+            return this.getRule('car');
+        }
+        if (s > 130) {
+            return this.getRule('car130');
+        }
+
+        const key = 'car' + s;
+        if (undefined !== CONFIG.rules[key]) {
+            return CONFIG.rules[key];
+        }
+
+        return this.getRule('car');
+    }
+
     displayTypesToString(displayTypes) {
         return displayTypes.join(' ');
     }
