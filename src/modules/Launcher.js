@@ -1,17 +1,8 @@
-String.prototype.format = function(opts) { return this.replace(/\{([^\}]+)\}/g, (match, name) => opts[name]) }
-Array.prototype.concatInside = function() { return [].concat.apply([], this); }
-Array.prototype.unique = function() {
-    return this.filter(function (value, index, self) { 
-        return self.indexOf(value) === index;
-    });
-}
-
-
-
 const PATH = require('path');
 const FS = require('fs');
 const CONFIG = require('./config.js');
 const FILE_LIST = require('./File/FileList.js');
+const { flatten, unique } = require('./utils.js');
 
 const OUTPUT_DIR = './BUILD';
 const CACHE_DIR = './CACHE';
@@ -27,42 +18,8 @@ const OUTPUT_PATH = PATH.resolve(__dirname, '../..', OUTPUT_DIR);
 const CACHE_PATH = PATH.resolve(__dirname, '../..', CACHE_DIR);
 const ICON_PATH = PATH.resolve(__dirname, '../..', ICON_DIR);
 
-const BASENAMES_LIST = [Object.values(CONFIG.rules), Object.values(CONFIG.services)].concatInside().map(rule => rule.basenames);
-const BASENAMES = BASENAMES_LIST.concatInside().unique();
-
-
-
-FS.mkdirRecursiveSync = path => {
-    const paths = path.split('/');
-    let fullPath = '';
-
-    paths.forEach((filename) => {
-        fullPath += filename + '/';
-
-        if (! FS.existsSync(fullPath)) {
-            FS.mkdirSync(fullPath);
-        }
-    });
-};
-
-FS.rmdirRecursiveSync = dir => {
-    const list = FS.readdirSync(dir);
-    
-    for(let i = 0; i < list.length; i++) {
-        const filename = PATH.join(dir, list[i]);
-        const stat = FS.statSync(filename);
-
-        if('.' !== filename && '..' !== filename) {
-            if(stat.isDirectory()) {
-                FS.rmdirRecursiveSync(filename);
-            } else {
-                FS.unlinkSync(filename);
-            }
-        }
-    }
-    
-    FS.rmdirSync(dir);
-};
+const BASENAMES_LIST = flatten([Object.values(CONFIG.rules), Object.values(CONFIG.services)]).map(rule => rule.basenames);
+const BASENAMES = unique(flatten(BASENAMES_LIST));
 
 
 
@@ -96,7 +53,7 @@ module.exports = class Launcher {
         if (true !== this.options.hasCache) {
             this.resetDirectory(CACHE_PATH);
         } else {
-            FS.mkdirRecursiveSync(CACHE_PATH);
+            FS.mkdirSync(CACHE_PATH, { recursive: true });
         }
         
         this.options.sources.forEach(source => {
@@ -164,11 +121,8 @@ module.exports = class Launcher {
     }
     
     resetDirectory(dir) {
-        if (FS.existsSync(dir)) {
-            FS.rmdirRecursiveSync(dir);
-        }
-    
-        FS.mkdirRecursiveSync(dir);
+        FS.rmSync(dir, { recursive: true, force: true });
+        FS.mkdirSync(dir, { recursive: true });
     }
 
     copyAssets() {

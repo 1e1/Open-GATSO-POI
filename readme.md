@@ -76,8 +76,8 @@ you should read `./bin/make.sh --help`, `./bin/mypois_ctl.sh help`, and `./bin/g
 ## documentation
 
 ### Speed Camera
-REST service from:
-* ![version GATSO FR](https://raw.githubusercontent.com/1e1/Open-GATSO-POI/gh-pages/cnx/gatso-FR.svg?sanitize=true) https://radars.securite-routiere.gouv.fr/ 
+Open data sources:
+* ![version GATSO FR](https://raw.githubusercontent.com/1e1/Open-GATSO-POI/gh-pages/cnx/gatso-FR.svg?sanitize=true) https://www.data.gouv.fr/datasets/liste-des-radars-fixes-en-france/ — official "Liste des radars fixes en France" CSV (Ministère de l'Intérieur). Replaces the per-radar REST API of radars.securite-routiere.gouv.fr, which is unreachable from CI runners (WAF). One bulk download; sections (vitesse moyenne) are single points.
 * ![version GATSO EU](https://raw.githubusercontent.com/1e1/Open-GATSO-POI/gh-pages/cnx/gatso-EU.svg?sanitize=true) https://lufop.net/zones-de-danger-france-et-europe-asc-et-csv/
 * ![version FUEL FR](https://raw.githubusercontent.com/1e1/Open-GATSO-POI/gh-pages/cnx/fuel-FR.svg?sanitize=true) https://www.prix-carburants.gouv.fr/rubrique/opendata/
 
