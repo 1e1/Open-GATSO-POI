@@ -48,7 +48,7 @@ _install()
             ;;
     esac
 
-    if ! curl -fsSL "$GH_URL" -o "$MYPOIS_GZ_PATH"
+    if ! curl -fsSL --retry 3 --retry-delay 5 --retry-all-errors "$GH_URL" -o "$MYPOIS_GZ_PATH"
     then
         echo "[ERROR] téléchargement mypois échoué: $GH_URL" >&2
         exit 1
