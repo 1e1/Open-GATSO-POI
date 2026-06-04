@@ -5,9 +5,8 @@ const INFO_PATH = '/radars/{id}?_format=json';
 const FS = require('fs');
 const HTTPS = require('https');
 const CRAWLER = require('./Crawler.js');
+const { format, flatten } = require('./utils.js');
 const POINT = require('./POI.js');
-
-HTTPS.globalAgent.options.rejectUnauthorized = false;
 
 const COUNTRY_CODE = 'FR';
 const REQUEST_RETRY = 5;
@@ -29,17 +28,24 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
 
     async prepare() {
         const index_path = this.options.cache + '.json';
+        let entryList = null;
 
         if (FS.existsSync(index_path)) {
-            const json = FS.readFileSync(index_path);
-
-            this.entryList = JSON.parse(json);
-        } else {
-            this.entryList = await this.downloadEntries();
-
-            const json = JSON.stringify(this.entryList);
-            FS.writeFileSync(index_path, json);
+            try {
+                entryList = JSON.parse(FS.readFileSync(index_path));
+            } catch (err) {
+                console.error('[ERROR] index en cache illisible, re-téléchargement: ' + index_path);
+                entryList = null;
+            }
         }
+
+        if (null === entryList) {
+            entryList = await this.downloadEntries();
+
+            FS.writeFileSync(index_path, JSON.stringify(entryList));
+        }
+
+        this.entryList = entryList;
 
         if (! FS.existsSync(this.options.cache)) {
             FS.mkdirSync(this.options.cache);
@@ -49,31 +55,32 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
     async downloadEntries() {
         let entryList = [];
 
-        const mainPromise = new Promise((resolve, reject) => {
-            HTTPS.get(BASE_URL + LIST_PATH, (request) => {
-                if (200 === request.statusCode) {
-                    let data = '';
-            
-                    request.on('data', (chunk) => {
-                        data += chunk;
-                    });
-        
-                    request.on('end', async () => {
-                        entryList = this.parseList(JSON.parse(data));
-                        
-                        resolve();
-                    });
-                } else {
-                    console.log('status: ' + request.statusCode);
-
-                    reject();
+        await new Promise((resolve, reject) => {
+            const req = HTTPS.get(BASE_URL + LIST_PATH, (response) => {
+                if (200 !== response.statusCode) {
+                    response.resume();
+                    return reject(new Error('status: ' + response.statusCode));
                 }
+
+                let data = '';
+
+                response.on('data', (chunk) => {
+                    data += chunk;
+                });
+
+                response.on('end', () => {
+                    try {
+                        entryList = this.parseList(JSON.parse(data));
+                        resolve();
+                    } catch (err) {
+                        reject(new Error('réponse JSON invalide (liste radars): ' + err.message));
+                    }
+                });
             });
+
+            req.on('error', reject);
+            req.setTimeout(60000, () => req.destroy(new Error('timeout liste radars')));
         });
-
-        mainPromise.catch(err => this.kill(err));
-
-        await mainPromise;
 
         return entryList;
     }
@@ -153,8 +160,8 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
         
         const displayType = this.displayTypesToString(displayTypes);
         const displayRule = this.displayRulesToString(displayRules);
-        const basenames = basenamesList.concatInside();
-    
+        const basenames = flatten(basenamesList);
+
         const point = new POINT();
 
         point
@@ -247,16 +254,18 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
         let json = null;
 
         if (FS.existsSync(cache_path)) {
-            // console.log(this.getCode() + ' ' + entry.id);
+            try {
+                json = JSON.parse(FS.readFileSync(cache_path));
+            } catch (err) {
+                console.error('[ERROR] cache radar illisible, re-téléchargement: ' + cache_path);
+                json = null;
+            }
+        }
 
-            const content = FS.readFileSync(cache_path);
-
-            json = JSON.parse(content);
-        } else {
+        if (null === json) {
             json = await this.downloadEntry(entry);
 
-            const content = JSON.stringify(json);
-            FS.writeFileSync(cache_path, content);
+            FS.writeFileSync(cache_path, JSON.stringify(json));
         }
 
         this.parseInfo(json, entry);
@@ -265,46 +274,47 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
     async downloadEntry(entry) {
         let retryLeft = REQUEST_RETRY;
         let json = null;
-    
-        do {
-            const request = new Promise((resolve, reject) => {
-                console.log(this.getCode() + ' ' + entry.url + ' #' + (1 + REQUEST_RETRY - retryLeft));
-    
-                HTTPS.get(entry.url, async (request) => {
-                    switch (request.statusCode) {
-                        case 200: 
+
+        while (0 < retryLeft && null === json) {
+            console.log(this.getCode() + ' ' + entry.url + ' #' + (1 + REQUEST_RETRY - retryLeft));
+
+            try {
+                json = await new Promise((resolve, reject) => {
+                    const req = HTTPS.get(entry.url, (response) => {
+                        if (200 !== response.statusCode) {
+                            response.resume();
+                            return reject(new Error('status: ' + response.statusCode));
+                        }
+
                         let data = '';
-                
-                        request.on('data', (chunk) => {
+
+                        response.on('data', (chunk) => {
                             data += chunk;
                         });
-        
-                        request.on('end', () => {
-                            json = JSON.parse(data);
-                            
-                            retryLeft = -1;
-                            resolve();
+
+                        response.on('end', () => {
+                            try {
+                                resolve(JSON.parse(data));
+                            } catch (err) {
+                                reject(new Error('JSON invalide ' + entry.url + ': ' + err.message));
+                            }
                         });
-                        break;
+                    });
 
-                        case 503:
-                        await this.sleep(WAITING_TIME_ON_ERROR);
-
-                        default: 
-                        console.log('status: ' + request.statusCode);
-    
-                        resolve();
-                    }
+                    req.on('error', reject);
+                    req.setTimeout(60000, () => req.destroy(new Error('timeout ' + entry.url)));
                 });
-            });
+            } catch (err) {
+                console.error('[ERROR]', (err && err.message) || err);
+                retryLeft--;
 
-            request.catch(ignore => null);
-    
-            await request;
-    
-        } while (0 < --retryLeft);
+                if (0 < retryLeft) {
+                    await this.sleep(WAITING_TIME_ON_ERROR);
+                }
+            }
+        }
 
-        if (0 === retryLeft) {
+        if (null === json) {
             throw `can not get ${entry.url}`;
         }
 
@@ -326,10 +336,10 @@ module.exports = class CrawlerGatsoFR extends CRAWLER {
         const entry = this.entryList.pop();
     
         if (entry) {
-            const path = INFO_PATH.format({id: entry.id});
-        
+            const path = format(INFO_PATH, {id: entry.id});
+
             entry.url = BASE_URL + path;
-    
+
             return entry;
         }
     

@@ -8,35 +8,14 @@ const REJECT_COUNTRIES = [ 'FR' ];
 const PATH = require('path');
 const FS = require('fs');
 const OS = require('os');
-const URL = require('url');
 const ZIP = require('node-stream-zip');
 const HTTPS = require('https');
 const CRAWLER = require('./Crawler.js');
 const CONFIG = require('./config.js');
+const { flatten, unescapeCsv } = require('./utils.js');
 const POINT = require('./POI.js');
 
-HTTPS.globalAgent.options.rejectUnauthorized = false;
-
 const WORKSPACE = FS.mkdtempSync(PATH.join(OS.tmpdir(), 'lufop-'));
-
-
-String.prototype.unescapeCsv = function() { 
-    const firstChar = this.charAt(0);
-
-    if (['"', "'"].includes(firstChar)) {
-        const pattern = new RegExp('\\' + firstChar, 'g');
-        const patternLeft = new RegExp('^' + firstChar + '*', 'g');
-        const patternRight = new RegExp(firstChar + '*$', 'g');
-        
-        return this
-            .replace(patternLeft, '')
-            .replace(patternRight, '')
-            .replace(pattern, firstChar)
-            ;
-    }
-
-    return this;
-}
 
 
 module.exports = class CrawlerGatsoEU extends CRAWLER {
@@ -53,41 +32,55 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
 
     async prepare() {
         const lastUpdateTimestamps = await this.getLastUpdateTimestamps();
-        const lastUpdateTimestamp = lastUpdateTimestamps.reduce((min,val) => Math.max(min,val));
+        let lastUpdateTimestamp = lastUpdateTimestamps.reduce((max, val) => Math.max(max, val), 0);
+
+        if (0 === lastUpdateTimestamp) {
+            // Le scraping de la page lufop n'a renvoyé aucune date (page modifiée, indispo...):
+            // on retombe sur l'heure courante plutôt que de planter (reduce sur tableau vide)
+            // ou de dater tous les POI à epoch 0.
+            console.warn('[WARN] aucune date de mise à jour trouvée sur ' + META_URL + ', fallback heure courante');
+            lastUpdateTimestamp = Math.floor(Date.now() / 1000);
+        }
+
         const zip_path = this.options.cache + '.zip';
 
         if (!FS.existsSync(zip_path)) {
             await this.downloadSource(zip_path);
         }
-        
+
         await this.unzip(zip_path, lastUpdateTimestamp);
     }
 
     async downloadSource(zip_path) {
-        const options = URL.parse(SOURCE_URL);
-        const zip_file = FS.createWriteStream(zip_path);
-        
-        zip_file.on('error', function(err) {
-            console.error('[ERROR]', err); 
-            FS.unlink(zip_path);
-        });
-
-        options.headers = { 'User-Agent': 'Mozilla/5.0' };
+        const options = { headers: { 'User-Agent': 'Mozilla/5.0' } };
 
         console.log(zip_path);
         console.log(SOURCE_URL);
 
-        const mainPromise = new Promise((resolve, reject) => {
-            HTTPS.get(options, (request) => {
-                request.pipe(zip_file).on('close', resolve);
+        await new Promise((resolve, reject) => {
+            const zip_file = FS.createWriteStream(zip_path);
+
+            // Sur erreur: on coupe, on supprime l'archive partielle (callback obligatoire) puis on rejette.
+            const fail = (err) => {
+                zip_file.destroy();
+                FS.unlink(zip_path, () => reject(err));
+            };
+
+            zip_file.on('error', fail);
+
+            const req = HTTPS.get(SOURCE_URL, options, (response) => {
+                if (200 !== response.statusCode) {
+                    response.resume();
+                    return fail(new Error('status: ' + response.statusCode));
+                }
+
+                response.on('error', fail);
+                response.pipe(zip_file).on('close', resolve);
             });
+
+            req.on('error', fail);
+            req.setTimeout(120000, () => req.destroy(new Error('timeout téléchargement EU')));
         });
-
-        mainPromise.catch(err => this.kill(err));
-
-        await mainPromise;
-        
-        zip_file.end();
     }
     
     
@@ -128,7 +121,7 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
     
         const displayType = this.displayTypesToString(displayTypes);
         const displayRule = this.displayRulesToString(displayRules);
-        const basenames = basenamesList.concatInside();
+        const basenames = flatten(basenamesList);
 
         const point = new POINT();
 
@@ -329,7 +322,7 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
                 const json = {
                     longitude: longitude.trim(),
                     latitude: latitude.trim(),
-                    comment: comment.trim().unescapeCsv(),
+                    comment: unescapeCsv(comment.trim()),
                 };
 
                 this.parseInfo(json, entry);
@@ -366,42 +359,43 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
 
     async getLastUpdateTimestamps() {
         const timestamps = [];
-        const options = URL.parse(META_URL);
+        const options = { headers: { 'User-Agent': 'Mozilla/5.0' } };
 
-        options.headers = { 
-            'User-Agent': 'Mozilla/5.0',
-         };
+        // La date n'est qu'informative (datation des POI): un échec ici ne doit pas
+        // faire échouer tout le build EU -> on journalise et on retombe sur [] (fallback amont).
+        try {
+            await new Promise((resolve, reject) => {
+                const req = HTTPS.get(META_URL, options, (response) => {
+                    let data = '';
 
-        const requestPromise = new Promise((resolve, reject) => {
-            HTTPS.get(options, (request) => {
-                let data = '';
-        
-                request.on('data', (chunk) => {
-                    data += chunk;
+                    response.on('error', reject);
+
+                    response.on('data', (chunk) => {
+                        data += chunk;
+                    });
+
+                    response.on('end', () => {
+                        let results;
+
+                        while (results = UPDATE_PATTERN.exec(data)) {
+                            const [ , day, month, year, hour, minute, second] = results;
+                            const iso = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
+                            const date = new Date(iso);
+                            const timestamp = Math.round(date.getTime() / 1000);
+
+                            timestamps.push(timestamp);
+                        }
+
+                        resolve();
+                    });
                 });
 
-                request.on('error', (chunk) => {
-                    reject();
-                });
-
-                request.on('end', () => {
-                    let results;
-
-                    while (results = UPDATE_PATTERN.exec(data)) {
-                        const [ , day, month, year, hour, minute, second] = results;
-                        const iso = `${year}-${month}-${day}T${hour}:${minute}:${second}`
-                        const date = new Date(iso);
-                        const timestamp = Math.round(date.getTime() / 1000);
-
-                        timestamps.push(timestamp);
-                    }
-
-                    resolve();
-                });
+                req.on('error', reject);
+                req.setTimeout(60000, () => req.destroy(new Error('timeout page lufop')));
             });
-        });
-
-        await requestPromise;
+        } catch (err) {
+            console.warn('[WARN] lecture de la date sur ' + META_URL + ' échouée: ' + ((err && err.message) || err));
+        }
 
         return timestamps;
     }
