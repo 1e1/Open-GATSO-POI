@@ -57,11 +57,13 @@ _install()
     tar -xzf "$MYPOIS_GZ_PATH" -C "$MYPOIS_PATH" --strip-components 1 || exit 1
     rm -f "$MYPOIS_GZ_PATH"
 
-    # Compat Python 3.12+: ConfigParser.readfp() (déprécié depuis 3.2) a été SUPPRIMÉ en 3.12.
-    # mypois (amont non maintenu, ~2019) l'utilise encore -> AttributeError sur les runners
-    # actuels (ubuntu-latest = Python 3.12). read_file() est l'équivalent exact, dispo depuis 3.2.
-    # perl -i pour la portabilité (sed -i diffère entre GNU/BSD).
-    perl -pi -e 's/\.readfp\(/.read_file(/g' "$MYPOIS_PATH"/*.py || exit 1
+    # Compat librairies modernes: mypois (amont jimmyH/mypois non maintenu depuis ~2019)
+    # cible des API supprimées dans les versions actuelles de Python/Pillow présentes sur
+    # ubuntu-latest (Python 3.12, Pillow 12). On patche le code téléchargé par des
+    # équivalents stricts. perl -i pour la portabilité (sed -i diffère entre GNU/BSD).
+    #  - ConfigParser.readfp()  : déprécié dès Py 3.2, SUPPRIMÉ en 3.12  -> read_file() (idem)
+    #  - PIL Image.ANTIALIAS    : SUPPRIMÉ en Pillow 10 (n'était qu'un alias) -> Image.LANCZOS
+    perl -pi -e 's/\.readfp\(/.read_file(/g; s/Image\.ANTIALIAS/Image.LANCZOS/g' "$MYPOIS_PATH"/*.py || exit 1
 }
 
 
