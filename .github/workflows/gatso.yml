@@ -164,14 +164,22 @@ jobs:
             exit 1
           fi
           GATSO_UPDATE_MAX=$(date -d @$(cat BUILD/version.txt | sort -n | tail -1) +%Y-%m-%d)
-          # Release ROULANTE : tag fixe (sans date) réutilisé à chaque run.
-          # action-gh-release met à jour la release existante et écrase les assets
-          # de même nom (les noms sont déterministes, ex: FR-gatso-*.zip) -> pas
-          # d'accumulation de releases/tags datés au fil des runs hebdo.
-          TAG="${TAG_PREFIX}master"
-          echo "GATSO_UPDATE_MAX=$GATSO_UPDATE_MAX"
+          # Modèle "1 release par version de code" :
+          #   - le tag suit la version de src/package.json (ex: v1.2.0) ;
+          #   - les runs planifiés (data only) RÉUTILISENT ce tag -> action-gh-release
+          #     met à jour la release existante et écrase les assets de même nom
+          #     (noms déterministes, ex: FR-gatso-*.zip) ;
+          #   - une NOUVELLE release n'apparaît que si la version est bumpée
+          #     (= vrai changement de code). Pas d'accumulation de releases datées.
+          VERSION=$(jq -r '.version' src/package.json)
+          if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
+            echo "version introuvable dans src/package.json"
+            exit 1
+          fi
+          TAG="${TAG_PREFIX}v${VERSION}"
+          echo "GATSO_UPDATE_MAX=$GATSO_UPDATE_MAX  VERSION=$VERSION"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "release_name=${TAG_PREFIX}master (${GATSO_UPDATE_MAX})" >> "$GITHUB_OUTPUT"
+          echo "release_name=${TAG_PREFIX}v${VERSION} (data ${GATSO_UPDATE_MAX})" >> "$GITHUB_OUTPUT"
 
       - name: Publier la release (assets dans RELEASES/)
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
