@@ -129,7 +129,13 @@ _run()
     ¶ '_run'
     _unmount
 
-    python "$MYPOIS_EXEC" "$CONFIG_PATH"
+    # On propage l'échec: sans ça, un crash de mypois.py (ex: ModuleNotFoundError)
+    # n'empêchait pas le script de retourner 0, et la cible VAG manquait silencieusement.
+    if ! python "$MYPOIS_EXEC" "$CONFIG_PATH"
+    then
+        echo "[ERROR] mypois.py a échoué (cible VAG non générée)" >&2
+        exit 1
+    fi
 }
 
 _update_version()

@@ -207,15 +207,11 @@ _unrelease()
 _mount()
 {
     ¶ '_mount'
-    $BIN_DIR/mypois_ctl.sh make
-    $BIN_DIR/gpsbabel_ctl.sh make
-    
-    rc=$?
-
-    if [ $rc != 0 ]
-    then
-      exit $rc
-    fi
+    # On vérifie le code retour de CHAQUE générateur. Auparavant seul celui de gpsbabel
+    # était testé: un échec de mypois (cible VAG) passait en silence -> release amputée
+    # de VAG_files.zip / VAG_image.iso.zip sans que le build n'échoue.
+    $BIN_DIR/mypois_ctl.sh make || exit $?
+    $BIN_DIR/gpsbabel_ctl.sh make || exit $?
 }
 
 

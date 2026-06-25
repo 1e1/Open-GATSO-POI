@@ -39,8 +39,13 @@ jobs:
           python3 -m venv .ci-venv
           echo "PATH=$GITHUB_WORKSPACE/.ci-venv/bin:$PATH" >> "$GITHUB_ENV"
           echo "VIRTUAL_ENV=$GITHUB_WORKSPACE/.ci-venv" >> "$GITHUB_ENV"
-          python -m pip install -U pip wheel
-          python -m pip install configparser pandas pillow
+          # NB: les variables écrites dans $GITHUB_ENV ne s'appliquent qu'aux steps SUIVANTS.
+          # Dans CE step, `python` pointe encore sur le Python système — il faut donc viser
+          # explicitement le binaire du venv, sinon pandas/pillow s'installent au mauvais endroit
+          # et mypois.py (cible VAG) plante en ModuleNotFoundError aux steps suivants.
+          VENV_PY="$GITHUB_WORKSPACE/.ci-venv/bin/python"
+          "$VENV_PY" -m pip install -U pip wheel
+          "$VENV_PY" -m pip install configparser pandas pillow
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
