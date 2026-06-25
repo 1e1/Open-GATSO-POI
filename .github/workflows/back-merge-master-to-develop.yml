@@ -1,0 +1,84 @@
+# Back-merge automatique master -> develop (GitFlow).
+# Idée : tout ce qui atterrit sur master (merge d'une PR, bump Dependabot, hotfix)
+# est répercuté sur develop pour éviter la dérive entre les deux branches.
+#
+# Pas de boucle infinie :
+#   - on ne déclenche QUE sur push vers master ; le back-merge n'écrit que sur develop,
+#     jamais sur master, donc aucune récursion possible ;
+#   - le push fait avec GITHUB_TOKEN ne redéclenche pas d'autre workflow (garde-fou natif) ;
+#   - si develop contient déjà tout master (cas d'une PR venue de develop), le merge est
+#     un no-op et le job s'arrête proprement.
+
+name: Back-merge master -> develop
+
+on:
+  push:
+    branches: [master]
+
+# Sérialise les back-merges pour éviter deux merges concurrents sur develop.
+concurrency:
+  group: back-merge-master-to-develop
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  back-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (historique complet)
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          # on commitera sur develop, il faut donc tout l'historique
+          ref: develop
+
+      - name: Configurer git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Tenter le merge master -> develop
+        id: merge
+        run: |
+          set -euo pipefail
+          git fetch origin master:master
+
+          # develop a-t-il déjà tout master ? -> rien à faire
+          if git merge-base --is-ancestor master develop; then
+            echo "develop est déjà à jour avec master, rien à back-merger."
+            echo "status=uptodate" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if git merge --no-edit -m "chore: back-merge master -> develop [skip ci]" master; then
+            echo "Merge propre."
+            echo "status=merged" >> "$GITHUB_OUTPUT"
+          else
+            echo "Conflit de merge -> repli sur une PR."
+            git merge --abort
+            echo "status=conflict" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Pousser develop (merge propre)
+        if: steps.merge.outputs.status == 'merged'
+        run: git push origin develop
+
+      - name: Ouvrir une PR de repli (conflit)
+        if: steps.merge.outputs.status == 'conflict'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # PR master -> develop ; à résoudre/merger à la main puisqu'il y a des conflits.
+          if gh pr list --base develop --head master --state open --json number --jq 'length' | grep -q '^0$'; then
+            gh pr create \
+              --base develop \
+              --head master \
+              --title "Back-merge master -> develop (conflits à résoudre)" \
+              --body "Back-merge automatique impossible (conflits). Merci de résoudre puis merger cette PR pour resynchroniser develop avec master."
+          else
+            echo "Une PR master -> develop est déjà ouverte, rien à faire."
+          fi

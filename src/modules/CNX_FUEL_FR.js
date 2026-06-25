@@ -10,7 +10,7 @@ const ZIP = require('node-stream-zip');
 const HTTPS = require('https');
 const CRAWLER = require('./Crawler.js');
 const CONFIG = require('./config.js');
-const { flatten } = require('./utils.js');
+const { flatten, isPathInside } = require('./utils.js');
 const POINT = require('./POI.js');
 
 const COUNTRY_CODE = 'FR';
@@ -207,6 +207,7 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
 
 
     async unzip(zip_path) {
+        let hasUnsafeEntry = false;
         const unzipPromise = new Promise((resolve, reject) => {
             const unzip = new ZIP({
                 file: zip_path,
@@ -214,19 +215,33 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
             });
 
             unzip.on('error', (err) => {
-                console.error('[ERROR]', err); 
+                console.error('[ERROR]', err);
                 reject();
             });
-            
+
             unzip.on('entry', (entry) => {
+                // Zip-slip: un nom d'entrée qui s'échappe du WORKSPACE est rejeté et fera
+                // avorter l'extraction (archive amont compromise / MITM sur roulez-eco.fr).
+                if (!isPathInside(WORKSPACE, entry.name)) {
+                    console.error('[ERROR] entrée zip hors WORKSPACE, extraction annulée:', entry.name);
+                    hasUnsafeEntry = true;
+                    return;
+                }
+
                 const file = {
                     filename: entry.name,
                 };
 
                 this.entryList.push(file);
             });
-            
+
             unzip.on('ready', () => {
+                if (hasUnsafeEntry) {
+                    unzip.close();
+                    reject(new Error('archive zip refusée: entrée hors WORKSPACE (zip-slip)'));
+                    return;
+                }
+
                 unzip.extract(null, WORKSPACE, async (err, count) => {
                     console.log(err ? 'Extract error' : `Extracted ${count} entries`);
                     unzip.close();
@@ -283,8 +298,10 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
             const services = serviceNames.map(service => {
                 return service.substring('<service>'.length);
             });
-            const gas = {}
-            
+            // Object.create(null): le nom de carburant (attribut 'nom' du XML) sert de clé;
+            // un objet sans prototype neutralise toute clé spéciale (__proto__, constructor).
+            const gas = Object.create(null);
+
             gasNodes.forEach(gasNode => {
                 const name = this.extractAttribute(gasNode, 'nom');
                 const price = this.extractAttribute(gasNode, 'valeur');
@@ -327,13 +344,20 @@ module.exports = class CrawlerFuelFR extends CRAWLER {
         const entry = this.entryList.pop();
     
         if (entry) {
+            // Défense en profondeur: on ne lit jamais un fichier hors du WORKSPACE,
+            // même si une entrée non fiable avait franchi le filtre d'extraction.
+            if (!isPathInside(WORKSPACE, entry.filename)) {
+                console.error('[ERROR] chemin d\'entrée hors WORKSPACE, ignoré:', entry.filename);
+                return this.getEntry();
+            }
+
             const path = PATH.resolve(WORKSPACE, entry.filename);
-        
+
             entry.path = path;
-    
+
             return entry;
         }
-    
+
         return null;
     }
 }

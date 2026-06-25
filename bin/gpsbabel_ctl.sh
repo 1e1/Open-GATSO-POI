@@ -1,8 +1,13 @@
 #!/bin/bash
 
 
+# pipefail: un échec dans un pipe (ex: gpsbabel -V | awk) n'est plus masqué par la dernière commande.
+# (on évite set -e/-u: incompatibles avec les idiomes `[ test ] && cmd` du script)
+set -o pipefail
+
+
 readonly BIN_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )
-readonly BASE_DIR=$( dirname $BIN_DIR)
+readonly BASE_DIR=$( dirname "$BIN_DIR")
 readonly GPSLABEL_EXEC="gpsbabel"
 readonly GPSLABEL_VERSION_PATH="$BASE_DIR/gpsbabel.version"
 readonly BUILD_PATH="$BASE_DIR/BUILD"
@@ -111,7 +116,7 @@ _run()
         COUNTER=${cells[2]}
         NAME=${cells[3]}
 
-        GPI_NAME=`echo $FILENAME | sed -e 's/_\([0-9]\{1,\}$\)/@\1/'`
+        GPI_NAME=`echo "$FILENAME" | sed -e 's/_\([0-9]\{1,\}$\)/@\1/'`
         BMP_PATH="$SRC_PATH/assets/icn/${FILENAME}.bmp"
 
         SOURCE="$BUILD_PATH/${FILENAME}.gpx"

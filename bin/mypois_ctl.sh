@@ -2,7 +2,7 @@
 
 
 readonly BIN_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )
-readonly BASE_DIR=$( dirname $BIN_DIR)
+readonly BASE_DIR=$( dirname "$BIN_DIR")
 readonly MYPOIS_PATH="$BASE_DIR/mypois"
 readonly MYPOIS_GZ_PATH="$MYPOIS_PATH.tar.gz"
 readonly MYPOIS_EXEC="$MYPOIS_PATH/mypois.py"
@@ -27,7 +27,7 @@ esac
 done
 
 
-__() { echo $1 >> $CONFIG_PATH; }
+__() { echo "$1" >> "$CONFIG_PATH"; }
 ¶()
 {
     echo
@@ -70,7 +70,7 @@ _install()
 _uninstall()
 {
     ¶ '_uninstall'
-    [ -d $MYPOIS_PATH ] && rm -rf $MYPOIS_PATH
+    [ -d "$MYPOIS_PATH" ] && rm -rf "$MYPOIS_PATH"
 }
 
 
@@ -149,12 +149,12 @@ _run()
 _update_version()
 {
     ¶ '_update_version'
-    if [ ! -f $MYPOIS_TS_PATH ]
+    if [ ! -f "$MYPOIS_TS_PATH" ]
     then
         _get_version
-    fi 
+    fi
 
-    MYPOIS_MODIFICATION_TIMESTAMP=`cat $MYPOIS_TS_PATH`
+    MYPOIS_MODIFICATION_TIMESTAMP=`cat "$MYPOIS_TS_PATH"`
 
     echo "$MYPOIS_MODIFICATION_TIMESTAMP < $MYPOIS_TS_PATH"
 
@@ -171,11 +171,11 @@ _update_version()
 _make_config()
 {
     ¶ '_make_config'
-    echo -n > $CONFIG_PATH 
+    echo -n > "$CONFIG_PATH"
 
-    if [ ! -d $BUILD_CSV_H_PATH ]
+    if [ ! -d "$BUILD_CSV_H_PATH" ]
     then
-        mkdir -p $BUILD_CSV_H_PATH
+        mkdir -p "$BUILD_CSV_H_PATH"
     fi
 
 
@@ -208,8 +208,8 @@ _make_config()
         NAME=${cells[3]}
 
         WARNING='no'
-        FIRST_WORD=`echo $FILENAME | cut -d '_' -f 1`
-        FIRST_NAME=`echo $NAME     | cut -d '|' -f 2 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'`
+        FIRST_WORD=`echo "$FILENAME" | cut -d '_' -f 1`
+        FIRST_NAME=`echo "$NAME"     | cut -d '|' -f 2 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'`
 
         
         case $FIRST_WORD in 
@@ -224,13 +224,13 @@ _make_config()
         __ "Source=$BUILD_CSV_H_PATH/${FILENAME}_h.csv"
         __ "Icon=$SRC_PATH/assets/icn/${FILENAME}.png"
         __ 'Disabled=no'
-        if [ $WARNING == 'yes' ] && [ $INSTALL_CHANNEL == 'beta' ]
+        if [ "$WARNING" == 'yes' ] && [ "$INSTALL_CHANNEL" == 'beta' ]
         then
             __ "WarnMessage=$FIRST_NAME"
             __ 'ActivationRadius=150000'
         fi
         __ 
-    done < $MANIFEST_PATH
+    done < "$MANIFEST_PATH"
 }
 
 
