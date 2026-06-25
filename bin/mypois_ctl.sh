@@ -56,6 +56,12 @@ _install()
     mkdir -p "$MYPOIS_PATH"
     tar -xzf "$MYPOIS_GZ_PATH" -C "$MYPOIS_PATH" --strip-components 1 || exit 1
     rm -f "$MYPOIS_GZ_PATH"
+
+    # Compat Python 3.12+: ConfigParser.readfp() (déprécié depuis 3.2) a été SUPPRIMÉ en 3.12.
+    # mypois (amont non maintenu, ~2019) l'utilise encore -> AttributeError sur les runners
+    # actuels (ubuntu-latest = Python 3.12). read_file() est l'équivalent exact, dispo depuis 3.2.
+    # perl -i pour la portabilité (sed -i diffère entre GNU/BSD).
+    perl -pi -e 's/\.readfp\(/.read_file(/g' "$MYPOIS_PATH"/*.py || exit 1
 }
 
 
