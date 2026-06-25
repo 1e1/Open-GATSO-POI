@@ -56,6 +56,14 @@ _install()
     mkdir -p "$MYPOIS_PATH"
     tar -xzf "$MYPOIS_GZ_PATH" -C "$MYPOIS_PATH" --strip-components 1 || exit 1
     rm -f "$MYPOIS_GZ_PATH"
+
+    # Compat librairies modernes: mypois (amont jimmyH/mypois non maintenu depuis ~2019)
+    # cible des API supprimées dans les versions actuelles de Python/Pillow présentes sur
+    # ubuntu-latest (Python 3.12, Pillow 12). On patche le code téléchargé par des
+    # équivalents stricts. perl -i pour la portabilité (sed -i diffère entre GNU/BSD).
+    #  - ConfigParser.readfp()  : déprécié dès Py 3.2, SUPPRIMÉ en 3.12  -> read_file() (idem)
+    #  - PIL Image.ANTIALIAS    : SUPPRIMÉ en Pillow 10 (n'était qu'un alias) -> Image.LANCZOS
+    perl -pi -e 's/\.readfp\(/.read_file(/g; s/Image\.ANTIALIAS/Image.LANCZOS/g' "$MYPOIS_PATH"/*.py || exit 1
 }
 
 
@@ -129,7 +137,13 @@ _run()
     ¶ '_run'
     _unmount
 
-    python "$MYPOIS_EXEC" "$CONFIG_PATH"
+    # On propage l'échec: sans ça, un crash de mypois.py (ex: ModuleNotFoundError)
+    # n'empêchait pas le script de retourner 0, et la cible VAG manquait silencieusement.
+    if ! python "$MYPOIS_EXEC" "$CONFIG_PATH"
+    then
+        echo "[ERROR] mypois.py a échoué (cible VAG non générée)" >&2
+        exit 1
+    fi
 }
 
 _update_version()
