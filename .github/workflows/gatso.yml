@@ -8,6 +8,10 @@ on:
     branches: [master, develop]
   pull_request:
     branches: [master, develop]
+  schedule:
+    # Rafraîchissement hebdo des données radars : tous les dimanches à 06h00 UTC.
+    - cron: "0 6 * * 0"
+  workflow_dispatch: {}
 
 concurrency:
   group: gatso-${{ github.workflow }}-${{ github.ref }}
@@ -115,7 +119,10 @@ jobs:
           ls -lR ./RELEASES
 
       - name: Archive pour déploiement (artefact)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        if: >-
+          (github.event_name == 'push' && github.ref == 'refs/heads/master') ||
+          github.event_name == 'schedule' ||
+          (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master')
         uses: actions/upload-artifact@v7
         with:
           name: gatso-deploy
@@ -130,7 +137,10 @@ jobs:
           retention-days: 2
 
   deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/master') ||
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master')
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -154,16 +164,21 @@ jobs:
             exit 1
           fi
           GATSO_UPDATE_MAX=$(date -d @$(cat BUILD/version.txt | sort -n | tail -1) +%Y-%m-%d)
-          TAG="${TAG_PREFIX}master.${GATSO_UPDATE_MAX}"
+          # Release ROULANTE : tag fixe (sans date) réutilisé à chaque run.
+          # action-gh-release met à jour la release existante et écrase les assets
+          # de même nom (les noms sont déterministes, ex: FR-gatso-*.zip) -> pas
+          # d'accumulation de releases/tags datés au fil des runs hebdo.
+          TAG="${TAG_PREFIX}master"
           echo "GATSO_UPDATE_MAX=$GATSO_UPDATE_MAX"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "release_name=${TAG_PREFIX}master" >> "$GITHUB_OUTPUT"
+          echo "release_name=${TAG_PREFIX}master (${GATSO_UPDATE_MAX})" >> "$GITHUB_OUTPUT"
 
       - name: Publier la release (assets dans RELEASES/)
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           name: ${{ steps.meta.outputs.release_name }}
           tag_name: ${{ steps.meta.outputs.tag }}
+          target_commitish: ${{ github.sha }}
           body_path: BUILD/manifest.txt
           fail_on_unmatched_files: false
           make_latest: true
