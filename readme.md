@@ -64,7 +64,7 @@ node ./build.js csv gpx
 require:
 - [cdrtools](http://cdrtools.sourceforge.net/private/cdrecord.html) (making Disk Image)
 - [mypois](https://github.com/jimmyH/mypois) (exporting to Discover Media: Volkswagen, Audi, Bugatti, Seat, Škoda, Porsche, Lamborghini, Bentley, Ducati, Scania, MAN)
-- [gpsbabel](https://www.gpsbabel.org) (exporting to UConnect: FIAT)
+- [gpsbabel](https://www.gpsbabel.org) **>= 1.10.0** (exporting to UConnect: FIAT) — 1.10.0 fixes 24-bit BMP icon colors in the GPI writer (upstream #1243). On macOS: `brew install gpsbabel` (or `brew upgrade gpsbabel`). If no system gpsbabel >= 1.10.0 is found, `./bin/gpsbabel_ctl.sh install` compiles the pinned tag (`GPSBABEL_REF`) from source (requires `cmake`, `ninja`, Qt6 base).
 
 ```bash
 ./bin/make.sh

@@ -1,5 +1,3 @@
-const META_URL = 'https://lufop.net/zones-de-danger-france-et-europe-asc-et-csv/';
-const UPDATE_PATTERN = /Dernière Mise à jours ok le (?:<[^>]*>)?(\d{2})\D(\d{2})\D(\d{4})\D+(\d{2})\D(\d{2})\D(\d{2})(?:<[^>]*>)?/g;
 const SOURCE_URL = 'https://lufop.net/wp-content/plugins/downloads-manager/upload/Lufop-Zones-de-danger-EU-CSV.zip';
 // Longer tokens first so "Troncondebut" is not parsed as "Tr" + "oncondebut…"
 const FILE_PATTERN = /^([A-Z]{2})(Troncondebut|Tronconfin|FeuRouge|Fixe|Tunnel)(?:[A-Z]{2})(\d+)?\.csv$/i;
@@ -38,7 +36,7 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
             // Le scraping de la page lufop n'a renvoyé aucune date (page modifiée, indispo...):
             // on retombe sur l'heure courante plutôt que de planter (reduce sur tableau vide)
             // ou de dater tous les POI à epoch 0.
-            console.warn('[WARN] aucune date de mise à jour trouvée sur ' + META_URL + ', fallback heure courante');
+            console.warn('[WARN] date de mise à jour introuvable (Last-Modified sur ' + SOURCE_URL + '), fallback heure courante');
             lastUpdateTimestamp = Math.floor(Date.now() / 1000);
         }
 
@@ -362,45 +360,46 @@ module.exports = class CrawlerGatsoEU extends CRAWLER {
 
 
     async getLastUpdateTimestamps() {
-        const timestamps = [];
-        const options = { headers: { 'User-Agent': 'Mozilla/5.0' } };
+        // Source de vérité: l'en-tête HTTP Last-Modified du fichier RÉELLEMENT téléchargé
+        // (SOURCE_URL). Choix délibéré: on ne scrape PLUS le HTML de la page (META_URL),
+        // dont le libellé change régulièrement (ex: "Dernière Mise à jours ok le" ->
+        // "Fichier du ..."), ce qui cassait silencieusement la datation. Le header décrit
+        // le fichier lui-même: pas de dépendance à la mise en page, et date exacte du ZIP EU.
+        // La date n'est qu'informative (datation des POI): tout échec -> [] (fallback amont).
+        const options = {
+            method: 'HEAD',
+            headers: { 'User-Agent': 'Mozilla/5.0' },
+        };
 
-        // La date n'est qu'informative (datation des POI): un échec ici ne doit pas
-        // faire échouer tout le build EU -> on journalise et on retombe sur [] (fallback amont).
         try {
-            await new Promise((resolve, reject) => {
-                const req = HTTPS.get(META_URL, options, (response) => {
-                    let data = '';
+            const lastModified = await new Promise((resolve, reject) => {
+                const req = HTTPS.request(SOURCE_URL, options, (response) => {
+                    response.resume(); // draine/ignore le corps éventuel
 
-                    response.on('error', reject);
+                    if (200 !== response.statusCode) {
+                        reject(new Error('HTTP ' + response.statusCode));
+                        return;
+                    }
 
-                    response.on('data', (chunk) => {
-                        data += chunk;
-                    });
-
-                    response.on('end', () => {
-                        let results;
-
-                        while (results = UPDATE_PATTERN.exec(data)) {
-                            const [ , day, month, year, hour, minute, second] = results;
-                            const iso = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
-                            const date = new Date(iso);
-                            const timestamp = Math.round(date.getTime() / 1000);
-
-                            timestamps.push(timestamp);
-                        }
-
-                        resolve();
-                    });
+                    resolve(response.headers['last-modified']);
                 });
 
                 req.on('error', reject);
-                req.setTimeout(60000, () => req.destroy(new Error('timeout page lufop')));
+                req.setTimeout(60000, () => req.destroy(new Error('timeout HEAD lufop')));
+                req.end();
             });
+
+            if (lastModified) {
+                const timestamp = Math.round(new Date(lastModified).getTime() / 1000);
+
+                if (Number.isFinite(timestamp) && timestamp > 0) {
+                    return [ timestamp ];
+                }
+            }
         } catch (err) {
-            console.warn('[WARN] lecture de la date sur ' + META_URL + ' échouée: ' + ((err && err.message) || err));
+            console.warn('[WARN] lecture de Last-Modified sur ' + SOURCE_URL + ' échouée: ' + ((err && err.message) || err));
         }
 
-        return timestamps;
+        return [];
     }
 }

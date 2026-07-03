@@ -134,8 +134,10 @@ _init()
 _install()
 {
     ¶ '_install'
-    "$BIN_DIR/mypois_ctl.sh" install "${INSTALL_ARGS[@]}"
-    "$BIN_DIR/gpsbabel_ctl.sh" install "${INSTALL_ARGS[@]}"
+    # On propage l'échec de CHAQUE installeur (cf. _mount): sinon un build gpsbabel
+    # raté passait en silence -> aucun .gpi généré et release amputée sans CI rouge.
+    "$BIN_DIR/mypois_ctl.sh" install "${INSTALL_ARGS[@]}" || exit $?
+    "$BIN_DIR/gpsbabel_ctl.sh" install "${INSTALL_ARGS[@]}" || exit $?
 }
 
 
