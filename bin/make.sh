@@ -7,7 +7,7 @@ set -o pipefail
 
 
 readonly BIN_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )
-readonly BASE_DIR=$( dirname $BIN_DIR)
+readonly BASE_DIR=$( dirname "$BIN_DIR")
 readonly BUILD_PATH="$BASE_DIR/BUILD"
 readonly CACHE_PATH="$BASE_DIR/CACHE"
 readonly MANIFEST_PATH="$BUILD_PATH/manifest.txt"
@@ -134,8 +134,10 @@ _init()
 _install()
 {
     ¶ '_install'
-    $BIN_DIR/mypois_ctl.sh install ${INSTALL_ARGS[*]}
-    $BIN_DIR/gpsbabel_ctl.sh install ${INSTALL_ARGS[*]}
+    # On propage l'échec de CHAQUE installeur (cf. _mount): sinon un build gpsbabel
+    # raté passait en silence -> aucun .gpi généré et release amputée sans CI rouge.
+    "$BIN_DIR/mypois_ctl.sh" install "${INSTALL_ARGS[@]}" || exit $?
+    "$BIN_DIR/gpsbabel_ctl.sh" install "${INSTALL_ARGS[@]}" || exit $?
 }
 
 
@@ -172,7 +174,7 @@ _erase()
 _build()
 {
     ¶ '_build'
-    node "$BASE_DIR/src/build.js" ${BUILD_ARGS[*]} || exit 1
+    node "$BASE_DIR/src/build.js" "${BUILD_ARGS[@]}" || exit 1
 }
 
 
@@ -243,7 +245,7 @@ _update_doc()
     ¶ '_update_doc'
     $BIN_DIR/mypois_ctl.sh update-version
     $BIN_DIR/gpsbabel_ctl.sh update-version
-    node $BASE_DIR/src/update_doc.js
+    node "$BASE_DIR/src/update_doc.js"
 }
 
 

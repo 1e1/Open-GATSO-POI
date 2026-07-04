@@ -82,5 +82,9 @@ typings/
 /BUILD*/
 #/RELEASES/
 /mypois-master/
+/gpsbabel-bin/
+/gpsbabel-src/
+/gpsbabel-src.tar.gz
+/gpsbabel.version
 /config.ini
 /CACHE/

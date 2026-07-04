@@ -1,5 +1,5 @@
 const WRITER = require('./Writer.js');
-const { format, escapeXml } = require('../../utils.js');
+const { format, escapeXml, escapeAttribute } = require('../../utils.js');
 
 module.exports = class Gpx extends WRITER {
 
@@ -32,8 +32,8 @@ module.exports = class Gpx extends WRITER {
             const description = (point.description + rp.suffix).trim();
 
             return format('<wpt lon="{lon}" lat="{lat}"><name>{name}</name><desc>{desc}</desc></wpt>', {
-                lon: rp.longitude,
-                lat: rp.latitude,
+                lon: escapeAttribute(rp.longitude),
+                lat: escapeAttribute(rp.latitude),
                 name: escapeXml(name),
                 desc: escapeXml(description),
             });

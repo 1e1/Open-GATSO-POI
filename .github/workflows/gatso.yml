@@ -18,7 +18,11 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: "20"
+  NODE_VERSION: "24"
+  # Version épinglée de GPSBabel: ubuntu-latest (24.04) n'a que 1.9.0 via apt, or
+  # >= 1.10.0 est requis pour le correctif GPI #1243 (couleurs des icônes BMP 24 bpp).
+  # bin/gpsbabel_ctl.sh lit GPSBABEL_REF; on compile ce tag et on le met en cache.
+  GPSBABEL_REF: "gpsbabel_1_10_0"
 
 jobs:
   build:
@@ -31,11 +35,17 @@ jobs:
 
       - name: "Set install channel (mypois, master vs beta)"
         id: channel
+        # Les valeurs ${{ github.* }} passent par env: et ne sont JAMAIS interpolées
+        # directement dans le corps du script (anti script-injection des Actions).
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "name=${{ github.event.pull_request.base.ref }}" >> "$GITHUB_OUTPUT"
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            echo "name=$PR_BASE_REF" >> "$GITHUB_OUTPUT"
           else
-            echo "name=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+            echo "name=$REF_NAME" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Python venv (Pillow / pandas)
@@ -59,9 +69,22 @@ jobs:
           cache-dependency-path: src/package-lock.json
 
       - name: Paquets système
+        # gpsbabel n'est plus installé via apt (24.04 = 1.9.0, trop ancien) : on compile
+        # le tag épinglé (cf. étape "Cache GPSBabel" + make.sh --install). On installe donc
+        # ici la chaîne de build CLI (Qt6 base + cmake/ninja + libs de formats).
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends genisoimage gpsbabel
+          sudo apt-get install -y --no-install-recommends \
+            genisoimage \
+            cmake ninja-build pkgconf g++ \
+            qt6-base-dev qt6-5compat-dev \
+            zlib1g-dev libusb-1.0-0-dev libshp-dev
+
+      - name: Cache GPSBabel (binaire compilé)
+        uses: actions/cache@v5
+        with:
+          path: gpsbabel-bin
+          key: gpsbabel-${{ runner.os }}-${{ env.GPSBABEL_REF }}
 
       - name: Cache sources externes
         uses: actions/cache@v5
