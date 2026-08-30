@@ -1,0 +1,17 @@
+{
+  "name": "GATSO",
+  "version": "1.2.1",
+  "main": "build.js",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "author": "1e1",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.18.1",
+    "node-stream-zip": "^1.15.0"
+  },
+  "overrides": {
+    "form-data": "^4.0.6"
+  }
+}
